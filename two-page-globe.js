@@ -29,6 +29,14 @@
   document.head.appendChild(style);
   // Color only locations containing LPs in the live pipeline; preserve all other dots.
   const stages = {Warm:'#df721f', Cold:'#5884ae', Contacted:'#7457a8', 'In Process':'#bd3c56', Committed:'#257c55'};
+  const legend = document.createElement('aside');
+  legend.className = 'pipeline-pin-key';
+  legend.setAttribute('aria-label','Pipeline pin colors');
+  legend.innerHTML = Object.entries(stages).map(([stage,color]) => '<span><i style="background:'+color+'" aria-hidden="true"></i>'+stage+'</span>').join('');
+  globe?.appendChild(legend);
+  const legendStyle = document.createElement('style');
+  legendStyle.textContent = '.pipeline-pin-key{position:absolute;z-index:58;left:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:6px 13px;max-width:calc(100% - 480px);padding:8px 10px;background:rgba(255,255,255,.92);border:1px solid #dedede;font:10px/1.3 Arial,Helvetica,sans-serif;color:#4b4b4b}.pipeline-pin-key span{white-space:nowrap}.pipeline-pin-key i{display:inline-block;width:7px;height:7px;margin-right:5px}@media(max-width:760px){.pipeline-pin-key{left:12px;right:12px;bottom:auto;top:calc(112px + env(safe-area-inset-top,0px));max-width:none;gap:5px 9px;padding:6px 8px;font-size:9px}}';
+  document.head.appendChild(legendStyle);
   let pipeline = Object.create(null);
   const svg = document.getElementById('globesvg');
   const colorDots = () => {
