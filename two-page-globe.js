@@ -8,7 +8,7 @@
   old.remove();
   const header = document.createElement('header');
   header.className = 'app-header';
-  header.innerHTML = '<a class="app-brand" href="index.html" aria-label="LP Globe home">LP GLOBE</a><span class="app-divider" aria-hidden="true"></span><nav aria-label="App panes"><a href="index.html" aria-current="page">Globe</a><a href="pipeline.html" data-page-link>PIPE</a></nav>';
+  header.innerHTML = '<a class="app-brand" href="index.html" aria-label="LP Globe home">LP GLOBE</a><span class="app-divider" aria-hidden="true"></span><nav aria-label="App panes"><a href="index.html" aria-current="page">Globe</a><a href="pipeline.html" data-page-link>PIPE</a><a href="rank.html" data-page-link>RANK</a></nav>';
   const globe = document.getElementById('globe-pane');
   globe?.prepend(header);
   const style = document.createElement('style');
