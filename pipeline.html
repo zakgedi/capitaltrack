@@ -933,7 +933,11 @@
       .detail-person strong { font-size: 14px; }
       .detail-person .role { color: var(--sub); font-size: 12px; margin-top: 3px; }
       .detail-person .person-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; font-size: 12px; }
-      .detail-person .person-links a { text-underline-offset: 3px; overflow-wrap: anywhere; }
+      .detail-person .person-links a, .detail-person .person-links button { text-underline-offset: 3px; overflow-wrap: anywhere; }
+      .detail-person .person-links button { border: 0; background: none; padding: 0; color: var(--ink); cursor: pointer; font: inherit; text-decoration: underline; }
+      .email-templates { display: none; margin-top: 10px; padding: 9px 0 2px; border-top: 1px solid var(--rule); font: 12px/1.4 Arial, sans-serif; }
+      .email-templates.show { display: flex; gap: 8px 14px; flex-wrap: wrap; }
+      .email-templates a { color: var(--ink); text-underline-offset: 3px; }
       .detail-person .bio { font: 14px/1.4 'Newsreader', Georgia, serif; margin: 7px 0 0; }
       .detail-actions { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--rule); }
       .detail-actions button { border: 1px solid var(--rule); background: white; padding: 10px 13px; font: 600 11px/1 Arial, sans-serif; text-transform: uppercase; letter-spacing: .05em; }
@@ -1770,16 +1774,28 @@
             roster.set(key, {...(roster.get(key) || {}), ...c});
           }
           const contacts = [...roster.values()];
-          const mailLink = (address, label, person) => {
+          const emailTemplates = (address, label, person) => {
             const email = String(address || '').trim();
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return '';
-            const subject = 'Introduction - ' + f.name;
-            return '<a href="mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subject) + '" aria-label="Email ' + esc(person.name) + ' at ' + esc(email) + '">' + label + '</a>';
+            const first = String(person.name || '').trim().split(/\s+/)[0] || 'there';
+            const signoff = '\n\nBest,\nZakaria\nNova Global | Capital Partnerships';
+            const drafts = [
+              ['Intro', 'Introduction', 'I work in Capital Partnerships at Nova Global and wanted to introduce myself. I would enjoy learning more about your work at ' + f.name + '. Would you be open to a brief conversation?'],
+              ['Touch Base', 'Touching base', 'Wanted to touch base and see if a brief conversation would be useful. Let me know what works for you.'],
+              ['Follow Up', 'Following up', 'Following up on my note. Let me know if a short conversation would be useful.'],
+              ['Meeting', 'Connecting', 'Would you have time for a brief conversation in the coming weeks? I would be glad to connect.'],
+              ['Thanks', 'Thank you', 'Thanks for your time. I appreciated the conversation.']
+            ];
+            const links = drafts.map(([title, subject, body]) => {
+              const href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subject + ' - ' + f.name) + '&body=' + encodeURIComponent('Hi ' + first + ',\n\n' + body + signoff);
+              return '<a href="' + esc(href) + '" aria-label="' + esc(title + ' email to ' + person.name) + '">' + esc(title) + '</a>';
+            }).join('');
+            return '<span class="email-action"><button type="button" class="email-choice" aria-expanded="false" aria-label="Email ' + esc(person.name) + ' at ' + esc(email) + '">' + label + '</button><span class="email-templates" aria-label="Email templates">' + links + '</span></span>';
           };
           const people = contacts.map(c => {
             const links = [
-              mailLink(c.orgEmail || c.email, 'Email' + (c.unverified || c.orgEmailStatus === 'inferred' ? ' (unverified)' : ''), c),
-              c.personalEmail && c.personalEmail !== (c.orgEmail || c.email) && mailLink(c.personalEmail, 'Personal email', c),
+              emailTemplates(c.orgEmail || c.email, 'Email' + (c.unverified || c.orgEmailStatus === 'inferred' ? ' (unverified)' : ''), c),
+              c.personalEmail && c.personalEmail !== (c.orgEmail || c.email) && emailTemplates(c.personalEmail, 'Personal email', c),
               profileLink(c.linkedin, 'LinkedIn ↗')
             ].filter(Boolean).join('');
             return '<div class="detail-person"><strong>' + esc(c.name) + '</strong>' +
@@ -1804,6 +1820,13 @@
           detailFirm = null;
           if (restoreFocus && detailReturn?.isConnected) detailReturn.focus();
         }
+        $("detail-content").addEventListener("click", (event) => {
+          const button = event.target.closest(".email-choice");
+          if (!button) return;
+          const templates = button.nextElementSibling;
+          const open = templates.classList.toggle("show");
+          button.setAttribute("aria-expanded", String(open));
+        });
         $("detail-close").onclick = () => closeDetail();
         $("detail-modal").addEventListener("pointerdown", e => {
           if (e.target === $("detail-modal")) closeDetail();
