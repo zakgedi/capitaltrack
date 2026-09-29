@@ -38,6 +38,12 @@
       .duel-card.won { background: var(--ink); color: #fff; }
       .duel-card.won .kicker, .duel-card.won .desc, .duel-card.won .stats { color: #bbb; }
       .duel-card.lost { opacity: .35; }
+      .duel-card.abstain { justify-content: center; align-items: center; text-align: center; gap: 6px; min-height: 0; border-color: var(--sub); }
+      .duel-card.abstain .abstain-label { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; }
+      .duel-card.abstain .abstain-sub { font-size: 12px; color: var(--sub); }
+      .duel-card.abstain.won { background: var(--ink); color: #fff; border-color: var(--ink); }
+      .duel-card.abstain.won .abstain-sub { color: #bbb; }
+      @media (min-width: 761px) { .duel { grid-template-columns: 1fr minmax(180px, 240px) 1fr; } }
       .kicker { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); display: flex; justify-content: space-between; gap: 8px; }
       .name { font-family: Georgia, serif; font-size: 28px; line-height: 1.12; letter-spacing: -0.02em; font-weight: 600; }
       .stats { font-size: 13px; color: var(--sub); }
@@ -113,6 +119,7 @@
       let busy = false;
       let pickCount = 0;
       const recentPairs = JSON.parse(localStorage.getItem("rank-recent") || "[]");
+      const abstained = new Set(JSON.parse(localStorage.getItem("rank-abstain") || "[]"));
 
       const seed = (f) => 1600 - 2 * (f.novaRank != null ? f.novaRank : f.rankNum * 60);
       const eloOf = (i) => (ratings.get(i) || { elo: seed(firms[i]), games: 0 });
@@ -146,6 +153,7 @@
           if (bi === ai) continue;
           const b = eloOf(bi);
           const pairKey = Math.min(ai, bi) + "-" + Math.max(ai, bi);
+          if (abstained.has(pairKey)) continue;
           let score = Math.abs(a.elo - b.elo);
           if (recentPairs.includes(pairKey)) score += 500;
           score += Math.abs((a.games || 0) - (b.games || 0)) * 2;
@@ -167,10 +175,31 @@
 
       function renderDuel() {
         current = pickPair();
-        $("duel").innerHTML = cardHtml(current[0], 0) + cardHtml(current[1], 1);
-        for (const el of document.querySelectorAll(".duel-card")) {
+        $("duel").innerHTML = cardHtml(current[0], 0)
+          + '<button class="duel-card abstain" type="button" id="abstain" aria-label="No opinion on this pairing">'
+          + '<span class="abstain-label">No opinion</span><span class="abstain-sub">This pairing won\u2019t return</span></button>'
+          + cardHtml(current[1], 1);
+        for (const el of document.querySelectorAll(".duel-card:not(.abstain)")) {
           el.addEventListener("click", () => decide(+el.dataset.i));
         }
+        $("abstain").addEventListener("click", abstain);
+      }
+
+      function abstain() {
+        if (busy || !current) return;
+        busy = true;
+        const key = Math.min(current[0], current[1]) + "-" + Math.max(current[0], current[1]);
+        abstained.add(key);
+        if (abstained.size > 500) abstained.delete(abstained.values().next().value);
+        localStorage.setItem("rank-abstain", JSON.stringify([...abstained]));
+        recentPairs.push(key);
+        while (recentPairs.length > 60) recentPairs.shift();
+        localStorage.setItem("rank-recent", JSON.stringify(recentPairs));
+        const el = $("abstain");
+        el.classList.add("won");
+        el.disabled = true;
+        for (const c of document.querySelectorAll(".duel-card:not(.abstain)")) { c.classList.add("lost"); c.disabled = true; }
+        setTimeout(() => { busy = false; renderDuel(); }, 350);
       }
 
       async function decide(winner) {
@@ -222,6 +251,7 @@
       document.addEventListener("keydown", (e) => {
         if (e.key === "1" && current) decide(current[0]);
         if (e.key === "2" && current) decide(current[1]);
+        if (e.key === "3" && current) abstain();
       });
 
       (async () => {
