@@ -974,8 +974,34 @@
         .detail-field { grid-template-columns: 82px 1fr; }
         .detail-actions { padding: 12px 18px max(12px,env(safe-area-inset-bottom)); }
       }
+      /* Pipe view toggle: Stacks (board) or List (ranked, detailed cards). */
+      .view-toggle { display: flex; gap: 4px; }
+      .view-toggle button { border: 1px solid transparent; background: #fff; padding: 8px 11px; font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--ink); }
+      .view-toggle button:hover { border-color: var(--rule); }
+      .view-toggle button[aria-pressed="true"] { border-color: var(--ink); }
+      .view-toggle button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      /* H/M/L priority badge on card faces: ink-only hierarchy. */
+      .prio-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; font: 700 10px/1 Arial, sans-serif; }
+      .prio-pill[data-prio="high"] { background: var(--ink); color: #fff; padding: 0 4px; }
+      .prio-pill[data-prio="mid"] { border: 1px solid var(--ink); color: var(--ink); padding: 0 3px; }
+      .prio-pill[data-prio="low"] { color: #8a8a86; }
+      .card-rank .prio-pill + .card-owner::before { content: '·'; margin-right: 9px; color: #b2b2ad; }
+      /* List view: one ranked column of detailed cards. */
+      .board.list { display: block; max-width: 1060px; overflow-x: visible; }
+      .board.list .list-card { margin-bottom: 10px; padding: 16px 18px 14px; cursor: pointer; }
+      .board.list .list-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+      .board.list .list-stage { font: 600 10px/1.5 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); white-space: nowrap; padding-top: 6px; }
+      .board.list .list-meta { margin-top: 6px; font: 12px/1.4 Arial, sans-serif; color: var(--sub); }
+      .board.list .list-line { margin-top: 9px; font: 14px/1.5 'Newsreader', Georgia, serif; color: var(--ink); overflow-wrap: anywhere; }
+      .board.list .list-line strong { font: 600 10px/1.5 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); margin-right: 8px; }
+      .board.list .list-notes { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      @media (max-width: 600px) {
+        .board.list { padding: 0 0 24px; }
+        .board.list .list-card { padding: 13px 14px 12px; }
+      }
     </style>
     <script src="page-transition.js" defer></script>
+    <!-- Machine-readable: /llms.txt describes this site's JSON surface (/firms.json) and live pipeline API for AI agents. -->
   </head>
   <body>
     <header class="top">
@@ -1004,6 +1030,9 @@
       <div class="heading">
         <div class="auth" id="auth" aria-live="polite">
           <small>Connecting…</small>
+        </div>
+        <div class="view-toggle" role="group" aria-label="Pipe view">
+          <button type="button" id="view-stacks" aria-pressed="true">Stacks</button><button type="button" id="view-list" aria-pressed="false">List</button>
         </div>
         <span class="count" id="total"></span>
       </div>
@@ -1120,6 +1149,9 @@
             </select></label
           ><label>Stars<select id="card-tier" aria-label="LP stars">
               <option value="">No stars</option><option value="S">★★★★★ (5)</option><option value="A">★★★★ (4)</option><option value="B">★★★ (3)</option><option value="C">★★ (2)</option><option value="D">★ (1)</option><option value="F" hidden>★ (1)</option>
+          </select></label><label
+            >Priority<select id="card-priority" aria-label="LP priority">
+              <option value="">No priority</option><option value="high">High</option><option value="mid">Mid</option><option value="low">Low</option>
           </select></label><label
             >Connection<input
               id="card-connection"
@@ -1243,6 +1275,7 @@
           );
         let state = { pipeline: {}, details: {}, tags: [], cardTags: [] };
         let selectedStage = stages[0];
+        let view = "stacks";
         let profiles = null;
         let detailFirm = null;
         let detailReturn = null;
@@ -1295,6 +1328,7 @@
             data = rows[0];
             state.tags = rows[1];
             state.cardTags = rows[2];
+            await ensurePriorityTags();
           } catch (error) {
             loading = false;
             setStatus("Could not load pipeline", true);
@@ -1399,7 +1433,7 @@
           return state.cardTags
             .filter((x) => x.firm_id === +id)
             .map((x) => state.tags.find((t) => t.id === x.tag_id))
-            .filter((t) => t && !["S", "A", "B", "C", "D", "F"].includes(t.name))
+            .filter((t) => t && !isReservedTag(t))
             .map(
               (t) =>
                 '<span class="tag-chip ' +
@@ -1412,6 +1446,70 @@
         }
         const starCount = (tier) => ({S:5, A:4, B:3, C:2, D:1, F:1})[tier] || 0;
         const starLabel = (tier) => starCount(tier) ? '★'.repeat(starCount(tier)) : '';
+        /* H/M/L priority lives in the same Supabase tag store as card tags,
+           as three reserved tags (High, Mid, Low); hidden from the tag UI the
+           same way legacy star-tier tags (S/A/B/C/D/F) are. */
+        const PRIORITY_LEVELS = ["high", "mid", "low"];
+        const PRIORITY_RANK = { high: 3, mid: 2, low: 1 };
+        const RESERVED_TAG_NAMES = new Set(["s", "a", "b", "c", "d", "f", ...PRIORITY_LEVELS]);
+        const isReservedTag = (t) => RESERVED_TAG_NAMES.has(String(t.name).toLowerCase());
+        function priorityTagIds(level) {
+          return state.tags
+            .filter((t) => String(t.name).toLowerCase() === level)
+            .map((t) => t.id);
+        }
+        function priorityOf(id) {
+          for (const level of PRIORITY_LEVELS) {
+            const ids = priorityTagIds(level);
+            if (ids.length && state.cardTags.some((x) => x.firm_id === +id && ids.includes(x.tag_id)))
+              return level;
+          }
+          return "";
+        }
+        async function ensurePriorityTags() {
+          for (const level of PRIORITY_LEVELS) {
+            if (state.tags.some((t) => String(t.name).toLowerCase() === level)) continue;
+            const name = level[0].toUpperCase() + level.slice(1);
+            try { await db.createTag(name, "slate"); } catch (e) { /* lost a create race or no insert; re-read below */ }
+            try { state.tags = await db.tags(); } catch (e) { /* keep prior tags */ }
+          }
+        }
+        function cardVisible(id, q, filter) {
+          return (
+            (!filter ||
+              state.cardTags.some(
+                (x) => x.firm_id === +id && String(x.tag_id) === filter,
+              )) &&
+            (!q ||
+              [
+                firms[+id].name,
+                firms[+id].type,
+                firms[+id].location,
+                ...(firms[+id].contacts || []).map((c) => c.name),
+                ...state.cardTags
+                  .filter((x) => x.firm_id === +id)
+                  .map((x) => state.tags.find((t) => t.id === x.tag_id)?.name),
+              ].some((x) =>
+                String(x || "")
+                  .toLowerCase()
+                  .includes(q),
+              ))
+          );
+        }
+        function rankHTML(id, d, prio) {
+          if (!d.tier && !d.owner && !prio) return "";
+          return (
+            '<div class="card-rank">' +
+            (d.tier ? '<span class="tier-pill" data-stars="' + starCount(d.tier) + '" aria-label="' + starCount(d.tier) + ' stars">' + starLabel(d.tier) + '</span>' : '') +
+            (prio ? '<span class="prio-pill" data-prio="' + prio + '" aria-label="' + prio + ' priority">' + prio[0].toUpperCase() + '</span>' : '') +
+            (d.owner ? '<span class="card-owner" aria-label="Owner: ' + esc(d.owner) + '">' + esc(d.owner) + '</span>' : '') +
+            '</div>'
+          );
+        }
+        function cardTagsHTML(id) {
+          const c = chips(id);
+          return c ? '<div class="tags">' + c + "</div>" : "";
+        }
         function render() {
           const q = $("board-search").value.trim().toLowerCase();
           const filter = $("tag-filter").value;
@@ -1421,32 +1519,17 @@
           $("manage-tags").disabled = loading || saving;
           $("total").textContent =
             all.length + " LP" + (all.length === 1 ? "" : "s");
-          $("board").innerHTML = stages
+          const board = $("board");
+          board.classList.toggle("list", view === "list");
+          board.setAttribute("aria-label", view === "list" ? "LP pipeline list" : "LP pipeline board");
+          if (view === "list") {
+            board.innerHTML = renderList(all, q, filter);
+            return;
+          }
+          board.innerHTML = stages
             .map((stage) => {
               const cards = all.filter(
-                ([id, s]) =>
-                  s === stage &&
-                  (!filter ||
-                    state.cardTags.some(
-                      (x) => x.firm_id === +id && String(x.tag_id) === filter,
-                    )) &&
-                  (!q ||
-                    [
-                      firms[+id].name,
-                      firms[+id].type,
-                      firms[+id].location,
-                      ...(firms[+id].contacts || []).map((c) => c.name),
-                      ...state.cardTags
-                        .filter((x) => x.firm_id === +id)
-                        .map(
-                          (x) =>
-                            state.tags.find((t) => t.id === x.tag_id)?.name,
-                        ),
-                    ].some((x) =>
-                      String(x || "")
-                        .toLowerCase()
-                        .includes(q),
-                    )),
+                ([id, s]) => s === stage && cardVisible(id, q, filter),
               );
               return (
                 '<section class="stack" data-stage="' +
@@ -1460,8 +1543,10 @@
                   ? cards
                       .map(([id]) => {
                         const f = firms[+id];
+                        const d = state.details[id] || {};
+                        const prio = priorityOf(id);
                         return (
-                          '<article class="card" draggable="true" data-stars="' + (starCount(state.details[id]?.tier) || '') + '" data-id="' +
+                          '<article class="card" draggable="true" data-stars="' + (starCount(d.tier) || '') + '" data-priority="' + prio + '" data-id="' +
                           id +
                           '" tabindex="0" aria-label="' +
                           esc(f.name) +
@@ -1472,11 +1557,8 @@
                           '</button><button class="grip" type="button" aria-label="Drag ' +
                           esc(f.name) +
                           '">⋮⋮</button></div>' +
-                          ((state.details[id]?.tier || state.details[id]?.owner)
-                            ? '<div class="card-rank">' + (state.details[id]?.tier ? '<span class="tier-pill" data-stars="' + starCount(state.details[id].tier) + '" aria-label="' + starCount(state.details[id].tier) + ' stars">' + starLabel(state.details[id].tier) + '</span>' : '') + (state.details[id]?.owner ? '<span class="card-owner" aria-label="Owner: ' + esc(state.details[id].owner) + '">' + esc(state.details[id].owner) + '</span>' : '') + '</div>' : '') +
-                          (chips(id)
-                            ? '<div class="tags">' + chips(id) + "</div>"
-                            : "") +
+                          rankHTML(id, d, prio) +
+                          cardTagsHTML(id) +
                           '</article>'
                         );
                       })
@@ -1493,11 +1575,67 @@
             })
             .join("");
         }
+        function renderList(all, q, filter) {
+          const rows = all
+            .filter(([id]) => cardVisible(id, q, filter))
+            .map(([id, stage]) => ({ id: +id, stage }))
+            .sort(
+              (a, b) =>
+                starCount(state.details[b.id]?.tier) -
+                  starCount(state.details[a.id]?.tier) ||
+                (PRIORITY_RANK[priorityOf(b.id)] || 0) -
+                  (PRIORITY_RANK[priorityOf(a.id)] || 0) ||
+                firms[a.id].name.localeCompare(firms[b.id].name, undefined, {
+                  sensitivity: "base",
+                  numeric: true,
+                }),
+            );
+          if (!rows.length)
+            return (
+              '<div class="empty">' +
+              (loading
+                ? "Loading…"
+                : q || filter
+                  ? "No matches"
+                  : "No LPs in the pipe yet") +
+              "</div>"
+            );
+          return rows
+            .map(({ id, stage }) => {
+              const f = firms[id];
+              const d = state.details[id] || {};
+              const prio = priorityOf(id);
+              return (
+                '<article class="card list-card" data-stars="' + (starCount(d.tier) || '') + '" data-priority="' + prio + '" data-stage="' + esc(stage) + '" data-id="' +
+                id +
+                '" tabindex="0" aria-label="' +
+                esc(f.name) +
+                '; open details with Enter"><div class="list-head"><button class="card-name" type="button">' +
+                esc(f.name) +
+                '</button><span class="list-stage">' +
+                esc(stage) +
+                '</span></div><div class="list-meta">' +
+                esc([category(f), f.location, f.aum].filter(Boolean).join(" · ")) +
+                '</div>' +
+                rankHTML(id, d, prio) +
+                (d.connection
+                  ? '<div class="list-line"><strong>Connection</strong>' + esc(d.connection) + '</div>'
+                  : '') +
+                (d.notes
+                  ? '<div class="list-line list-notes"><strong>Notes</strong>' + esc(d.notes) + '</div>'
+                  : '') +
+                cardTagsHTML(id) +
+                '</article>'
+              );
+            })
+            .join("");
+        }
         function renderFilter() {
           const old = $("tag-filter").value;
           $("tag-filter").innerHTML =
             '<option value="">All tags</option>' +
             state.tags
+              .filter((t) => !isReservedTag(t))
               .map(
                 (t) =>
                   '<option value="' + t.id + '">' + esc(t.name) + "</option>",
@@ -1549,8 +1687,9 @@
               .filter((x) => x.firm_id === activeFirm)
               .map((x) => x.tag_id),
           );
-          $("tag-list").innerHTML = state.tags.length
-            ? state.tags
+          const visibleTags = state.tags.filter((t) => !isReservedTag(t));
+          $("tag-list").innerHTML = visibleTags.length
+            ? visibleTags
                 .map(
                   (t) =>
                     '<div class="tag-row">' +
@@ -1585,6 +1724,15 @@
             : '<div class="empty">Create a tag below</div>';
         }
         $("manage-tags").onclick = () => openTags();
+        function setView(v) {
+          if (view === v || !["stacks", "list"].includes(v)) return;
+          view = v;
+          $("view-stacks").setAttribute("aria-pressed", String(v === "stacks"));
+          $("view-list").setAttribute("aria-pressed", String(v === "list"));
+          render();
+        }
+        $("view-stacks").onclick = () => setView("stacks");
+        $("view-list").onclick = () => setView("list");
         $("tag-filter").onchange = render;
         $("board").addEventListener("click", (e) => {
           const b = e.target.closest("[data-edit-card]");
@@ -1750,22 +1898,25 @@
           const line = source.split('\n').find(x => x.startsWith('firms=[{"name":'));
           if (!line || !line.endsWith('];')) throw new Error('Globe profiles unavailable');
           const data = JSON.parse(line.slice(6, -1));
+          // Pipe lists audited firms the Globe page does not; match profiles by
+          // name so one universe drifting from the other never blanks every profile.
           if (data.length !== firms.length || data.some((f, i) => f.name !== firms[i].name))
-            throw new Error('Globe profiles do not match pipeline firms');
-          profiles = data;
-          return data;
+            console.warn('Globe profiles do not fully match pipeline firms; matching by name');
+          profiles = new Map(data.map((f) => [f.name, f]));
+          return profiles;
         }
         async function openDetail(id) {
           if (loading || saving || !state.pipeline[id] || !firms[id]) return;
           detailFirm = +id;
           detailReturn = document.activeElement;
           const f = firms[id], d = state.details[id] || {};
+          const prio = priorityOf(id);
           $("detail-title").textContent = f.name;
           $("detail-content").textContent = "Loading firm profile…";
           $("detail-modal").classList.add("show");
           $("detail-close").focus();
           let p = {};
-          try { p = (await loadProfiles())[id]; }
+          try { p = (await loadProfiles()).get(f.name) || {}; }
           catch (error) { notice(error.message); }
           if (detailFirm !== +id) return;
           const tagChips = chips(id);
@@ -1810,7 +1961,7 @@
           }).join('');
           $("detail-content").innerHTML =
             '<div class="detail-meta"><span>' + esc(category(f)) + '</span><span>' + esc(f.location || 'Location unknown') + '</span><span>' + esc(f.aum || 'AUM unknown') + '</span>' + (tagChips ? '<div class="tags">' + tagChips + '</div>' : '') + '</div>' +
-            row('Stack', state.pipeline[id]) + row('Stars', d.tier ? starLabel(d.tier) + ' (' + starCount(d.tier) + '/5)' : 'No stars') + row('Owner', d.owner || 'Unknown owner') +
+            row('Stack', state.pipeline[id]) + row('Stars', d.tier ? starLabel(d.tier) + ' (' + starCount(d.tier) + '/5)' : 'No stars') + row('Priority', prio ? prio[0].toUpperCase() + prio.slice(1) : 'No priority') + row('Owner', d.owner || 'Unknown owner') +
             row('Connection', d.connection) + row('Notes', d.notes) +
             '<h3 class="detail-section">Firm profile</h3>' +
             '<p class="detail-description">' + esc(p.description || 'No firm description yet.') + '</p>' +
@@ -1856,6 +2007,7 @@
           $("card-stage").value = isNew ? selectedStage : (state.pipeline[id] || stages[0]);
           $("card-owner").value = d.owner || "";
           $("card-tier").value = d.tier || "";
+          $("card-priority").value = priorityOf(id);
           $("card-connection").value = d.connection || "";
           $("card-notes").value = d.notes || "";
           $("card-tag-name").value = "";
@@ -1873,7 +2025,7 @@
                 .filter((x) => x.firm_id === cardFirm)
                 .map((x) => x.tag_id));
           if (extraSelected !== null) chosen.add(extraSelected);
-          const ordinaryTags = state.tags.filter((t) => !["S", "A", "B", "C", "D", "F"].includes(t.name));
+          const ordinaryTags = state.tags.filter((t) => !isReservedTag(t));
           $("card-tag-options").innerHTML = ordinaryTags.length
             ? ordinaryTags
                 .map(
@@ -2002,8 +2154,19 @@
             if (!stages.includes(stage)) throw new Error("Choose a stack");
             await db.put(id, stage, detail);
             for (const tag of state.tags) {
+              if (isReservedTag(tag)) continue;
               if (chosen.has(tag.id) !== old.has(tag.id))
                 await db.setCardTag(id, tag.id, chosen.has(tag.id));
+            }
+            const prio = $("card-priority").value;
+            for (const level of PRIORITY_LEVELS) {
+              for (const tid of priorityTagIds(level)) {
+                const want = prio === level;
+                const has = state.cardTags.some(
+                  (x) => x.firm_id === id && x.tag_id === tid,
+                );
+                if (want !== has) await db.setCardTag(id, tid, want);
+              }
             }
             closeCard();
             await loadPipeline();
@@ -2025,6 +2188,7 @@
             openDetail(+c.dataset.id);
             return;
           }
+          if (view !== "stacks") return;
           if (!["ArrowRight", "ArrowLeft"].includes(e.key)) return;
           e.preventDefault();
           const id = c.dataset.id;
