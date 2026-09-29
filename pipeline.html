@@ -741,6 +741,35 @@
         width: auto;
         margin: 0;
       }
+      .card-tag-create {
+        display: flex;
+        gap: 7px;
+        margin-top: 10px;
+        align-items: center;
+      }
+      .card-tag-create input {
+        flex: 1;
+        min-width: 0;
+      }
+      .card-tag-create select {
+        width: 92px;
+        flex: none;
+      }
+      .card-tag-create button {
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--ink);
+        background: #fff;
+        white-space: nowrap;
+      }
+      @media (max-width: 480px) {
+        .card-tag-create {
+          flex-wrap: wrap;
+        }
+        .card-tag-create input {
+          flex-basis: 100%;
+        }
+      }
       .pane-nav {
         display: flex;
         gap: 0;
@@ -944,6 +973,16 @@
           <div>
             <label>Tags</label>
             <div id="card-tag-options" class="card-tag-options"></div>
+            <div class="card-tag-create">
+              <input id="card-tag-name" type="text" maxlength="32" placeholder="New tag" aria-label="New tag name" autocomplete="off" />
+              <select id="card-tag-color" aria-label="New tag color">
+                <option value="blue">Blue</option><option value="slate">Slate</option>
+                <option value="teal">Teal</option><option value="green">Green</option>
+                <option value="amber">Amber</option><option value="orange">Orange</option>
+                <option value="rose">Rose</option><option value="violet">Violet</option>
+              </select>
+              <button id="card-tag-create" type="button">Create tag</button>
+            </div>
           </div>
           <div class="form-actions">
             <button type="button" id="card-cancel">Cancel</button
@@ -962,6 +1001,8 @@
       (function () {
         "use strict";
         const stages = [
+          "Warm",
+          "Cold",
           "Contacted",
           "First meeting",
           "Starting diligence",
@@ -1553,9 +1594,21 @@
           $("card-owner").value = d.owner || "";
           $("card-connection").value = d.connection || "";
           $("card-notes").value = d.notes || "";
-          const chosen = new Set(
-            state.cardTags.filter((x) => x.firm_id === id).map((x) => x.tag_id),
-          );
+          $("card-tag-name").value = "";
+          $("card-tag-color").value = "blue";
+          $("card-tag-options").innerHTML = "";
+          renderCardTags();
+          $("card-modal").classList.add("show");
+          $("card-owner").focus();
+        }
+        function renderCardTags(extraSelected = null) {
+          const previous = $("card-tag-options").querySelectorAll("input[type=checkbox]");
+          const chosen = previous.length
+            ? new Set([...previous].filter((input) => input.checked).map((input) => +input.value))
+            : new Set(state.cardTags
+                .filter((x) => x.firm_id === cardFirm)
+                .map((x) => x.tag_id));
+          if (extraSelected !== null) chosen.add(extraSelected);
           $("card-tag-options").innerHTML = state.tags.length
             ? state.tags
                 .map(
@@ -1571,10 +1624,46 @@
                     "</span></label>",
                 )
                 .join("")
-            : "<small>No tags yet. Use Manage tags to create one.</small>";
-          $("card-modal").classList.add("show");
-          $("card-owner").focus();
+            : "<small>No tags yet. Create one below.</small>";
         }
+        $("card-tag-create").onclick = async () => {
+          if (saving || cardFirm === null) return;
+          const name = $("card-tag-name").value.trim();
+          const color = $("card-tag-color").value;
+          if (!name) {
+            $("card-tag-name").focus();
+            return;
+          }
+          if (name.length > 32 || !colors.includes(color)) return;
+          if (state.tags.some((t) => t.name.toLowerCase() === name.toLowerCase())) {
+            notice("Tag name already exists");
+            return;
+          }
+          saving = true;
+          $("card-tag-create").disabled = true;
+          try {
+            const created = await db.createTag(name, color);
+            state.tags = await db.tags();
+            const tag = state.tags.find((t) => t.id === created?.[0]?.id) ||
+              state.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
+            renderCardTags(tag?.id ?? null);
+            renderFilter();
+            $("card-tag-name").value = "";
+            notice("Tag created. Save card to apply it.");
+          } catch (error) {
+            notice("Tag not saved: " + error.message);
+          } finally {
+            saving = false;
+            $("card-tag-create").disabled = false;
+            render();
+          }
+        };
+        $("card-tag-name").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            $("card-tag-create").click();
+          }
+        });
         function closeCard() {
           $("card-modal").classList.remove("show");
           cardFirm = null;
