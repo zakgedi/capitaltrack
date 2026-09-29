@@ -1409,6 +1409,7 @@
                           (chips(id)
                             ? '<div class="tags">' + chips(id) + "</div>"
                             : "") +
+                            (state.details[id] && state.details[id].owner ? '<div class="meta">' + esc(state.details[id].owner) + "</div>" : "") +
                           '</article>'
                         );
                       })
