@@ -27,6 +27,42 @@
     @media(max-width:600px){.app-header{min-height:52px;padding:0 16px;gap:8px}.app-brand{font-size:12px}.app-divider{height:18px}.app-header nav{margin-left:auto}.app-header nav a{padding:8px 9px}#stop{top:calc(62px + env(safe-area-inset-top,0px))}.gzoom{top:calc(62px + env(safe-area-inset-top,0px))}}
     .app-header a:focus-visible{outline:2px solid #141414;outline-offset:2px}`;
   document.head.appendChild(style);
+  // Color only locations containing LPs in the live pipeline; preserve all other dots.
+  const stages = {Warm:'#df721f', Cold:'#5884ae', Contacted:'#7457a8', 'In Process':'#bd3c56', Committed:'#257c55'};
+  let pipeline = Object.create(null);
+  const svg = document.getElementById('globesvg');
+  const colorDots = () => {
+    if (!svg) return;
+    svg.querySelectorAll('circle').forEach(dot => {
+      const matches = [...new Set((dot.__data__?.firmIdx || []).map(id => pipeline[id]).filter(Boolean))];
+      if (matches.length) dot.style.fill = stages[matches[0]];
+      else if (dot.style.fill) dot.style.fill = '';
+      dot.style.stroke = matches.length ? '#fff' : '';
+      dot.style.strokeWidth = matches.length ? '1.6px' : '';
+      dot.setAttribute('aria-label', dot.__data__?.n + (matches.length ? ' · Pipeline: ' + matches.join(', ') : ''));
+    });
+  };
+  if (svg) {
+    let queued = false;
+    new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => { queued = false; colorDots(); });
+    }).observe(svg, {childList:true, subtree:true});
+  }
+  async function loadPins() {
+    try {
+      const key = 'sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy';
+      const res = await fetch('https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1/lp_pipeline?select=firm_id,stage', {headers:{apikey:key,Authorization:'Bearer '+key}});
+      if (!res.ok) throw Error('Pipeline unavailable');
+      const rows = await res.json();
+      pipeline = Object.create(null);
+      rows.forEach(row => { if (stages[row.stage]) pipeline[row.firm_id] = row.stage; });
+      colorDots();
+    } catch (err) { console.warn('Pipeline pins unavailable',err); }
+  }
+  loadPins();
+  window.addEventListener('pageshow', event => { if (event.persisted) loadPins(); });
   const transition = document.createElement('script');
   transition.src = 'page-transition.js';
   document.body.appendChild(transition);
