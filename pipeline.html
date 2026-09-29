@@ -939,6 +939,13 @@
       .detail-actions button { border: 1px solid var(--rule); background: white; padding: 10px 13px; font: 600 11px/1 Arial, sans-serif; text-transform: uppercase; letter-spacing: .05em; }
       .detail-actions button:hover { border-color: var(--ink); }
       .detail-actions .primary { background: var(--ink); color: white; border-color: var(--ink); margin-left: auto; }
+      /* Tier colors lightly wash the whole card; unranked cards remain white. */
+      .card[data-tier="S"] { background: #fcf8eb; border-color: #e8d9ab; }
+      .card[data-tier="A"] { background: #f2f8f3; border-color: #cce1d1; }
+      .card[data-tier="B"] { background: #f2f7fb; border-color: #d0e0ec; }
+      .card[data-tier="C"] { background: #f8f5fa; border-color: #e2d5e8; }
+      .card[data-tier="D"] { background: #faf6f1; border-color: #e7d9c9; }
+      .card[data-tier="F"] { background: #f5f5f4; border-color: #dededb; }
       /* A viewport-width board with wide, compact cards. */
       .board { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; min-width: 0; overflow-x: visible; }
       .stack { min-width: 0; }
@@ -1444,7 +1451,7 @@
                       .map(([id]) => {
                         const f = firms[+id];
                         return (
-                          '<article class="card" draggable="true" data-id="' +
+                          '<article class="card" draggable="true" data-tier="' + esc(state.details[id]?.tier || '') + '" data-id="' +
                           id +
                           '" tabindex="0" aria-label="' +
                           esc(f.name) +
