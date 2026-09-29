@@ -74,9 +74,36 @@
   {id:113,name:'Hayden Millington',role:'Investments',notes:'Roster source: https://www.investure.com/hayden-millington',unverified:false},
   {id:113,name:'Jason Kang',role:'Investments',notes:'Roster source: https://www.investure.com/jason-kang',unverified:false},
   {id:193,name:'Lisa Schaefer',role:'Investment Operations Director',notes:'Roster source: https://www2.lehigh.edu/investment/team',unverified:false},
-  {id:206,name:'Marla Szoradi',role:'Manager, Investment Operations',notes:'Roster source: https://www.oberlin.edu/marla-szoradi',unverified:false}
+  {id:206,name:'Marla Szoradi',role:'Manager, Investment Operations',notes:'Roster source: https://www.oberlin.edu/marla-szoradi',unverified:false},
+  {id:86,name:'Patricia Battaglia',role:'Director, Operations',notes:'Roster source: https://oim.psu.edu/patricia-battaglia',unverified:false},
+  {id:86,name:'Gwen Dixon',role:'Senior Analyst, Operations',notes:'Roster source: https://oim.psu.edu/gwen-dixon',unverified:false},
+  {id:86,name:'Jenna Doksa',role:'Senior Analyst, Operations',notes:'Roster source: https://oim.psu.edu/jenna-doksa',unverified:false},
+  {id:86,name:'Karen Hammel',role:'Associate, Operations',notes:'Roster source: https://oim.psu.edu/karen-hammel',unverified:false},
+  {id:86,name:'Sharon Lucas',role:'Analyst, Operations',notes:'Roster source: https://oim.psu.edu/sharon-lucas',unverified:false},
+  {id:86,name:'Michael Pettit',role:'Managing Director, Operations',notes:'Roster source: https://oim.psu.edu/michael-pettit',unverified:false},
+  {id:86,name:'Kathleen Schiavi',role:'Associate Director, Operations',notes:'Roster source: https://oim.psu.edu/kathleen-schiavi',unverified:false},
+  {id:86,name:'Haven Smith',role:'Analyst, Operations',notes:'Roster source: https://oim.psu.edu/haven-smith',unverified:false},
+  {id:86,name:'Zander Lutz',role:'Analyst, Investments',notes:'Roster source: https://oim.psu.edu/zander-lutz',unverified:false},
+  {id:80,name:'Meena Lakshman',role:'Director of Investments',notes:'Roster source: https://helmsleytrust.org/our-team/',unverified:false},
+  {id:80,name:'Claudia Cole',role:'Investment Officer',notes:'Roster source: https://helmsleytrust.org/our-team/',unverified:false},
+  {id:80,name:'Christopher Shieh',role:'Investment Officer',notes:'Roster source: https://helmsleytrust.org/our-team/',unverified:false},
+  {id:80,name:'Mike Smith',role:'Investment Officer',notes:'Roster source: https://helmsleytrust.org/our-team/',unverified:false},
+  {id:80,name:'Alessandra Felloni',role:'Investment Associate',notes:'Roster source: https://helmsleytrust.org/our-team/',unverified:false},
+  {id:56,name:'Thomas Kidane',role:'Co-Head of Patricia Industries',notes:'Roster source: https://www.investorab.com/about-investor/board-management/executive-leadership-team/executive-leadership-team/thomas-kidane',unverified:false},
+  {id:56,name:'Daniel Nodhäll',role:'Head of Listed Companies',notes:'Roster source: https://www.investorab.com/about-investor/board-management/executive-leadership-team/executive-leadership-team/daniel-nodhaell',unverified:false},
+  {id:56,name:'Yuriy Prilutskiy',role:'Co-Head of Patricia Industries',notes:'Roster source: https://www.investorab.com/about-investor/board-management/executive-leadership-team/executive-leadership-team/yuriy-prilutskiy',unverified:false},
+  {id:62,name:'Michelle Knudsen',role:'Chief Investment Officer',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Adam Kobor',role:'Managing Director of Investments',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Jeff Chang',role:'Managing Director of Investments',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Ben Bronson',role:'Managing Director of Investments',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Makayla Baker',role:'Director of Investments',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Kevin Murphy',role:'Investment Analyst',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Jeff Rathgeber',role:'Managing Director of Investment Operations',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Kevin Chan',role:'Director of Investment Operations',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Tim Rojas',role:'Operations Analyst',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false},
+  {id:62,name:'Caitlyn Maguire',role:'Administrative Manager',notes:'Roster source: https://www.nyu.edu/about/leadership-university-administration/organization-directory/investment-office.html',unverified:false}
  ];
- for(const {id,...c} of additions) if(firms[id]&&({15:'University of Notre Dame',191:'Knight Foundation',115:'Kauffman Foundation',84:'Oxford University Endowment Management',64:'NZ Super Fund',116:'Kresge Foundation',187:'Inatai Foundation',114:'Jasper Ridge Partners',113:'Investure',193:'Lehigh University',206:'Oberlin College'}[id]===firms[id].name)&&Array.isArray(firms[id].contacts)&&!firms[id].contacts.some(x=>x.name.toLowerCase()===c.name.toLowerCase())) firms[id].contacts.push(c);
+ for(const {id,...c} of additions) if(firms[id]&&({15:'University of Notre Dame',191:'Knight Foundation',115:'Kauffman Foundation',84:'Oxford University Endowment Management',64:'NZ Super Fund',116:'Kresge Foundation',187:'Inatai Foundation',114:'Jasper Ridge Partners',113:'Investure',193:'Lehigh University',206:'Oberlin College',86:'Penn State (Office of Investment Management)',80:'Helmsley Trust',56:'Investor AB (Wallenberg)',62:'New York University'}[id]===firms[id].name)&&Array.isArray(firms[id].contacts)&&!firms[id].contacts.some(x=>x.name.toLowerCase()===c.name.toLowerCase())) firms[id].contacts.push(c);
 })();
 if(typeof renderKpis==='function')renderKpis();
 if(typeof renderListRows==='function')renderListRows();
