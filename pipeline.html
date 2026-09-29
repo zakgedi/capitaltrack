@@ -163,6 +163,11 @@
         padding: 0 9px 12px;
         min-height: 250px;
       }
+      .stack-head button { border: 0; background: transparent; font-weight: 600; font-size: 12px; padding: 5px 3px; margin: -5px 0; text-align: left; }
+      .stack-head button:hover { text-decoration: underline; text-underline-offset: 3px; }
+      .stack-head button:focus-visible, .stack-body:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+      .stack-body { cursor: pointer; }
+      .stack-body .card { cursor: grab; }
       .stack.over {
         background: #f0f0ed;
       }
@@ -489,6 +494,8 @@
         font-size: 16px;
         border-radius: 0;
       }
+      .pick-stage-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 19px 12px; font-size: 12px; font-weight: 600; }
+      .pick-stage-label select { flex: 1; max-width: 230px; padding: 9px 10px; border: 1px solid var(--rule); background: #fff; border-radius: 0; font-size: 16px; }
       .pick-list {
         overflow: auto;
         padding: 0 19px 18px;
@@ -839,17 +846,19 @@
           min-height: 42px;
         }
       }
+      .pane-nav a:focus-visible, .brand:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
     </style>
+    <script src="page-transition.js" defer></script>
   </head>
   <body>
     <header class="top">
       <div class="shell top-inner">
-        <a class="brand" href="index.html#globe" target="_top" aria-label="LP Globe home"
+        <a class="brand" href="index.html" data-page-link aria-label="LP Globe home"
           >LP GLOBE</a
         ><span class="divider"></span>
         <nav class="pane-nav" aria-label="App panes">
-          <a href="index.html#globe" target="_top">Globe</a
-          ><a href="index.html#pipeline" target="_top" aria-current="page">Pipeline</a>
+          <a href="index.html" data-page-link>Globe</a
+          ><a href="pipeline.html" aria-current="page">Pipeline</a>
         </nav>
         <div class="actions">
           <input
@@ -901,6 +910,7 @@
           placeholder="Search LP Globe"
           aria-label="Search LP Globe firms"
         />
+        <label class="pick-stage-label">Stack<select id="pick-stage" aria-label="Stack for new LP"></select></label>
         <div id="pick-list" class="pick-list"></div>
       </div>
     </div>
@@ -957,9 +967,10 @@
           </button>
         </div>
         <form id="card-form" class="card-form">
+          <label>Stack<select id="card-stage" required></select></label>
           <label
             >Owner<select id="card-owner">
-              <option value="">Select owner</option>
+              <option value="">Unknown owner</option>
               <option>Carlo</option>
               <option>Koko</option>
               <option>Zeg</option>
@@ -1085,6 +1096,7 @@
               })[c],
           );
         let state = { pipeline: {}, details: {}, tags: [], cardTags: [] };
+        let selectedStage = stages[0];
         let cardFirm = null;
         let cardIsNew = false;
         let activeFirm = null;
@@ -1287,9 +1299,9 @@
               return (
                 '<section class="stack" data-stage="' +
                 stage +
-                '"><div class="stack-head"><h3>' +
+                '"><div class="stack-head"><h3><button type="button" data-add-stage="' +
                 stage +
-                "</h3><span>" +
+                '" aria-label="Add LP to ' + stage + '">' + stage + '</button></h3><span>' +
                 cards.length +
                 '</span></div><div class="stack-body">' +
                 (cards.length
@@ -1305,7 +1317,7 @@
                           category(f) +
                           ", " +
                           esc(f.aum || "AUM unknown") +
-                          '; drag to move or use arrow keys"><div class="card-top"><a class="card-name" href="index.html#globe" target="_top" data-firm="' +
+                          '; drag to move or use arrow keys"><div class="card-top"><a class="card-name" href="index.html" data-page-link data-firm="' +
                           id +
                           '">' +
                           esc(f.name) +
@@ -1581,8 +1593,10 @@
                 .join("")
             : '<div class="empty">No LPs match</div>';
         }
-        function open() {
+        function open(stage = selectedStage) {
           if (loading || saving) return;
+          selectedStage = stages.includes(stage) ? stage : stages[0];
+          $("pick-stage").value = selectedStage;
           $("picker").classList.add("show");
           $("pick-search").value = "";
           picker();
@@ -1597,6 +1611,7 @@
           cardIsNew = isNew;
           const d = state.details[id] || {};
           $("card-title").textContent = firms[id].name;
+          $("card-stage").value = isNew ? selectedStage : (state.pipeline[id] || stages[0]);
           $("card-owner").value = d.owner || "";
           $("card-connection").value = d.connection || "";
           $("card-notes").value = d.notes || "";
@@ -1675,7 +1690,17 @@
           cardFirm = null;
           cardIsNew = false;
         }
-        $("add").onclick = open;
+        for (const select of [$("pick-stage"), $("card-stage")]) {
+          select.innerHTML = stages.map(stage => '<option value="' + stage + '">' + stage + '</option>').join('');
+        }
+        $("pick-stage").onchange = () => { selectedStage = $("pick-stage").value; };
+        $("board").addEventListener("click", (event) => {
+          const trigger = event.target.closest("[data-add-stage]");
+          if (trigger) { open(trigger.dataset.addStage); return; }
+          const body = event.target.closest(".stack-body");
+          if (body && !event.target.closest(".card, button, a")) open(body.closest(".stack").dataset.stage);
+        });
+        $("add").onclick = () => open(stages[0]);
         $("close").onclick = close;
         $("card-close").onclick = closeCard;
         $("card-cancel").onclick = closeCard;
@@ -1726,7 +1751,9 @@
           saving = true;
           $("card-submit").disabled = true;
           try {
-            await db.put(id, state.pipeline[id] || stages[0], detail);
+            const stage = $("card-stage").value;
+            if (!stages.includes(stage)) throw new Error("Choose a stack");
+            await db.put(id, stage, detail);
             for (const tag of state.tags) {
               if (chosen.has(tag.id) !== old.has(tag.id))
                 await db.setCardTag(id, tag.id, chosen.has(tag.id));
@@ -1880,4 +1907,4 @@
       })();
     </script>
   </body>
-</html>
+  </html>
