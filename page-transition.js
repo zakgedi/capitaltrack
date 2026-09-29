@@ -1,6 +1,6 @@
 /* A short paper-wipe between Globe and Pipeline, never between in-page controls. */
 (() => {
-  if (location.pathname.endsWith('/index.html') || location.pathname.endsWith('/lp-globe/')) { for (const src of ['globe-roster-patch.js', 'roster-shard-a.js', 'roster-shard-b.js', 'roster-shard-c.js', 'pipeline-roster-priority.js']) { const roster = document.createElement('script'); roster.src = src; document.body.appendChild(roster); } }
+  if (location.pathname.endsWith('/index.html') || location.pathname.endsWith('/lp-globe/')) { for (const src of ['globe-roster-patch.js', 'roster-shard-a.js', 'roster-shard-b.js', 'roster-shard-c.js', 'pipeline-roster-priority.js', 'roster-enrichment-contacts.js']) { const roster = document.createElement('script'); roster.src = src; document.body.appendChild(roster); } }
   const key = 'lp-globe-page-transition';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const curtain = document.createElement('div');
