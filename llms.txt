@@ -1,0 +1,18 @@
+# LP GLOBE
+
+> LP GLOBE (https://zakgedi.github.io/lp-globe/) is Zakaria Gedi's map of the institutional allocator (limited partner) universe: 344 endowments, foundations, family offices, pensions and sovereign wealth funds, with investment-team rosters, roles, contact details, AUM and locations. A second pane, Pipe, is the pipeline board for Nova Global's LP fundraise.
+
+## Machine-readable data
+
+- [firms.json](https://zakgedi.github.io/lp-globe/firms.json): the complete firm universe as structured JSON. Array `firms` (0-based index = the firm id used across the site). Per firm: name, type, location, aum, rank, description, notes, and contacts[] with name, role, email/orgEmail/personalEmail, linkedin, bio, and an `unverified` flag when a record is pattern-inferred or from a third-party directory.
+- Live pipeline state (board stage, owner, stars, priority, connection notes per firm) is served by the site's public read API (PostgREST):
+  - Base URL: https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1
+  - Required headers on every request: `apikey: sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy` and `Authorization: Bearer sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy` (publishable key; already public in the site's own JavaScript).
+  - `GET /lp_pipeline?select=firm_id,stage,owner,tier,connection,notes` - one row per firm on the board. `firm_id` is the 0-based index into firms.json. `stage` is one of Wishlist, Warm, Contacted, In Process, Committed. `tier` maps to stars: S=5, A=4, B=3, C=2, D=1.
+  - `GET /lp_tags?select=id,name,color` and `GET /lp_card_tags?select=firm_id,tag_id` - card tags. Tags named High, Mid, Low are the card's priority designation.
+  - Example: `curl -H "apikey: sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy" -H "Authorization: Bearer sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy" "https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1/lp_pipeline?select=firm_id,stage,tier"`
+
+## Pages
+
+- [Globe](https://zakgedi.github.io/lp-globe/index.html): interactive globe and searchable firm directory. Firm cards carry stable data attributes (data-id, data-stars, data-priority).
+- [Pipe](https://zakgedi.github.io/lp-globe/pipeline.html): the fundraise pipeline. Two views: Stacks (board by stage) and List (every card ranked by stars, then High/Mid/Low priority). Cards carry data-id, data-stage, data-stars and data-priority attributes.
