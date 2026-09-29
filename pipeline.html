@@ -501,7 +501,8 @@
       }
       .pick-stage-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 19px 12px; font-size: 12px; font-weight: 600; }
       .pick-stage-label select { flex: 1; max-width: 230px; padding: 9px 10px; border: 1px solid var(--rule); background: #fff; border-radius: 0; font-size: 16px; }
-      .pick-list {
+      .pick-list-title { margin: 3px 19px 6px; font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); }
+      .pick-list { flex: 1; min-height: 0;
         overflow: auto;
         padding: 0 19px 18px;
         overscroll-behavior: contain;
@@ -1004,11 +1005,11 @@
           id="pick-search"
           class="pick-search"
           type="search"
-          placeholder="Search LP Globe"
-          aria-label="Search LP Globe firms"
+          placeholder="Filter by firm, city, or person"
+          aria-label="Filter LP list"
         />
         <label class="pick-stage-label">Stack<select id="pick-stage" aria-label="Stack for new LP"></select></label>
-        <div id="pick-list" class="pick-list"></div>
+        <div id="pick-list-title" class="pick-list-title" aria-live="polite"></div><div id="pick-list" class="pick-list" aria-label="Available LP firms"></div>
       </div>
     </div>
     <div
@@ -1672,7 +1673,8 @@
                       .includes(q),
                   )),
             )
-            .slice(0, 60);
+            .sort((a, b) => a.f.name.localeCompare(b.f.name, undefined, { sensitivity: "base", numeric: true }));
+          $("pick-list-title").textContent = (q ? "Matching LPs" : "All LPs") + " · " + matches.length;
           $("pick-list").innerHTML = matches.length
             ? matches
                 .map(
@@ -1695,7 +1697,7 @@
           $("picker").classList.add("show");
           $("pick-search").value = "";
           picker();
-          $("pick-search").focus();
+          $("pick-list").querySelector(".pick-row")?.focus();
         }
         function close() {
           $("picker").classList.remove("show");
