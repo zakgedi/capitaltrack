@@ -1,45 +1,1788 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ffffff"><title>Pipeline · LP Globe</title>
-<style>
-:root{--ink:#141414;--sub:#666;--rule:#dedede;--soft:#f6f6f5}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#fff;color:var(--ink)}body{font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px}button,input,select{font:inherit}button{cursor:pointer;border-radius:0}a{color:inherit}.shell{max-width:1680px;margin:auto;padding:0 28px}.top{border-bottom:1px solid var(--ink)}.top-inner{min-height:76px;display:flex;align-items:center;gap:23px}.brand{font-family:Georgia,serif;letter-spacing:-.055em;font-size:24px;font-weight:600;text-decoration:none;white-space:nowrap}.divider{height:23px;width:1px;background:var(--rule)}h1{font-size:15px;letter-spacing:-.025em;margin:0;font-weight:600}.actions{margin-left:auto;display:flex;align-items:center;gap:12px}.search{border:1px solid var(--rule);width:230px;height:38px;padding:0 12px;outline:0;border-radius:0;min-width:0}.search:focus,.pick-search:focus{border-color:var(--ink)}.add{height:38px;min-width:38px;border:1px solid var(--ink);background:var(--ink);color:white;font-size:23px;line-height:1;display:flex;align-items:center;justify-content:center}.add:hover{background:#333}.heading{padding-top:30px;padding-bottom:22px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}.heading h2{font-family:Georgia,serif;font-size:30px;letter-spacing:-.04em;font-weight:400;margin:0}.count{font-size:12px;color:var(--sub);white-space:nowrap}.board{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:14px;align-items:start;padding-bottom:50px}.stack{border-top:2px solid var(--ink);min-height:330px;background:#fafafa}.stack-head{display:flex;align-items:baseline;justify-content:space-between;gap:5px;padding:16px 14px 17px}.stack-head h3{margin:0;font-size:12px;font-weight:600;letter-spacing:-.01em}.stack-head span{font-size:12px;color:var(--sub)}.stack-body{padding:0 9px 12px;min-height:250px}.stack.over{background:#f0f0ed}.card{background:#fff;border:1px solid var(--rule);padding:13px 13px 12px;margin-bottom:8px;touch-action:auto;cursor:grab}.card:hover{border-color:var(--ink)}.card.dragging{opacity:.3}.card-top{display:flex;align-items:flex-start;gap:5px;justify-content:space-between}.card-name{font-weight:600;line-height:1.35;overflow-wrap:anywhere;text-decoration:none}.card-name:hover{text-decoration:underline}.grip{flex:none;color:#999;border:0;background:none;padding:0 0 5px 8px;font-size:20px;line-height:16px;touch-action:none;cursor:grab;user-select:none}.grip:active{cursor:grabbing} .card.touch-drag{touch-action:none}.meta{color:var(--sub);font-size:11px;line-height:1.45;margin-top:9px;overflow-wrap:anywhere}.aum{margin-top:13px;font-size:15px;font-family:Georgia,serif}.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}.tag-chip{display:inline-flex;align-items:center;max-width:100%;padding:3px 7px;font:600 10px/1.4 Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid currentColor}.tag-chip.slate{color:#4b5563;background:#f3f4f6}.tag-chip.blue{color:#1d4e8f;background:#eaf2fc}.tag-chip.teal{color:#116b70;background:#e4f4f3}.tag-chip.green{color:#2d6738;background:#e8f5e9}.tag-chip.amber{color:#805300;background:#fff2d2}.tag-chip.orange{color:#9b4300;background:#fff0e3}.tag-chip.rose{color:#963b55;background:#fbeaf0}.tag-chip.violet{color:#69468b;background:#f1ebf8}.tag-open{border:0;background:transparent;color:#666;font-size:11px;text-decoration:underline;text-underline-offset:3px;padding:7px 0 0}.tag-open:hover{color:#141414}.tag-toolbar{display:flex;gap:8px;align-items:center;margin:0 0 16px;flex-wrap:wrap}.tag-toolbar select,.tag-toolbar button{border:1px solid var(--rule);background:#fff;height:34px;padding:0 10px;font-size:12px}.tag-toolbar button:hover{border-color:var(--ink)}.tag-list{overflow-y:auto;padding:7px 19px;min-height:90px}.tag-row{display:flex;gap:9px;align-items:center;border-bottom:1px solid var(--rule);padding:9px 0}.tag-row .tag-chip{margin-right:auto}.tag-row button{border:1px solid var(--rule);background:white;min-width:34px;min-height:34px;padding:0 9px}.tag-row button:hover{border-color:var(--ink)}.tag-create{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:15px 19px;border-top:1px solid var(--rule)}.tag-create input{min-width:120px;flex:1;border:1px solid var(--rule);height:40px;padding:0 10px;font-size:16px}.tag-create select{border:1px solid var(--rule);height:40px;padding:0 6px;background:#fff}.tag-create button{height:40px;border:1px solid var(--ink);background:#141414;color:white;padding:0 15px}.palette{display:flex;gap:6px;flex-wrap:wrap}.palette button{width:24px;height:24px;padding:0;border:1px solid #999;outline-offset:2px}.palette button.active{outline:2px solid #141414}.palette button.slate{background:#f3f4f6}.palette button.blue{background:#8ebbe9}.palette button.teal{background:#73c8bc}.palette button.green{background:#9bd6a1}.palette button.amber{background:#f5d37e}.palette button.orange{background:#f2ae79}.palette button.rose{background:#eba1b5}.palette button.violet{background:#c4a8e3}.card-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:14px}.stage-select{font-size:11px;border:1px solid var(--rule);background:#fff;color:var(--ink);padding:6px;max-width:100%;border-radius:0}.remove{border:0;background:none;color:var(--sub);font-size:18px;padding:2px 6px}.remove:hover{color:var(--ink)}.empty{color:#999;font-size:12px;padding:20px 5px;text-align:center}.drag-ghost{position:fixed;pointer-events:none;z-index:100;box-shadow:0 14px 30px #0002;opacity:.96;width:240px;transform:rotate(1deg)}.picker{position:fixed;inset:0;z-index:60;background:#0005;display:none;align-items:center;justify-content:center;padding:18px}.picker.show{display:flex}.pick-panel{background:white;width:min(520px,100%);max-height:min(620px,85dvh);display:flex;flex-direction:column;border:1px solid var(--ink)}.pick-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule);padding:16px 19px}.pick-head h2{margin:0;font-size:17px;font-weight:600}.close{background:white;border:0;font-size:24px;line-height:1;padding:0 2px}.pick-search{width:calc(100% - 38px);margin:18px 19px 11px;padding:11px 12px;border:1px solid var(--rule);outline:0;font-size:16px;border-radius:0}.pick-list{overflow:auto;padding:0 19px 18px;overscroll-behavior:contain}.pick-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:white;border:0;border-bottom:1px solid var(--rule);text-align:left;padding:12px 0;min-height:54px}.pick-row:hover,.pick-row:focus{background:var(--soft)}.pick-row strong{font-size:13px;display:block;line-height:1.3}.pick-row small{font-size:11px;color:var(--sub);display:block;margin-top:3px}.pick-row b{font-size:20px;font-weight:400}.pick-row:disabled{color:#999;cursor:default}.pick-row:disabled b{font-size:11px}.feedback{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 15px;opacity:0;pointer-events:none;transition:opacity .18s;z-index:90;font-size:12px}.feedback.show{opacity:1}@media(min-width:601px) and (max-width:1000px){.board{gap:14px}.stack{flex:0 0 min(31vw,285px)}.heading{padding-top:25px}}@media(max-width:1000px){.board{display:flex;overflow-x:auto;scroll-snap-type:x proximity;gap:12px;margin:0 -28px;padding:0 28px 40px;overscroll-behavior-inline:contain}.stack{flex:0 0 250px;scroll-snap-align:start;min-height:58vh}.board::-webkit-scrollbar{height:5px}.board::-webkit-scrollbar-thumb{background:#ccc}}@media(max-width:600px){.shell{padding:0 16px}.top-inner{min-height:68px;gap:12px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px}.brand{font-size:21px}.divider{height:17px}.top h1{font-size:14px}.actions{flex-basis:100%;margin-left:0;gap:8px}.search{flex:1;width:auto;height:42px;font-size:16px}.add{width:42px;height:42px}.heading{padding:24px 0 19px;gap:12px}.heading h2{font-size:27px;flex:1}.heading .count{order:2}.heading .auth{order:3;flex-basis:100%}.board{margin:0 -16px;padding:0 16px 32px}.stack{flex-basis:min(82vw,310px)}.picker{align-items:flex-end;padding:0}.pick-panel{width:100%;max-height:83dvh;min-height:60dvh;border-left:0;border-right:0;border-bottom:0;padding-bottom:env(safe-area-inset-bottom)}}
-.auth{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}.auth button{border:1px solid var(--ink);background:white;min-height:38px;padding:0 12px}.auth input{width:220px;height:38px;border:1px solid var(--rule);padding:0 9px;font-size:14px}.auth small{color:var(--sub)}.auth.error{color:#a31b1b}.auth input:focus{outline:1px solid var(--ink)}.auth button:disabled{opacity:.5;cursor:default}@media(max-width:600px){.auth{margin:0 0 2px;width:100%}.auth input{flex:1;min-width:0;font-size:16px}.auth button{min-height:42px}}
-</style></head><body>
-<header class="top"><div class="shell top-inner"><a class="brand" href="index.html" aria-label="LP Globe home">LP GLOBE</a><span class="divider"></span><h1>Pipeline</h1><div class="actions"><input class="search" id="board-search" type="search" placeholder="Search cards" aria-label="Search cards"><button class="add" id="add" type="button" aria-label="Add LP">+</button></div></div></header>
-<main class="shell"><div class="heading"><h2>LP pipeline</h2><div class="auth" id="auth" aria-live="polite"><small>Connecting…</small></div><span class="count" id="total"></span></div><div class="tag-toolbar"><label for="tag-filter">Tags</label><select id="tag-filter" aria-label="Filter by tag"><option value="">All tags</option></select><button id="manage-tags" type="button">Manage tags</button></div><div class="board" id="board" aria-label="LP pipeline board"></div></main>
-<div class="picker" id="picker" role="dialog" aria-modal="true" aria-labelledby="pick-title"><div class="pick-panel"><div class="pick-head"><h2 id="pick-title">Add an LP</h2><button class="close" id="close" type="button" aria-label="Close">×</button></div><input id="pick-search" class="pick-search" type="search" placeholder="Search LP Globe" aria-label="Search LP Globe firms"><div id="pick-list" class="pick-list"></div></div></div><div class="picker" id="tag-modal" role="dialog" aria-modal="true" aria-labelledby="tag-title"><div class="pick-panel"><div class="pick-head"><h2 id="tag-title">Tags</h2><button class="close" id="tag-close" type="button" aria-label="Close tags">×</button></div><div class="tag-list" id="tag-list"></div><form class="tag-create" id="tag-form"><input id="tag-name" maxlength="32" required placeholder="Tag name" aria-label="Tag name"><div class="palette" id="tag-palette" aria-label="Tag color"></div><button id="tag-submit" type="submit">Create tag</button></form></div></div><div class="feedback" id="feedback" role="status"></div>
-<script>let firms=[];</script><script src="firms-lite.js"></script><script src="auth-lite.js"></script><script>
-(function(){'use strict';
-const stages=['Contacted','First meeting','Starting diligence','Final process','Committed'];
-const sections=['Historic Institutions','Historic Individuals','Historic Legacies','Other'];const institution=new Set(['endowment']),individual=new Set(['family office','sfo','hnw','private investment office']),legacy=new Set(['foundation','philanthropic llc']);const overrides={'The Museum of Modern Art':0,'Indiana University Foundation':0,'University of Illinois Foundation':0,'Georgia Tech Foundation':0,'University of Massachusetts Foundation':0,'Purdue Research Foundation':0,'The California Endowment':2,'Chan Zuckerberg Initiative (investment office)':2,'Cleveland Clinic':3,'Mayo Clinic':3,'Memorial Sloan Kettering Cancer Center':3,'Boston Children\'s Hospital':3,'Children\'s Healthcare of Atlanta':3,'Children\'s Hospital Los Angeles (CHLA)':3,'Children\'s Hospital of Philadelphia (CHOP)':3,'Dana-Farber Cancer Institute':3,'Hackensack Meridian Health':3,'NewYork-Presbyterian Office of Investments':3,'Texas Children\'s Hospital':3,'Mass General Brigham Investment Office':3,'Sequoia Heritage':3,'Global Endowment Management (GEM)':3,'Bilt':3,'Harlem Children\'s Zone (endowment)':3,'Council on Foreign Relations (endowment)':3,'Texas':3,'The Nature Conservancy':3};function category(f){const t=(f.type||'').toLowerCase();return sections[overrides[f.name]??(institution.has(t)?0:individual.has(t)?1:legacy.has(t)?2:3)]} 
-const $=id=>document.getElementById(id);const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let state={pipeline:{},tags:[],cardTags:[]};let activeFirm=null;let editTagId=null;let chosenColor="blue";const colors=["slate","blue","teal","green","amber","orange","rose","violet"];let session=null;let loading=true;let saving=false;const db=window.lpAuth;
-const savedLocal=(()=>{try{return JSON.parse(localStorage.getItem('lp-globe-v1')||'{}')?.pipeline||{}}catch(e){return {}}})();
-function setStatus(msg,error=false){$('auth').classList.toggle('error',error);$('auth').innerHTML='<small>'+esc(msg)+'</small>'}
-function authUI(){if(session){$('auth').classList.remove('error');$('auth').innerHTML='<small>'+esc(session.user.email||'Signed in')+'</small><button id="signout" type="button">Sign out</button>';$('signout').onclick=async()=>{await db.signOut();session=null;authUI();await loadPipeline()}}else{ $('auth').innerHTML='<input id="auth-email" type="email" autocomplete="email" placeholder="Your email" aria-label="Email for sign-in"><button id="signin" type="button">Email sign-in link</button>';$('signin').onclick=async()=>{const e=$('auth-email').value.trim().toLowerCase();if(e!=='zakaria.m.gedi@gmail.com'){notice('Use the LP Globe owner email');return}setStatus('Sending link…');try{await db.send(e);setStatus('Check your email for the sign-in link')}catch(error){authUI();notice('Sign-in failed: '+error.message)}};}}
-async function loadPipeline(){if(!session){state.pipeline={};state.tags=[];state.cardTags=[];loading=false;render();return}loading=true;render();let data;try{const rows=await Promise.all([db.list(),db.tags(),db.cardTags()]);data=rows[0];state.tags=rows[1];state.cardTags=rows[2]}catch(error){loading=false;setStatus('Could not load pipeline',true);notice(error.message);return}loading=false;state.pipeline=Object.fromEntries(data.map(row=>[row.firm_id,row.stage]));renderFilter();
- if(Object.keys(savedLocal).length&&!localStorage.getItem('lp-globe-pipeline-migrated')){let n=0;for(const [id,stage] of Object.entries(savedLocal)){if(state.pipeline[id]||!firms[+id]||!stages.includes(stage))continue;try{await db.put(id,stage)}catch(e){notice('Some local cards could not sync');break}state.pipeline[id]=stage;n++}localStorage.setItem('lp-globe-pipeline-migrated','1');if(n)notice(n+' local cards synced');render()}
-}
-function save(id,stage){if(!session||loading||saving){notice('Wait for the pipeline to finish loading');return false}const old=state.pipeline[id];if(stage===null)delete state.pipeline[id];else state.pipeline[id]=stage;saving=true;render();(async()=>{try{if(stage===null)await db.del(id);else await db.put(id,stage);if(stage===null)state.cardTags=state.cardTags.filter(x=>x.firm_id!==+id);saving=false;render();notice(stage===null?'Removed':'Saved to pipeline')}catch(error){saving=false;if(old===undefined)delete state.pipeline[id];else state.pipeline[id]=old;await loadPipeline();notice('Not saved: '+error.message)}})();return true}
-(async()=>{try{session=await db.accept();authUI();await loadPipeline()}catch(e){loading=false;setStatus('Could not connect. Reload the page.',true);notice(e.message)}})();
-function notice(s){$('feedback').textContent=s;$('feedback').classList.add('show');clearTimeout(notice.t);notice.t=setTimeout(()=>$('feedback').classList.remove('show'),2300)}
-function records(){return Object.entries(state.pipeline).filter(([id,stage])=>Number.isInteger(+id)&&firms[+id]&&stages.includes(stage))}
-function chips(id){return state.cardTags.filter(x=>x.firm_id===+id).map(x=>state.tags.find(t=>t.id===x.tag_id)).filter(Boolean).map(t=>'<span class="tag-chip '+t.color+'">'+esc(t.name)+'</span>').join('')}
-function render(){const q=$('board-search').value.trim().toLowerCase();const filter=$('tag-filter').value;const all=records();$('add').disabled=!session||loading||saving;$('board-search').disabled=!session||loading;$('manage-tags').disabled=!session||loading||saving;$('total').textContent=all.length+' LP'+(all.length===1?'':'s');$('board').innerHTML=stages.map(stage=>{const cards=all.filter(([id,s])=>s===stage&&(!filter||state.cardTags.some(x=>x.firm_id===+id&&String(x.tag_id)===filter))&&(!q||[firms[+id].name,firms[+id].type,firms[+id].location,...(firms[+id].contacts||[]).map(c=>c.name),...state.cardTags.filter(x=>x.firm_id===+id).map(x=>state.tags.find(t=>t.id===x.tag_id)?.name)].some(x=>String(x||'').toLowerCase().includes(q))));return '<section class="stack" data-stage="'+stage+'"><div class="stack-head"><h3>'+stage+'</h3><span>'+cards.length+'</span></div><div class="stack-body">'+(cards.length?cards.map(([id])=>{const f=firms[+id];return '<article class="card" draggable="true" data-id="'+id+'" tabindex="0" aria-label="'+esc(f.name)+', '+category(f)+', '+esc(f.aum||'AUM unknown')+'; drag to move or use arrow keys"><div class="card-top"><a class="card-name" href="index.html#/firm/'+id+'">'+esc(f.name)+'</a><button class="grip" type="button" aria-label="Drag '+esc(f.name)+'">⋮⋮</button></div><div class="meta">'+category(f)+'</div><div class="aum">'+esc(f.aum||'AUM unknown')+'</div>'+(chips(id)?'<div class="tags">'+chips(id)+'</div>':'')+'<button class="tag-open" type="button" data-tags="'+id+'" aria-label="Edit tags for '+esc(f.name)+'">'+(chips(id)?'Edit tags':'+ Tags')+'</button></article>'}).join(''):'<div class="empty">'+(loading?'Loading…':!session?'Sign in to view pipeline':q||filter?'No matches':'Drop LPs here')+'</div>')+'</div></section>'}).join('')}
-function renderFilter(){const old=$('tag-filter').value;$('tag-filter').innerHTML='<option value="">All tags</option>'+state.tags.map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join('');$('tag-filter').value=state.tags.some(t=>String(t.id)===old)?old:'';render()}
-function palette(){ $('tag-palette').innerHTML=colors.map(c=>'<button type="button" class="'+c+(c===chosenColor?' active':'')+'" data-color="'+c+'" aria-label="'+c+' color" aria-pressed="'+(c===chosenColor)+'"></button>').join('')}
-function openTags(id=null){if(!session||loading||saving)return;activeFirm=id===null?null:+id;editTagId=null;chosenColor='blue';$('tag-name').value='';$('tag-submit').textContent='Create tag';$('tag-title').textContent=id===null?'Manage tags':'Tags · '+firms[+id].name;palette();renderTagList();$('tag-modal').classList.add('show')}
-function closeTags(){$('tag-modal').classList.remove('show');activeFirm=null;editTagId=null}
-function renderTagList(){const selected=new Set(state.cardTags.filter(x=>x.firm_id===activeFirm).map(x=>x.tag_id));$('tag-list').innerHTML=state.tags.length?state.tags.map(t=>'<div class="tag-row">'+(activeFirm===null?'':'<button type="button" data-toggle="'+t.id+'" aria-label="'+(selected.has(t.id)?'Remove':'Add')+' '+esc(t.name)+'" aria-pressed="'+selected.has(t.id)+'">'+(selected.has(t.id)?'✓':'+')+'</button>')+'<span class="tag-chip '+t.color+'">'+esc(t.name)+'</span><button type="button" data-edit="'+t.id+'" aria-label="Edit '+esc(t.name)+'">Edit</button><button type="button" data-delete="'+t.id+'" aria-label="Delete '+esc(t.name)+'">×</button></div>').join(''):'<div class="empty">Create a tag below</div>'}
-$('manage-tags').onclick=()=>openTags();$('tag-filter').onchange=render;$('board').addEventListener('click',e=>{const b=e.target.closest('[data-tags]');if(b)openTags(b.dataset.tags)});$('tag-close').onclick=closeTags;$('tag-modal').addEventListener('pointerdown',e=>{if(e.target===$('tag-modal'))closeTags()});$('tag-palette').onclick=e=>{const b=e.target.closest('[data-color]');if(b){chosenColor=b.dataset.color;palette()}};
-$('tag-form').onsubmit=async e=>{e.preventDefault();if(saving)return;const name=$('tag-name').value.trim();if(!name||name.length>32||!colors.includes(chosenColor))return;if(state.tags.some(t=>t.name.toLowerCase()===name.toLowerCase()&&t.id!==editTagId)){notice('Tag name already exists');return}saving=true;try{if(editTagId)await db.updateTag(editTagId,name,chosenColor);else await db.createTag(name,chosenColor);state.tags=await db.tags();editTagId=null;$('tag-name').value='';$('tag-submit').textContent='Create tag';renderTagList();renderFilter();notice('Tag saved')}catch(error){notice('Not saved: '+error.message)}finally{saving=false;render()}};
-$('tag-list').onclick=async e=>{const b=e.target.closest('[data-toggle],[data-edit],[data-delete]');if(!b||saving)return;const id=+(b.dataset.toggle||b.dataset.edit||b.dataset.delete);const t=state.tags.find(x=>x.id===id);if(!t)return;if(b.dataset.edit){editTagId=id;$('tag-name').value=t.name;chosenColor=t.color;palette();$('tag-submit').textContent='Save tag';$('tag-name').focus();return}if(b.dataset.delete&&!confirm('Delete tag "'+t.name+'" from every card?'))return;saving=true;try{if(b.dataset.delete){await db.deleteTag(id);state.tags=state.tags.filter(x=>x.id!==id);state.cardTags=state.cardTags.filter(x=>x.tag_id!==id);if(editTagId===id){editTagId=null;$('tag-name').value='';$('tag-submit').textContent='Create tag'}}else{const existing=state.cardTags.some(x=>x.firm_id===activeFirm&&x.tag_id===id);await db.setCardTag(activeFirm,id,!existing);if(existing)state.cardTags=state.cardTags.filter(x=>!(x.firm_id===activeFirm&&x.tag_id===id));else state.cardTags.push({firm_id:activeFirm,tag_id:id})}renderTagList();renderFilter();notice(b.dataset.delete?'Tag deleted':'Card tags saved')}catch(error){notice('Not saved: '+error.message)}finally{saving=false;render()}};
-function picker(){const q=$('pick-search').value.trim().toLowerCase();const matches=firms.map((f,id)=>({f,id})).filter(({f})=>!q||[f.name,f.type,f.location,...(f.contacts||[]).map(c=>c.name)].some(x=>String(x||'').toLowerCase().includes(q))).slice(0,60);$('pick-list').innerHTML=matches.length?matches.map(({f,id})=>'<button class="pick-row" type="button" data-add="'+id+'" '+(state.pipeline[id]?'':'')+'><span><strong>'+esc(f.name)+'</strong><small>'+esc([f.type,f.location].filter(Boolean).join(' · '))+'</small></span><b>'+(state.pipeline[id]?'Remove':'+')+'</b></button>').join(''):'<div class="empty">No LPs match</div>'}
-function open(){if(!session||loading||saving)return; $('picker').classList.add('show');$('pick-search').value='';picker();$('pick-search').focus() }function close(){ $('picker').classList.remove('show');$('add').focus() }
-$('add').onclick=open;$('close').onclick=close;$('picker').addEventListener('pointerdown',e=>{if(e.target===$('picker'))close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('picker').classList.contains('show'))close();else if(e.key==='Escape'&&$('tag-modal').classList.contains('show'))closeTags()});$('pick-search').oninput=picker;$('board-search').oninput=render;
-$('pick-list').onclick=e=>{const b=e.target.closest('[data-add]');if(!b)return;const id=b.dataset.add;if(state.pipeline[id]){if(save(id,null))close()}else{if(save(id,stages[0]))close()}};
-$('board').addEventListener('keydown',e=>{const c=e.target.closest('.card');if(!c||e.target!==c||!['ArrowRight','ArrowLeft'].includes(e.key))return;e.preventDefault();const id=c.dataset.id;const n=stages.indexOf(state.pipeline[id])+(e.key==='ArrowRight'?1:-1);if(n<0||n>=stages.length)return;if(!save(id,stages[n]))return;document.querySelector('.card[data-id="'+id+'"]')?.focus();notice('Moved to '+stages[n])});
-let dragId=null;$('board').addEventListener('dragstart',e=>{const c=e.target.closest('.card');if(!c)return;dragId=c.dataset.id;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragId);setTimeout(()=>c.classList.add('dragging'),0)});$('board').addEventListener('dragover',e=>{const s=e.target.closest('.stack');if(s){e.preventDefault();e.dataTransfer.dropEffect='move';document.querySelectorAll('.stack.over').forEach(x=>x.classList.remove('over'));s.classList.add('over')}});$('board').addEventListener('drop',e=>{const s=e.target.closest('.stack');if(!s)return;e.preventDefault();const id=dragId||e.dataTransfer.getData('text/plain');if(session&&!saving&&state.pipeline[id]&&s.dataset.stage!==state.pipeline[id]){save(id,s.dataset.stage)}else document.querySelectorAll('.stack.over').forEach(x=>x.classList.remove('over'));dragId=null});$('board').addEventListener('dragend',()=>{dragId=null;document.querySelectorAll('.stack.over,.card.dragging').forEach(x=>x.classList.remove('over','dragging'))});
-let touch=null;$('board').addEventListener('pointerdown',e=>{const grip=e.target.closest('.grip');if(!grip||e.pointerType==='mouse')return;e.preventDefault();const card=grip.closest('.card');touch={id:card.dataset.id,x:e.clientX,y:e.clientY,ghost:null};card.classList.add('touch-drag');grip.setPointerCapture(e.pointerId)});$('board').addEventListener('pointermove',e=>{if(!touch)return;e.preventDefault();if(!touch.ghost&&Math.hypot(e.clientX-touch.x,e.clientY-touch.y)>5){touch.ghost=document.querySelector('.card[data-id="'+touch.id+'"]').cloneNode(true);touch.ghost.classList.add('drag-ghost');document.body.append(touch.ghost)}if(touch.ghost){const viewport=$('board').getBoundingClientRect();if(e.clientX>viewport.right-35)$('board').scrollLeft+=25;else if(e.clientX<viewport.left+35)$('board').scrollLeft-=25;touch.ghost.style.left=(e.clientX-100)+'px';touch.ghost.style.top=(e.clientY-35)+'px';document.querySelectorAll('.stack.over').forEach(x=>x.classList.remove('over'));const hitX=Math.max(viewport.left+1,Math.min(viewport.right-1,e.clientX));const under=document.elementFromPoint(hitX,e.clientY)?.closest('.stack');if(under)under.classList.add('over')}});function finish(e){if(!touch)return;const viewport=$('board').getBoundingClientRect();const hitX=Math.max(viewport.left+1,Math.min(viewport.right-1,e.clientX));const s=document.elementFromPoint(hitX,e.clientY)?.closest('.stack');touch.ghost?.remove();document.querySelector('.card.touch-drag')?.classList.remove('touch-drag');if(session&&!saving&&s&&s.dataset.stage!==state.pipeline[touch.id]){save(touch.id,s.dataset.stage)}else document.querySelectorAll('.stack.over').forEach(x=>x.classList.remove('over'));touch=null}$('board').addEventListener('pointerup',finish);$('board').addEventListener('pointercancel',finish);
-render();
-})();
-</script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Pipeline · LP Globe</title>
+    <style>
+      :root {
+        --ink: #141414;
+        --sub: #666;
+        --rule: #dedede;
+        --soft: #f6f6f5;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #fff;
+        color: var(--ink);
+      }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        font-size: 14px;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+        border-radius: 0;
+      }
+      a {
+        color: inherit;
+      }
+      .shell {
+        max-width: 1680px;
+        margin: auto;
+        padding: 0 28px;
+      }
+      .top {
+        border-bottom: 1px solid var(--ink);
+      }
+      .top-inner {
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        gap: 23px;
+      }
+      .brand {
+        font-family: Georgia, serif;
+        letter-spacing: -0.055em;
+        font-size: 24px;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .divider {
+        height: 23px;
+        width: 1px;
+        background: var(--rule);
+      }
+      h1 {
+        font-size: 15px;
+        letter-spacing: -0.025em;
+        margin: 0;
+        font-weight: 600;
+      }
+      .actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .search {
+        border: 1px solid var(--rule);
+        width: 230px;
+        height: 38px;
+        padding: 0 12px;
+        outline: 0;
+        border-radius: 0;
+        min-width: 0;
+      }
+      .search:focus,
+      .pick-search:focus {
+        border-color: var(--ink);
+      }
+      .add {
+        height: 38px;
+        min-width: 38px;
+        border: 1px solid var(--ink);
+        background: var(--ink);
+        color: white;
+        font-size: 23px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .add:hover {
+        background: #333;
+      }
+      .heading {
+        padding-top: 30px;
+        padding-bottom: 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .heading h2 {
+        font-family: Georgia, serif;
+        font-size: 30px;
+        letter-spacing: -0.04em;
+        font-weight: 400;
+        margin: 0;
+      }
+      .count {
+        font-size: 12px;
+        color: var(--sub);
+        white-space: nowrap;
+      }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(190px, 1fr));
+        gap: 14px;
+        align-items: start;
+        padding-bottom: 50px;
+      }
+      .stack {
+        border-top: 2px solid var(--ink);
+        min-height: 330px;
+        background: #fafafa;
+      }
+      .stack-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 5px;
+        padding: 16px 14px 17px;
+      }
+      .stack-head h3 {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .stack-head span {
+        font-size: 12px;
+        color: var(--sub);
+      }
+      .stack-body {
+        padding: 0 9px 12px;
+        min-height: 250px;
+      }
+      .stack.over {
+        background: #f0f0ed;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--rule);
+        padding: 13px 13px 12px;
+        margin-bottom: 8px;
+        touch-action: auto;
+        cursor: grab;
+      }
+      .card:hover {
+        border-color: var(--ink);
+      }
+      .card.dragging {
+        opacity: 0.3;
+      }
+      .card-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 5px;
+        justify-content: space-between;
+      }
+      .card-name {
+        font-weight: 600;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+        text-decoration: none;
+      }
+      .card-name:hover {
+        text-decoration: underline;
+      }
+      .grip {
+        flex: none;
+        color: #999;
+        border: 0;
+        background: none;
+        padding: 0 0 5px 8px;
+        font-size: 20px;
+        line-height: 16px;
+        touch-action: none;
+        cursor: grab;
+        user-select: none;
+      }
+      .grip:active {
+        cursor: grabbing;
+      }
+      .card.touch-drag {
+        touch-action: none;
+      }
+      .meta {
+        color: var(--sub);
+        font-size: 11px;
+        line-height: 1.45;
+        margin-top: 9px;
+        overflow-wrap: anywhere;
+      }
+      .aum {
+        margin-top: 13px;
+        font-size: 15px;
+        font-family: Georgia, serif;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 12px;
+      }
+      .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        padding: 3px 7px;
+        font:
+          600 10px/1.4 Arial,
+          sans-serif;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border: 1px solid currentColor;
+      }
+      .tag-chip.slate {
+        color: #4b5563;
+        background: #f3f4f6;
+      }
+      .tag-chip.blue {
+        color: #1d4e8f;
+        background: #eaf2fc;
+      }
+      .tag-chip.teal {
+        color: #116b70;
+        background: #e4f4f3;
+      }
+      .tag-chip.green {
+        color: #2d6738;
+        background: #e8f5e9;
+      }
+      .tag-chip.amber {
+        color: #805300;
+        background: #fff2d2;
+      }
+      .tag-chip.orange {
+        color: #9b4300;
+        background: #fff0e3;
+      }
+      .tag-chip.rose {
+        color: #963b55;
+        background: #fbeaf0;
+      }
+      .tag-chip.violet {
+        color: #69468b;
+        background: #f1ebf8;
+      }
+      .tag-open {
+        border: 0;
+        background: transparent;
+        color: #666;
+        font-size: 11px;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        padding: 7px 0 0;
+      }
+      .tag-open:hover {
+        color: #141414;
+      }
+      .tag-toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 0 0 16px;
+        flex-wrap: wrap;
+      }
+      .tag-toolbar select,
+      .tag-toolbar button {
+        border: 1px solid var(--rule);
+        background: #fff;
+        height: 34px;
+        padding: 0 10px;
+        font-size: 12px;
+      }
+      .tag-toolbar button:hover {
+        border-color: var(--ink);
+      }
+      .tag-list {
+        overflow-y: auto;
+        padding: 7px 19px;
+        min-height: 90px;
+      }
+      .tag-row {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        border-bottom: 1px solid var(--rule);
+        padding: 9px 0;
+      }
+      .tag-row .tag-chip {
+        margin-right: auto;
+      }
+      .tag-row button {
+        border: 1px solid var(--rule);
+        background: white;
+        min-width: 34px;
+        min-height: 34px;
+        padding: 0 9px;
+      }
+      .tag-row button:hover {
+        border-color: var(--ink);
+      }
+      .tag-create {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 15px 19px;
+        border-top: 1px solid var(--rule);
+      }
+      .tag-create input {
+        min-width: 120px;
+        flex: 1;
+        border: 1px solid var(--rule);
+        height: 40px;
+        padding: 0 10px;
+        font-size: 16px;
+      }
+      .tag-create select {
+        border: 1px solid var(--rule);
+        height: 40px;
+        padding: 0 6px;
+        background: #fff;
+      }
+      .tag-create button {
+        height: 40px;
+        border: 1px solid var(--ink);
+        background: #141414;
+        color: white;
+        padding: 0 15px;
+      }
+      .palette {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .palette button {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 1px solid #999;
+        outline-offset: 2px;
+      }
+      .palette button.active {
+        outline: 2px solid #141414;
+      }
+      .palette button.slate {
+        background: #f3f4f6;
+      }
+      .palette button.blue {
+        background: #8ebbe9;
+      }
+      .palette button.teal {
+        background: #73c8bc;
+      }
+      .palette button.green {
+        background: #9bd6a1;
+      }
+      .palette button.amber {
+        background: #f5d37e;
+      }
+      .palette button.orange {
+        background: #f2ae79;
+      }
+      .palette button.rose {
+        background: #eba1b5;
+      }
+      .palette button.violet {
+        background: #c4a8e3;
+      }
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        margin-top: 14px;
+      }
+      .stage-select {
+        font-size: 11px;
+        border: 1px solid var(--rule);
+        background: #fff;
+        color: var(--ink);
+        padding: 6px;
+        max-width: 100%;
+        border-radius: 0;
+      }
+      .remove {
+        border: 0;
+        background: none;
+        color: var(--sub);
+        font-size: 18px;
+        padding: 2px 6px;
+      }
+      .remove:hover {
+        color: var(--ink);
+      }
+      .empty {
+        color: #999;
+        font-size: 12px;
+        padding: 20px 5px;
+        text-align: center;
+      }
+      .drag-ghost {
+        position: fixed;
+        pointer-events: none;
+        z-index: 100;
+        box-shadow: 0 14px 30px #0002;
+        opacity: 0.96;
+        width: 240px;
+        transform: rotate(1deg);
+      }
+      .picker {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: #0005;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+      }
+      .picker.show {
+        display: flex;
+      }
+      .pick-panel {
+        background: white;
+        width: min(520px, 100%);
+        max-height: min(620px, 85dvh);
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--ink);
+      }
+      .pick-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--rule);
+        padding: 16px 19px;
+      }
+      .pick-head h2 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 600;
+      }
+      .close {
+        background: white;
+        border: 0;
+        font-size: 24px;
+        line-height: 1;
+        padding: 0 2px;
+      }
+      .pick-search {
+        width: calc(100% - 38px);
+        margin: 18px 19px 11px;
+        padding: 11px 12px;
+        border: 1px solid var(--rule);
+        outline: 0;
+        font-size: 16px;
+        border-radius: 0;
+      }
+      .pick-list {
+        overflow: auto;
+        padding: 0 19px 18px;
+        overscroll-behavior: contain;
+      }
+      .pick-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        background: white;
+        border: 0;
+        border-bottom: 1px solid var(--rule);
+        text-align: left;
+        padding: 12px 0;
+        min-height: 54px;
+      }
+      .pick-row:hover,
+      .pick-row:focus {
+        background: var(--soft);
+      }
+      .pick-row strong {
+        font-size: 13px;
+        display: block;
+        line-height: 1.3;
+      }
+      .pick-row small {
+        font-size: 11px;
+        color: var(--sub);
+        display: block;
+        margin-top: 3px;
+      }
+      .pick-row b {
+        font-size: 20px;
+        font-weight: 400;
+      }
+      .pick-row:disabled {
+        color: #999;
+        cursor: default;
+      }
+      .pick-row:disabled b {
+        font-size: 11px;
+      }
+      .feedback {
+        position: fixed;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--ink);
+        color: #fff;
+        padding: 10px 15px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s;
+        z-index: 90;
+        font-size: 12px;
+      }
+      .feedback.show {
+        opacity: 1;
+      }
+      @media (min-width: 601px) and (max-width: 1000px) {
+        .board {
+          gap: 14px;
+        }
+        .stack {
+          flex: 0 0 min(31vw, 285px);
+        }
+        .heading {
+          padding-top: 25px;
+        }
+      }
+      @media (max-width: 1000px) {
+        .board {
+          display: flex;
+          overflow-x: auto;
+          scroll-snap-type: x proximity;
+          gap: 12px;
+          margin: 0 -28px;
+          padding: 0 28px 40px;
+          overscroll-behavior-inline: contain;
+        }
+        .stack {
+          flex: 0 0 250px;
+          scroll-snap-align: start;
+          min-height: 58vh;
+        }
+        .board::-webkit-scrollbar {
+          height: 5px;
+        }
+        .board::-webkit-scrollbar-thumb {
+          background: #ccc;
+        }
+      }
+      @media (max-width: 600px) {
+        .shell {
+          padding: 0 16px;
+        }
+        .top-inner {
+          min-height: 68px;
+          gap: 12px;
+          flex-wrap: wrap;
+          padding-top: 12px;
+          padding-bottom: 12px;
+        }
+        .brand {
+          font-size: 21px;
+        }
+        .divider {
+          height: 17px;
+        }
+        .top h1 {
+          font-size: 14px;
+        }
+        .actions {
+          flex-basis: 100%;
+          margin-left: 0;
+          gap: 8px;
+        }
+        .search {
+          flex: 1;
+          width: auto;
+          height: 42px;
+          font-size: 16px;
+        }
+        .add {
+          width: 42px;
+          height: 42px;
+        }
+        .heading {
+          padding: 24px 0 19px;
+          gap: 12px;
+        }
+        .heading h2 {
+          font-size: 27px;
+          flex: 1;
+        }
+        .heading .count {
+          order: 2;
+        }
+        .heading .auth {
+          order: 3;
+          flex-basis: 100%;
+        }
+        .pane-nav {
+          margin-left: 0;
+        }
+        .pane-nav a {
+          padding: 7px 9px;
+        }
+        .board {
+          margin: 0 -16px;
+          padding: 0 16px 32px;
+        }
+        .stack {
+          flex-basis: min(82vw, 310px);
+        }
+        .picker {
+          align-items: flex-end;
+          padding: 0;
+        }
+        .pick-panel {
+          width: 100%;
+          max-height: 83dvh;
+          min-height: 60dvh;
+          border-left: 0;
+          border-right: 0;
+          border-bottom: 0;
+          padding-bottom: env(safe-area-inset-bottom);
+        }
+      }
+      .card-detail {
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--sub);
+        margin-top: 8px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .card-detail strong {
+        color: var(--ink);
+      }
+      .card-edit {
+        border: 1px solid var(--rule);
+        background: #fff;
+        padding: 6px 9px;
+        font-size: 11px;
+        margin-top: 12px;
+      }
+      .card-edit:hover {
+        border-color: var(--ink);
+      }
+      .card-form {
+        overflow: auto;
+        padding: 18px 19px;
+        display: grid;
+        gap: 16px;
+      }
+      .card-form label {
+        display: grid;
+        gap: 7px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .card-form input,
+      .card-form textarea,
+      .card-form select {
+        border: 1px solid var(--rule);
+        border-radius: 0;
+        padding: 10px;
+        font-size: 16px;
+        background: #fff;
+        color: var(--ink);
+        width: 100%;
+      }
+      .card-form textarea {
+        min-height: 130px;
+        resize: vertical;
+      }
+      .card-form .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .card-form .form-actions button {
+        padding: 10px 16px;
+        background: #fff;
+        border: 1px solid var(--rule);
+      }
+      .card-form .form-actions button[type="submit"] {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .card-tag-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .card-tag-options label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid var(--rule);
+        padding: 6px 8px;
+        font-size: 12px;
+        font-weight: 400;
+      }
+      .card-tag-options input {
+        width: auto;
+        margin: 0;
+      }
+      .pane-nav {
+        display: flex;
+        gap: 0;
+        margin-left: 8px;
+      }
+      .pane-nav a {
+        padding: 9px 12px;
+        border: 1px solid var(--rule);
+        font-size: 12px;
+        text-decoration: none;
+      }
+      .pane-nav a[aria-current="page"] {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .auth {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-left: auto;
+      }
+      .auth button {
+        border: 1px solid var(--ink);
+        background: white;
+        min-height: 38px;
+        padding: 0 12px;
+      }
+      .auth input {
+        width: 220px;
+        height: 38px;
+        border: 1px solid var(--rule);
+        padding: 0 9px;
+        font-size: 14px;
+      }
+      .auth small {
+        color: var(--sub);
+      }
+      .auth.error {
+        color: #a31b1b;
+      }
+      .auth input:focus {
+        outline: 1px solid var(--ink);
+      }
+      .auth button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      @media (max-width: 600px) {
+        .auth {
+          margin: 0 0 2px;
+          width: 100%;
+        }
+        .auth input {
+          flex: 1;
+          min-width: 0;
+          font-size: 16px;
+        }
+        .auth button {
+          min-height: 42px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="shell top-inner">
+        <a class="brand" href="index.html" aria-label="LP Globe home"
+          >LP GLOBE</a
+        ><span class="divider"></span>
+        <nav class="pane-nav" aria-label="App panes">
+          <a href="index.html#globe">Globe</a
+          ><a href="index.html#pipeline" aria-current="page">Pipeline</a>
+        </nav>
+        <div class="actions">
+          <input
+            class="search"
+            id="board-search"
+            type="search"
+            placeholder="Search cards"
+            aria-label="Search cards"
+          /><button class="add" id="add" type="button" aria-label="Add LP">
+            +
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="shell">
+      <div class="heading">
+        <h2>LP pipeline</h2>
+        <div class="auth" id="auth" aria-live="polite">
+          <small>Connecting…</small>
+        </div>
+        <span class="count" id="total"></span>
+      </div>
+      <div class="tag-toolbar">
+        <label for="tag-filter">Tags</label
+        ><select id="tag-filter" aria-label="Filter by tag">
+          <option value="">All tags</option></select
+        ><button id="manage-tags" type="button">Manage tags</button>
+      </div>
+      <div class="board" id="board" aria-label="LP pipeline board"></div>
+    </main>
+    <div
+      class="picker"
+      id="picker"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pick-title"
+    >
+      <div class="pick-panel">
+        <div class="pick-head">
+          <h2 id="pick-title">Add an LP</h2>
+          <button class="close" id="close" type="button" aria-label="Close">
+            ×
+          </button>
+        </div>
+        <input
+          id="pick-search"
+          class="pick-search"
+          type="search"
+          placeholder="Search LP Globe"
+          aria-label="Search LP Globe firms"
+        />
+        <div id="pick-list" class="pick-list"></div>
+      </div>
+    </div>
+    <div
+      class="picker"
+      id="tag-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tag-title"
+    >
+      <div class="pick-panel">
+        <div class="pick-head">
+          <h2 id="tag-title">Tags</h2>
+          <button
+            class="close"
+            id="tag-close"
+            type="button"
+            aria-label="Close tags"
+          >
+            ×
+          </button>
+        </div>
+        <div class="tag-list" id="tag-list"></div>
+        <form class="tag-create" id="tag-form">
+          <input
+            id="tag-name"
+            maxlength="32"
+            required
+            placeholder="Tag name"
+            aria-label="Tag name"
+          />
+          <div class="palette" id="tag-palette" aria-label="Tag color"></div>
+          <button id="tag-submit" type="submit">Create tag</button>
+        </form>
+      </div>
+    </div>
+    <div
+      class="picker"
+      id="card-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="card-title"
+    >
+      <div class="pick-panel">
+        <div class="pick-head">
+          <h2 id="card-title">LP card</h2>
+          <button
+            class="close"
+            id="card-close"
+            type="button"
+            aria-label="Close card"
+          >
+            ×
+          </button>
+        </div>
+        <form id="card-form" class="card-form">
+          <label
+            >Owner<select id="card-owner">
+              <option value="">Select owner</option>
+              <option>Carlo</option>
+              <option>Koko</option>
+              <option>Zeg</option>
+              <option>Henry</option>
+              <option>Bene</option>
+              <option>Armando</option>
+            </select></label
+          ><label
+            >Connection<input
+              id="card-connection"
+              maxlength="500"
+              type="text"
+              autocomplete="off" /></label
+          ><label
+            >Notes<textarea id="card-notes" maxlength="10000"></textarea>
+          </label>
+          <div>
+            <label>Tags</label>
+            <div id="card-tag-options" class="card-tag-options"></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="card-cancel">Cancel</button
+            ><button type="submit" id="card-submit">Save card</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="feedback" id="feedback" role="status"></div>
+    <script>
+      let firms = [];
+    </script>
+    <script src="firms-lite.js"></script>
+    <script src="auth-lite.js"></script>
+    <script>
+      (function () {
+        "use strict";
+        const stages = [
+          "Contacted",
+          "First meeting",
+          "Starting diligence",
+          "Final process",
+          "Committed",
+        ];
+        const sections = [
+          "Historic Institutions",
+          "Historic Individuals",
+          "Historic Legacies",
+          "Other",
+        ];
+        const institution = new Set(["endowment"]),
+          individual = new Set([
+            "family office",
+            "sfo",
+            "hnw",
+            "private investment office",
+          ]),
+          legacy = new Set(["foundation", "philanthropic llc"]);
+        const overrides = {
+          "The Museum of Modern Art": 0,
+          "Indiana University Foundation": 0,
+          "University of Illinois Foundation": 0,
+          "Georgia Tech Foundation": 0,
+          "University of Massachusetts Foundation": 0,
+          "Purdue Research Foundation": 0,
+          "The California Endowment": 2,
+          "Chan Zuckerberg Initiative (investment office)": 2,
+          "Cleveland Clinic": 3,
+          "Mayo Clinic": 3,
+          "Memorial Sloan Kettering Cancer Center": 3,
+          "Boston Children's Hospital": 3,
+          "Children's Healthcare of Atlanta": 3,
+          "Children's Hospital Los Angeles (CHLA)": 3,
+          "Children's Hospital of Philadelphia (CHOP)": 3,
+          "Dana-Farber Cancer Institute": 3,
+          "Hackensack Meridian Health": 3,
+          "NewYork-Presbyterian Office of Investments": 3,
+          "Texas Children's Hospital": 3,
+          "Mass General Brigham Investment Office": 3,
+          "Sequoia Heritage": 3,
+          "Global Endowment Management (GEM)": 3,
+          Bilt: 3,
+          "Harlem Children's Zone (endowment)": 3,
+          "Council on Foreign Relations (endowment)": 3,
+          Texas: 3,
+          "The Nature Conservancy": 3,
+        };
+        function category(f) {
+          const t = (f.type || "").toLowerCase();
+          return sections[
+            overrides[f.name] ??
+              (institution.has(t)
+                ? 0
+                : individual.has(t)
+                  ? 1
+                  : legacy.has(t)
+                    ? 2
+                    : 3)
+          ];
+        }
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) =>
+          String(s == null ? "" : s).replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[c],
+          );
+        let state = { pipeline: {}, details: {}, tags: [], cardTags: [] };
+        let cardFirm = null;
+        let cardIsNew = false;
+        let activeFirm = null;
+        let editTagId = null;
+        let chosenColor = "blue";
+        const colors = [
+          "slate",
+          "blue",
+          "teal",
+          "green",
+          "amber",
+          "orange",
+          "rose",
+          "violet",
+        ];
+        
+        let loading = true;
+        let saving = false;
+        const db = window.lpAuth;
+        const savedLocal = (() => {
+          try {
+            return (
+              JSON.parse(localStorage.getItem("lp-globe-v1") || "{}")
+                ?.pipeline || {}
+            );
+          } catch (e) {
+            return {};
+          }
+        })();
+        function setStatus(msg, error = false) {
+          $("auth").classList.toggle("error", error);
+          $("auth").innerHTML = "<small>" + esc(msg) + "</small>";
+        }
+        function authUI() {
+          $("auth").innerHTML = "";
+        }
+        async function loadPipeline() {
+          loading = true;
+          render();
+          let data;
+          try {
+            const rows = await Promise.all([
+              db.list(),
+              db.tags(),
+              db.cardTags(),
+            ]);
+            data = rows[0];
+            state.tags = rows[1];
+            state.cardTags = rows[2];
+          } catch (error) {
+            loading = false;
+            setStatus("Could not load pipeline", true);
+            notice(error.message);
+            return;
+          }
+          loading = false;
+          state.pipeline = Object.fromEntries(
+            data.map((row) => [row.firm_id, row.stage]),
+          );
+          state.details = Object.fromEntries(
+            data.map((row) => [
+              row.firm_id,
+              {
+                owner: row.owner || "",
+                connection: row.connection || "",
+                notes: row.notes || "",
+              },
+            ]),
+          );
+          renderFilter();
+          if (
+            Object.keys(savedLocal).length &&
+            !localStorage.getItem("lp-globe-pipeline-migrated")
+          ) {
+            let n = 0;
+            for (const [id, stage] of Object.entries(savedLocal)) {
+              if (state.pipeline[id] || !firms[+id] || !stages.includes(stage))
+                continue;
+              try {
+                await db.put(id, stage);
+              } catch (e) {
+                notice("Some local cards could not sync");
+                break;
+              }
+              state.pipeline[id] = stage;
+              n++;
+            }
+            localStorage.setItem("lp-globe-pipeline-migrated", "1");
+            if (n) notice(n + " local cards synced");
+            render();
+          }
+        }
+        function save(id, stage) {
+          if (loading || saving) {
+            notice("Wait for the pipeline to finish loading");
+            return false;
+          }
+          const old = state.pipeline[id];
+          if (stage === null) delete state.pipeline[id];
+          else state.pipeline[id] = stage;
+          saving = true;
+          render();
+          (async () => {
+            try {
+              if (stage === null) await db.del(id);
+              else await db.put(id, stage);
+              if (stage === null)
+                state.cardTags = state.cardTags.filter(
+                  (x) => x.firm_id !== +id,
+                );
+              saving = false;
+              render();
+              notice(stage === null ? "Removed" : "Saved to pipeline");
+            } catch (error) {
+              saving = false;
+              if (old === undefined) delete state.pipeline[id];
+              else state.pipeline[id] = old;
+              await loadPipeline();
+              notice("Not saved: " + error.message);
+            }
+          })();
+          return true;
+        }
+        (async () => {
+          try {
+            authUI();
+            await loadPipeline();
+          } catch (e) {
+            loading = false;
+            setStatus("Could not connect. Reload the page.", true);
+            notice(e.message);
+          }
+        })();
+        function notice(s) {
+          $("feedback").textContent = s;
+          $("feedback").classList.add("show");
+          clearTimeout(notice.t);
+          notice.t = setTimeout(
+            () => $("feedback").classList.remove("show"),
+            2300,
+          );
+        }
+        function records() {
+          return Object.entries(state.pipeline).filter(
+            ([id, stage]) =>
+              Number.isInteger(+id) && firms[+id] && stages.includes(stage),
+          );
+        }
+        function chips(id) {
+          return state.cardTags
+            .filter((x) => x.firm_id === +id)
+            .map((x) => state.tags.find((t) => t.id === x.tag_id))
+            .filter(Boolean)
+            .map(
+              (t) =>
+                '<span class="tag-chip ' +
+                t.color +
+                '">' +
+                esc(t.name) +
+                "</span>",
+            )
+            .join("");
+        }
+        function render() {
+          const q = $("board-search").value.trim().toLowerCase();
+          const filter = $("tag-filter").value;
+          const all = records();
+          $("add").disabled = loading || saving;
+          $("board-search").disabled = loading;
+          $("manage-tags").disabled = loading || saving;
+          $("total").textContent =
+            all.length + " LP" + (all.length === 1 ? "" : "s");
+          $("board").innerHTML = stages
+            .map((stage) => {
+              const cards = all.filter(
+                ([id, s]) =>
+                  s === stage &&
+                  (!filter ||
+                    state.cardTags.some(
+                      (x) => x.firm_id === +id && String(x.tag_id) === filter,
+                    )) &&
+                  (!q ||
+                    [
+                      firms[+id].name,
+                      firms[+id].type,
+                      firms[+id].location,
+                      ...(firms[+id].contacts || []).map((c) => c.name),
+                      ...state.cardTags
+                        .filter((x) => x.firm_id === +id)
+                        .map(
+                          (x) =>
+                            state.tags.find((t) => t.id === x.tag_id)?.name,
+                        ),
+                    ].some((x) =>
+                      String(x || "")
+                        .toLowerCase()
+                        .includes(q),
+                    )),
+              );
+              return (
+                '<section class="stack" data-stage="' +
+                stage +
+                '"><div class="stack-head"><h3>' +
+                stage +
+                "</h3><span>" +
+                cards.length +
+                '</span></div><div class="stack-body">' +
+                (cards.length
+                  ? cards
+                      .map(([id]) => {
+                        const f = firms[+id];
+                        return (
+                          '<article class="card" draggable="true" data-id="' +
+                          id +
+                          '" tabindex="0" aria-label="' +
+                          esc(f.name) +
+                          ", " +
+                          category(f) +
+                          ", " +
+                          esc(f.aum || "AUM unknown") +
+                          '; drag to move or use arrow keys"><div class="card-top"><a class="card-name" href="index.html#globe" data-firm="' +
+                          id +
+                          '">' +
+                          esc(f.name) +
+                          '</a><button class="grip" type="button" aria-label="Drag ' +
+                          esc(f.name) +
+                          '">⋮⋮</button></div><div class="meta">' +
+                          category(f) +
+                          '</div><div class="aum">' +
+                          esc(f.aum || "AUM unknown") +
+                          "</div>" +
+                          (chips(id)
+                            ? '<div class="tags">' + chips(id) + "</div>"
+                            : "") +
+                          '<div class="card-detail">' +
+                          (state.details[id]?.owner
+                            ? "<strong>Owner</strong> " +
+                              esc(state.details[id].owner) +
+                              "<br>"
+                            : "") +
+                          (state.details[id]?.connection
+                            ? "<strong>Connection</strong> " +
+                              esc(state.details[id].connection) +
+                              "<br>"
+                            : "") +
+                          (state.details[id]?.notes
+                            ? "<strong>Notes</strong> " +
+                              esc(state.details[id].notes)
+                            : "") +
+                          '</div><button class="card-edit" type="button" data-edit-card="' +
+                          id +
+                          '">Edit card</button></article>'
+                        );
+                      })
+                      .join("")
+                  : '<div class="empty">' +
+                    (loading
+                      ? "Loading…"
+                      : q || filter
+                        ? "No matches"
+                        : "Drop LPs here") +
+                    "</div>") +
+                "</div></section>"
+              );
+            })
+            .join("");
+        }
+        function renderFilter() {
+          const old = $("tag-filter").value;
+          $("tag-filter").innerHTML =
+            '<option value="">All tags</option>' +
+            state.tags
+              .map(
+                (t) =>
+                  '<option value="' + t.id + '">' + esc(t.name) + "</option>",
+              )
+              .join("");
+          $("tag-filter").value = state.tags.some((t) => String(t.id) === old)
+            ? old
+            : "";
+          render();
+        }
+        function palette() {
+          $("tag-palette").innerHTML = colors
+            .map(
+              (c) =>
+                '<button type="button" class="' +
+                c +
+                (c === chosenColor ? " active" : "") +
+                '" data-color="' +
+                c +
+                '" aria-label="' +
+                c +
+                ' color" aria-pressed="' +
+                (c === chosenColor) +
+                '"></button>',
+            )
+            .join("");
+        }
+        function openTags(id = null) {
+          if (loading || saving) return;
+          activeFirm = id === null ? null : +id;
+          editTagId = null;
+          chosenColor = "blue";
+          $("tag-name").value = "";
+          $("tag-submit").textContent = "Create tag";
+          $("tag-title").textContent =
+            id === null ? "Manage tags" : "Tags · " + firms[+id].name;
+          palette();
+          renderTagList();
+          $("tag-modal").classList.add("show");
+        }
+        function closeTags() {
+          $("tag-modal").classList.remove("show");
+          activeFirm = null;
+          editTagId = null;
+        }
+        function renderTagList() {
+          const selected = new Set(
+            state.cardTags
+              .filter((x) => x.firm_id === activeFirm)
+              .map((x) => x.tag_id),
+          );
+          $("tag-list").innerHTML = state.tags.length
+            ? state.tags
+                .map(
+                  (t) =>
+                    '<div class="tag-row">' +
+                    (activeFirm === null
+                      ? ""
+                      : '<button type="button" data-toggle="' +
+                        t.id +
+                        '" aria-label="' +
+                        (selected.has(t.id) ? "Remove" : "Add") +
+                        " " +
+                        esc(t.name) +
+                        '" aria-pressed="' +
+                        selected.has(t.id) +
+                        '">' +
+                        (selected.has(t.id) ? "✓" : "+") +
+                        "</button>") +
+                    '<span class="tag-chip ' +
+                    t.color +
+                    '">' +
+                    esc(t.name) +
+                    '</span><button type="button" data-edit="' +
+                    t.id +
+                    '" aria-label="Edit ' +
+                    esc(t.name) +
+                    '">Edit</button><button type="button" data-delete="' +
+                    t.id +
+                    '" aria-label="Delete ' +
+                    esc(t.name) +
+                    '">×</button></div>',
+                )
+                .join("")
+            : '<div class="empty">Create a tag below</div>';
+        }
+        $("manage-tags").onclick = () => openTags();
+        $("tag-filter").onchange = render;
+        $("board").addEventListener("click", (e) => {
+          const b = e.target.closest("[data-edit-card]");
+          if (b) openCard(+b.dataset.editCard, false);
+        });
+        $("tag-close").onclick = closeTags;
+        $("tag-modal").addEventListener("pointerdown", (e) => {
+          if (e.target === $("tag-modal")) closeTags();
+        });
+        $("tag-palette").onclick = (e) => {
+          const b = e.target.closest("[data-color]");
+          if (b) {
+            chosenColor = b.dataset.color;
+            palette();
+          }
+        };
+        $("tag-form").onsubmit = async (e) => {
+          e.preventDefault();
+          if (saving) return;
+          const name = $("tag-name").value.trim();
+          if (!name || name.length > 32 || !colors.includes(chosenColor))
+            return;
+          if (
+            state.tags.some(
+              (t) =>
+                t.name.toLowerCase() === name.toLowerCase() &&
+                t.id !== editTagId,
+            )
+          ) {
+            notice("Tag name already exists");
+            return;
+          }
+          saving = true;
+          try {
+            if (editTagId) await db.updateTag(editTagId, name, chosenColor);
+            else await db.createTag(name, chosenColor);
+            state.tags = await db.tags();
+            editTagId = null;
+            $("tag-name").value = "";
+            $("tag-submit").textContent = "Create tag";
+            renderTagList();
+            renderFilter();
+            notice("Tag saved");
+          } catch (error) {
+            notice("Not saved: " + error.message);
+          } finally {
+            saving = false;
+            render();
+          }
+        };
+        $("tag-list").onclick = async (e) => {
+          const b = e.target.closest("[data-toggle],[data-edit],[data-delete]");
+          if (!b || saving) return;
+          const id = +(b.dataset.toggle || b.dataset.edit || b.dataset.delete);
+          const t = state.tags.find((x) => x.id === id);
+          if (!t) return;
+          if (b.dataset.edit) {
+            editTagId = id;
+            $("tag-name").value = t.name;
+            chosenColor = t.color;
+            palette();
+            $("tag-submit").textContent = "Save tag";
+            $("tag-name").focus();
+            return;
+          }
+          if (
+            b.dataset.delete &&
+            !confirm('Delete tag "' + t.name + '" from every card?')
+          )
+            return;
+          saving = true;
+          try {
+            if (b.dataset.delete) {
+              await db.deleteTag(id);
+              state.tags = state.tags.filter((x) => x.id !== id);
+              state.cardTags = state.cardTags.filter((x) => x.tag_id !== id);
+              if (editTagId === id) {
+                editTagId = null;
+                $("tag-name").value = "";
+                $("tag-submit").textContent = "Create tag";
+              }
+            } else {
+              const existing = state.cardTags.some(
+                (x) => x.firm_id === activeFirm && x.tag_id === id,
+              );
+              await db.setCardTag(activeFirm, id, !existing);
+              if (existing)
+                state.cardTags = state.cardTags.filter(
+                  (x) => !(x.firm_id === activeFirm && x.tag_id === id),
+                );
+              else state.cardTags.push({ firm_id: activeFirm, tag_id: id });
+            }
+            renderTagList();
+            renderFilter();
+            notice(b.dataset.delete ? "Tag deleted" : "Card tags saved");
+          } catch (error) {
+            notice("Not saved: " + error.message);
+          } finally {
+            saving = false;
+            render();
+          }
+        };
+        function picker() {
+          const q = $("pick-search").value.trim().toLowerCase();
+          const matches = firms
+            .map((f, id) => ({ f, id }))
+            .filter(
+              ({ f, id }) =>
+                !state.pipeline[id] &&
+                (!q ||
+                  [
+                    f.name,
+                    f.type,
+                    f.location,
+                    ...(f.contacts || []).map((c) => c.name),
+                  ].some((x) =>
+                    String(x || "")
+                      .toLowerCase()
+                      .includes(q),
+                  )),
+            )
+            .slice(0, 60);
+          $("pick-list").innerHTML = matches.length
+            ? matches
+                .map(
+                  ({ f, id }) =>
+                    '<button class="pick-row" type="button" data-add="' +
+                    id +
+                    '"><span><strong>' +
+                    esc(f.name) +
+                    "</strong><small>" +
+                    esc([f.type, f.location].filter(Boolean).join(" · ")) +
+                    "</small></span><b>+</b></button>",
+                )
+                .join("")
+            : '<div class="empty">No LPs match</div>';
+        }
+        function open() {
+          if (loading || saving) return;
+          $("picker").classList.add("show");
+          $("pick-search").value = "";
+          picker();
+          $("pick-search").focus();
+        }
+        function close() {
+          $("picker").classList.remove("show");
+          $("add").focus();
+        }
+        function openCard(id, isNew) {
+          cardFirm = id;
+          cardIsNew = isNew;
+          const d = state.details[id] || {};
+          $("card-title").textContent = firms[id].name;
+          $("card-owner").value = d.owner || "";
+          $("card-connection").value = d.connection || "";
+          $("card-notes").value = d.notes || "";
+          const chosen = new Set(
+            state.cardTags.filter((x) => x.firm_id === id).map((x) => x.tag_id),
+          );
+          $("card-tag-options").innerHTML = state.tags.length
+            ? state.tags
+                .map(
+                  (t) =>
+                    '<label><input type="checkbox" value="' +
+                    t.id +
+                    '" ' +
+                    (chosen.has(t.id) ? "checked" : "") +
+                    '><span class="tag-chip ' +
+                    t.color +
+                    '">' +
+                    esc(t.name) +
+                    "</span></label>",
+                )
+                .join("")
+            : "<small>No tags yet. Use Manage tags to create one.</small>";
+          $("card-modal").classList.add("show");
+          $("card-owner").focus();
+        }
+        function closeCard() {
+          $("card-modal").classList.remove("show");
+          cardFirm = null;
+          cardIsNew = false;
+        }
+        $("add").onclick = open;
+        $("close").onclick = close;
+        $("card-close").onclick = closeCard;
+        $("card-cancel").onclick = closeCard;
+        $("card-modal").addEventListener("pointerdown", (e) => {
+          if (e.target === $("card-modal")) closeCard();
+        });
+        $("picker").addEventListener("pointerdown", (e) => {
+          if (e.target === $("picker")) close();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && $("card-modal").classList.contains("show"))
+            closeCard();
+          else if (e.key === "Escape" && $("picker").classList.contains("show"))
+            close();
+          else if (
+            e.key === "Escape" &&
+            $("tag-modal").classList.contains("show")
+          )
+            closeTags();
+        });
+        $("pick-search").oninput = picker;
+        $("board-search").oninput = render;
+        $("pick-list").onclick = (e) => {
+          const b = e.target.closest("[data-add]");
+          if (!b) return;
+          close();
+          openCard(+b.dataset.add, true);
+        };
+        $("card-form").onsubmit = async (e) => {
+          e.preventDefault();
+          if (saving || cardFirm === null) return;
+          const id = cardFirm,
+            detail = {
+              owner: $("card-owner").value,
+              connection: $("card-connection").value.trim(),
+              notes: $("card-notes").value.trim(),
+            },
+            chosen = new Set(
+              [...$("card-tag-options").querySelectorAll("input:checked")].map(
+                (x) => +x.value,
+              ),
+            ),
+            old = new Set(
+              state.cardTags
+                .filter((x) => x.firm_id === id)
+                .map((x) => x.tag_id),
+            );
+          saving = true;
+          $("card-submit").disabled = true;
+          try {
+            await db.put(id, state.pipeline[id] || stages[0], detail);
+            for (const tag of state.tags) {
+              if (chosen.has(tag.id) !== old.has(tag.id))
+                await db.setCardTag(id, tag.id, chosen.has(tag.id));
+            }
+            closeCard();
+            await loadPipeline();
+            notice("Card saved");
+          } catch (error) {
+            await loadPipeline();
+            notice("Not saved: " + error.message);
+          } finally {
+            saving = false;
+            $("card-submit").disabled = false;
+            render();
+          }
+        };
+        $("board").addEventListener("keydown", (e) => {
+          const c = e.target.closest(".card");
+          if (
+            !c ||
+            e.target !== c ||
+            !["ArrowRight", "ArrowLeft"].includes(e.key)
+          )
+            return;
+          e.preventDefault();
+          const id = c.dataset.id;
+          const n =
+            stages.indexOf(state.pipeline[id]) +
+            (e.key === "ArrowRight" ? 1 : -1);
+          if (n < 0 || n >= stages.length) return;
+          if (!save(id, stages[n])) return;
+          document.querySelector('.card[data-id="' + id + '"]')?.focus();
+          notice("Moved to " + stages[n]);
+        });
+        let dragId = null;
+        $("board").addEventListener("dragstart", (e) => {
+          const c = e.target.closest(".card");
+          if (!c) return;
+          dragId = c.dataset.id;
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", dragId);
+          setTimeout(() => c.classList.add("dragging"), 0);
+        });
+        $("board").addEventListener("dragover", (e) => {
+          const s = e.target.closest(".stack");
+          if (s) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            document
+              .querySelectorAll(".stack.over")
+              .forEach((x) => x.classList.remove("over"));
+            s.classList.add("over");
+          }
+        });
+        $("board").addEventListener("drop", (e) => {
+          const s = e.target.closest(".stack");
+          if (!s) return;
+          e.preventDefault();
+          const id = dragId || e.dataTransfer.getData("text/plain");
+          if (
+            !saving &&
+            state.pipeline[id] &&
+            s.dataset.stage !== state.pipeline[id]
+          ) {
+            save(id, s.dataset.stage);
+          } else
+            document
+              .querySelectorAll(".stack.over")
+              .forEach((x) => x.classList.remove("over"));
+          dragId = null;
+        });
+        $("board").addEventListener("dragend", () => {
+          dragId = null;
+          document
+            .querySelectorAll(".stack.over,.card.dragging")
+            .forEach((x) => x.classList.remove("over", "dragging"));
+        });
+        let touch = null;
+        $("board").addEventListener("pointerdown", (e) => {
+          const grip = e.target.closest(".grip");
+          if (!grip || e.pointerType === "mouse") return;
+          e.preventDefault();
+          const card = grip.closest(".card");
+          touch = {
+            id: card.dataset.id,
+            x: e.clientX,
+            y: e.clientY,
+            ghost: null,
+          };
+          card.classList.add("touch-drag");
+          grip.setPointerCapture(e.pointerId);
+        });
+        $("board").addEventListener("pointermove", (e) => {
+          if (!touch) return;
+          e.preventDefault();
+          if (
+            !touch.ghost &&
+            Math.hypot(e.clientX - touch.x, e.clientY - touch.y) > 5
+          ) {
+            touch.ghost = document
+              .querySelector('.card[data-id="' + touch.id + '"]')
+              .cloneNode(true);
+            touch.ghost.classList.add("drag-ghost");
+            document.body.append(touch.ghost);
+          }
+          if (touch.ghost) {
+            const viewport = $("board").getBoundingClientRect();
+            if (e.clientX > viewport.right - 35) $("board").scrollLeft += 25;
+            else if (e.clientX < viewport.left + 35)
+              $("board").scrollLeft -= 25;
+            touch.ghost.style.left = e.clientX - 100 + "px";
+            touch.ghost.style.top = e.clientY - 35 + "px";
+            document
+              .querySelectorAll(".stack.over")
+              .forEach((x) => x.classList.remove("over"));
+            const hitX = Math.max(
+              viewport.left + 1,
+              Math.min(viewport.right - 1, e.clientX),
+            );
+            const under = document
+              .elementFromPoint(hitX, e.clientY)
+              ?.closest(".stack");
+            if (under) under.classList.add("over");
+          }
+        });
+        function finish(e) {
+          if (!touch) return;
+          const viewport = $("board").getBoundingClientRect();
+          const hitX = Math.max(
+            viewport.left + 1,
+            Math.min(viewport.right - 1, e.clientX),
+          );
+          const s = document
+            .elementFromPoint(hitX, e.clientY)
+            ?.closest(".stack");
+          touch.ghost?.remove();
+          document
+            .querySelector(".card.touch-drag")
+            ?.classList.remove("touch-drag");
+          if (!saving && s && s.dataset.stage !== state.pipeline[touch.id]) {
+            save(touch.id, s.dataset.stage);
+          } else
+            document
+              .querySelectorAll(".stack.over")
+              .forEach((x) => x.classList.remove("over"));
+          touch = null;
+        }
+        $("board").addEventListener("pointerup", finish);
+        $("board").addEventListener("pointercancel", finish);
+        render();
+      })();
+    </script>
+  </body>
+</html>
