@@ -233,6 +233,8 @@
         font-size: 15px;
         font-family: Georgia, serif;
       }
+      .tier-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 27px; padding: 4px 6px; border: 1px solid #242424; font: 700 11px/1 Arial, sans-serif; color: #242424; background: #f8f6ef; flex: none; }
+      .card-rank { display: flex; align-items: center; gap: 8px; margin-top: 9px; font: 11px/1.3 Arial, sans-serif; color: var(--sub); }
       .tags {
         display: flex;
         flex-wrap: wrap;
@@ -1063,7 +1065,9 @@
               <option>Armando</option>
               <option>Nahom</option>
             </select></label
-          ><label
+          ><label>Tier<select id="card-tier" aria-label="LP tier">
+              <option value="">Unranked</option><option value="S">S tier</option><option value="A">A tier</option><option value="B">B tier</option><option value="C">C tier</option><option value="D">D tier</option><option value="F">F tier</option>
+          </select></label><label
             >Connection<input
               id="card-connection"
               maxlength="500"
@@ -1247,6 +1251,7 @@
               row.firm_id,
               {
                 owner: row.owner || "",
+                tier: row.tier || "",
                 connection: row.connection || "",
                 notes: row.notes || "",
               },
@@ -1335,7 +1340,7 @@
           return state.cardTags
             .filter((x) => x.firm_id === +id)
             .map((x) => state.tags.find((t) => t.id === x.tag_id))
-            .filter(Boolean)
+            .filter((t) => t && !["S", "A", "B", "C", "D", "F"].includes(t.name))
             .map(
               (t) =>
                 '<span class="tag-chip ' +
@@ -1406,10 +1411,11 @@
                           '</button><button class="grip" type="button" aria-label="Drag ' +
                           esc(f.name) +
                           '">⋮⋮</button></div>' +
+                          ((state.details[id]?.tier || state.details[id]?.owner)
+                            ? '<div class="card-rank">' + (state.details[id]?.tier ? '<span class="tier-pill" aria-label="' + esc(state.details[id].tier) + ' tier">' + esc(state.details[id].tier) + '</span>' : '') + (state.details[id]?.owner ? '<span>Owner: ' + esc(state.details[id].owner) + '</span>' : '') + '</div>' : '') +
                           (chips(id)
                             ? '<div class="tags">' + chips(id) + "</div>"
                             : "") +
-                            (state.details[id] && state.details[id].owner ? '<div class="meta">' + esc(state.details[id].owner) + "</div>" : "") +
                           '</article>'
                         );
                       })
@@ -1716,7 +1722,7 @@
           }).join('');
           $("detail-content").innerHTML =
             '<div class="detail-meta"><span>' + esc(category(f)) + '</span><span>' + esc(f.location || 'Location unknown') + '</span><span>' + esc(f.aum || 'AUM unknown') + '</span>' + (tagChips ? '<div class="tags">' + tagChips + '</div>' : '') + '</div>' +
-            row('Stack', state.pipeline[id]) + row('Owner', d.owner || 'Unknown owner') +
+            row('Stack', state.pipeline[id]) + row('Tier', d.tier ? d.tier + ' tier' : 'Unranked') + row('Owner', d.owner || 'Unknown owner') +
             row('Connection', d.connection) + row('Notes', d.notes) +
             '<h3 class="detail-section">Firm profile</h3>' +
             '<p class="detail-description">' + esc(p.description || 'No firm description yet.') + '</p>' +
@@ -1754,6 +1760,7 @@
           $("card-title").textContent = firms[id].name;
           $("card-stage").value = isNew ? selectedStage : (state.pipeline[id] || stages[0]);
           $("card-owner").value = d.owner || "";
+          $("card-tier").value = d.tier || "";
           $("card-connection").value = d.connection || "";
           $("card-notes").value = d.notes || "";
           $("card-tag-name").value = "";
@@ -1771,8 +1778,9 @@
                 .filter((x) => x.firm_id === cardFirm)
                 .map((x) => x.tag_id));
           if (extraSelected !== null) chosen.add(extraSelected);
-          $("card-tag-options").innerHTML = state.tags.length
-            ? state.tags
+          const ordinaryTags = state.tags.filter((t) => !["S", "A", "B", "C", "D", "F"].includes(t.name));
+          $("card-tag-options").innerHTML = ordinaryTags.length
+            ? ordinaryTags
                 .map(
                   (t) =>
                     '<label><input type="checkbox" value="' +
@@ -1878,6 +1886,7 @@
           const id = cardFirm,
             detail = {
               owner: $("card-owner").value,
+              tier: $("card-tier").value,
               connection: $("card-connection").value.trim(),
               notes: $("card-notes").value.trim(),
             },
