@@ -28,7 +28,7 @@
     .app-header a:focus-visible{outline:2px solid #141414;outline-offset:2px}`;
   document.head.appendChild(style);
   // Color only locations containing LPs in the live pipeline; preserve all other dots.
-  const stages = {Warm:'#df721f', Cold:'#5884ae', Contacted:'#7457a8', 'In Process':'#bd3c56', Committed:'#257c55'};
+  const stages = {Wishlist:'#ab708a', Warm:'#df721f', Cold:'#5884ae', Contacted:'#7457a8', 'In Process':'#bd3c56', Committed:'#257c55'};
   const legend = document.createElement('aside');
   legend.className = 'pipeline-pin-key';
   legend.setAttribute('aria-label','Pipeline pin colors');
