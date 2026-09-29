@@ -939,6 +939,25 @@
       .detail-actions button { border: 1px solid var(--rule); background: white; padding: 10px 13px; font: 600 11px/1 Arial, sans-serif; text-transform: uppercase; letter-spacing: .05em; }
       .detail-actions button:hover { border-color: var(--ink); }
       .detail-actions .primary { background: var(--ink); color: white; border-color: var(--ink); margin-left: auto; }
+      /* A viewport-width board with wide, compact cards. */
+      .board { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; min-width: 0; overflow-x: visible; }
+      .stack { min-width: 0; }
+      .stack-head { padding: 12px 12px 13px; }
+      .stack-body { padding: 0 8px 12px; }
+      .card { padding: 11px 12px 10px; margin-bottom: 7px; }
+      .card-name { font-size: 17px; line-height: 1.2; }
+      .card-rank { margin-top: 7px; }
+      .card .tags { margin-top: 7px; padding-top: 6px; }
+      @media (min-width: 601px) and (max-width: 1099px) {
+        .board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; padding: 0 0 28px; }
+        .stack { min-height: 0; }
+      }
+      @media (max-width: 600px) {
+        .board { display: grid; grid-template-columns: minmax(0, 1fr); margin: 0; padding: 0 0 24px; }
+        .stack { flex-basis: auto; min-height: 0; }
+        .stack-body { min-height: 0; }
+        .card { padding: 10px 12px 9px; }
+      }
       @media (max-width: 600px) {
         .detail-panel { max-height: 90dvh; min-height: 0; }
         .detail-scroll { padding: 0 18px 18px; }
