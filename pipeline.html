@@ -747,13 +747,14 @@
         margin-top: 10px;
         align-items: center;
       }
-      .card-tag-create input {
-        flex: 1;
+      .card-form .card-tag-create input {
+        flex: 1 1 0;
+        width: auto;
         min-width: 0;
       }
-      .card-tag-create select {
+      .card-form .card-tag-create select {
         width: 92px;
-        flex: none;
+        flex: 0 0 92px;
       }
       .card-tag-create button {
         min-height: 40px;
@@ -766,7 +767,7 @@
         .card-tag-create {
           flex-wrap: wrap;
         }
-        .card-tag-create input {
+        .card-form .card-tag-create input {
           flex-basis: 100%;
         }
       }
