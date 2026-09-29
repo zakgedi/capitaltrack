@@ -22,3 +22,10 @@ window.lpAuth={
   for(const c of additions) if(!existing.has(c.name.toLocaleLowerCase())) { firms[29].contacts.push(c); existing.add(c.name.toLocaleLowerCase()); }
   firms[29].notes=firms[29].contacts.length+' investment staff (mixed-source roster; check per-person notes)';
 })();
+
+/* Investment-team roster additions: sourced to organization sites, 2026-09-29. */
+(function(){
+ if(typeof firms==='undefined'||!Array.isArray(firms))return;
+ const additions=[{"id":6,"name":"Jenn Birmingham","role":"Managing Director","notes":"Roster source: https://princo.princeton.edu/team/investment-team/","unverified":false},{"id":6,"name":"Zachary Holecek","role":"Associate Director","notes":"Roster source: https://princo.princeton.edu/team/investment-team/","unverified":false},{"id":6,"name":"Spencer James","role":"Analyst","notes":"Roster source: https://princo.princeton.edu/team/investment-team/","unverified":false},{"id":6,"name":"Christina Li","role":"Analyst","notes":"Roster source: https://princo.princeton.edu/team/investment-team/","unverified":false},{"id":6,"name":"Max Manicone","role":"Associate Director","notes":"Roster source: https://princo.princeton.edu/team/investment-team/","unverified":false},{"id":6,"name":"Vince Tuohey","role":"President","notes":"Roster source: https://princo.princeton.edu/team/investment-team/","unverified":false},{"id":6,"name":"Annie Weiss","role":"Managing Director","notes":"Roster source: https://princo.princeton.edu/team/investment-team/","unverified":false},{"id":6,"name":"Amy Zhou","role":"Managing Director","notes":"Roster source: https://princo.princeton.edu/team/investment-team/","unverified":false},{"id":4,"name":"Sanjeev Daga","role":"Chief Operating Officer","notes":"Roster source: https://www.hmc.harvard.edu/about/","unverified":false}];
+ for(const {id,...c} of additions) if(firms[id]&&!firms[id].contacts.some(x=>x.name.toLowerCase()===c.name.toLowerCase())) firms[id].contacts.push(c);
+})();
