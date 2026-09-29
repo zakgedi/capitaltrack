@@ -1,5 +1,6 @@
 /* A short paper-wipe between Globe and Pipeline, never between in-page controls. */
 (() => {
+  if (location.pathname.endsWith('/index.html') || location.pathname.endsWith('/lp-globe/')) { const roster = document.createElement('script'); roster.src = 'globe-roster-patch.js'; document.body.appendChild(roster); }
   const key = 'lp-globe-page-transition';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const curtain = document.createElement('div');
