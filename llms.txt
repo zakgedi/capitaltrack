@@ -10,6 +10,7 @@
   - Required headers on every request: `apikey: sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy` and `Authorization: Bearer sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy` (publishable key; already public in the site's own JavaScript).
   - `GET /lp_pipeline?select=firm_id,stage,owner,tier,connection,notes` - one row per firm on the board. `firm_id` is the 0-based index into firms.json. `stage` is one of Wishlist, Warm, Contacted, In Process, Committed. `tier` maps to stars: S=5, A=4, B=3, C=2, D=1.
   - `GET /lp_tags?select=id,name,color` and `GET /lp_card_tags?select=firm_id,tag_id` - card tags. Tags named High, Mid, Low are the card's priority designation.
+  - `GET /lp_rankings?select=firm_id,elo,games` - head-to-head calibration ratings from the Rank page. `firm_id` is the 0-based index into firms.json. `elo` is the calibrated rating (seeded from the engine order, updated Elo-style, K=24); `games` is how many pairings the firm has been in.
   - Example: `curl -H "apikey: sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy" -H "Authorization: Bearer sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy" "https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1/lp_pipeline?select=firm_id,stage,tier"`
 
 ## Pages
