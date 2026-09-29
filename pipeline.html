@@ -1754,10 +1754,24 @@
           const tagChips = chips(id);
           $("detail-title").textContent = f.name;
           const row = (label, value) => '<div class="detail-field"><dt>' + label + '</dt><dd>' + esc(value || "—") + '</dd></div>';
-          const people = (p.contacts || f.contacts || []).map(c => {
+          // Merge Globe profile details with the pipeline's freshest roster additions.
+          const roster = new Map();
+          for (const c of [...(p.contacts || []), ...(f.contacts || [])]) {
+            const key = String(c.name || '').trim().toLocaleLowerCase();
+            if (!key) continue;
+            roster.set(key, {...(roster.get(key) || {}), ...c});
+          }
+          const contacts = [...roster.values()];
+          const mailLink = (address, label, person) => {
+            const email = String(address || '').trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return '';
+            const subject = 'Introduction - ' + f.name;
+            return '<a href="mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subject) + '" aria-label="Email ' + esc(person.name) + ' at ' + esc(email) + '">' + label + '</a>';
+          };
+          const people = contacts.map(c => {
             const links = [
-              c.orgEmail && '<a href="mailto:' + encodeURIComponent(c.orgEmail) + '">Org email' + (c.unverified ? ' (unverified)' : '') + '</a>',
-              c.personalEmail && '<a href="mailto:' + encodeURIComponent(c.personalEmail) + '">Personal email</a>',
+              mailLink(c.orgEmail || c.email, 'Email' + (c.unverified || c.orgEmailStatus === 'inferred' ? ' (unverified)' : ''), c),
+              c.personalEmail && c.personalEmail !== (c.orgEmail || c.email) && mailLink(c.personalEmail, 'Personal email', c),
               profileLink(c.linkedin, 'LinkedIn ↗')
             ].filter(Boolean).join('');
             return '<div class="detail-person"><strong>' + esc(c.name) + '</strong>' +
@@ -1771,7 +1785,7 @@
             row('Connection', d.connection) + row('Notes', d.notes) +
             '<h3 class="detail-section">Firm profile</h3>' +
             '<p class="detail-description">' + esc(p.description || 'No firm description yet.') + '</p>' +
-            '<h3 class="detail-section">People (' + (p.contacts || f.contacts || []).length + ')</h3>' +
+            '<h3 class="detail-section">People (' + contacts.length + ')</h3>' +
             (people || '<p>No people listed.</p>');
           $("detail-content").scrollTop = 0;
           $("detail-modal").classList.add("show");
