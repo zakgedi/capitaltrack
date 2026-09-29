@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Rank - LP Globe</title>
+    <meta name="description" content="Head-to-head LP ranking: pick the stronger allocator in each pairing to calibrate the rank engine." />
+    <style>
+      :root { --ink: #141414; --sub: #666; --rule: #dedede; --soft: #f6f6f5; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; background: #fff; color: var(--ink); }
+      body { font-family: Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; font-size: 14px; }
+      button { cursor: pointer; border-radius: 0; font: inherit; }
+      a { color: inherit; }
+      .shell { max-width: 1680px; margin: auto; padding: 0 28px; }
+      .top { border-bottom: 1px solid var(--ink); }
+      .top-inner { min-height: 76px; display: flex; align-items: center; gap: 23px; }
+      .brand { font-family: Arial, Helvetica, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .09em; text-decoration: none; white-space: nowrap; }
+      .divider { height: 22px; width: 1px; background: var(--rule); }
+      .pane-nav { display: flex; gap: 4px; margin-left: 8px; }
+      .pane-nav a { border: 1px solid transparent; padding: 9px 12px; font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; text-decoration: none; }
+      .pane-nav a:hover, .pane-nav a[aria-current="page"] { border-color: var(--ink); background: #fff; color: var(--ink); }
+      .pane-nav a:focus-visible, .brand:focus-visible, .duel-card:focus-visible, .skip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+      .picks { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); }
+      .picks b { color: var(--ink); }
+
+      .stage { padding: 28px 0 8px; }
+      .prompt { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); margin: 0 0 14px; }
+      .duel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+      .duel-card {
+        appearance: none; text-align: left; background: #fff; border: 1px solid var(--ink);
+        padding: 22px 22px 18px; display: flex; flex-direction: column; gap: 10px;
+        min-height: 300px; transition: background .12s, color .12s;
+      }
+      .duel-card:hover { background: var(--soft); }
+      .duel-card.won { background: var(--ink); color: #fff; }
+      .duel-card.won .kicker, .duel-card.won .desc, .duel-card.won .stats { color: #bbb; }
+      .duel-card.lost { opacity: .35; }
+      .kicker { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); display: flex; justify-content: space-between; gap: 8px; }
+      .name { font-family: Georgia, serif; font-size: 28px; line-height: 1.12; letter-spacing: -0.02em; font-weight: 600; }
+      .stats { font-size: 13px; color: var(--sub); }
+      .desc { font-size: 13px; line-height: 1.5; color: var(--sub); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+      .choose { margin-top: auto; font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; border-top: 1px solid currentColor; padding-top: 10px; }
+      .duel-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+      .skip { background: none; border: none; padding: 6px 0; font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); text-decoration: underline; text-underline-offset: 3px; }
+      .skip:hover { color: var(--ink); }
+      .hint { font-size: 12px; color: var(--sub); }
+
+      .board { padding: 26px 0 60px; }
+      .board h2 { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; margin: 0 0 12px; }
+      .board table { width: 100%; border-collapse: collapse; }
+      .board th, .board td { text-align: left; padding: 7px 8px 7px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
+      .board th { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); }
+      .board td.num, .board th.num { text-align: right; padding-right: 0; font-variant-numeric: tabular-nums; }
+      .delta-up { color: var(--ink); font-weight: 700; }
+      .delta-down { color: var(--sub); }
+      .status { padding: 40px 0; color: var(--sub); font-size: 13px; }
+
+      @media (max-width: 760px) {
+        .shell { padding: 0 16px; }
+        .top-inner { min-height: 0; gap: 8px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
+        .brand { font-size: 12px; }
+        .divider { height: 18px; }
+        .pane-nav { margin-left: auto; }
+        .pane-nav a { padding: 8px 9px; }
+        .actions { flex-basis: 100%; margin-left: 0; }
+        .stage { padding-top: 18px; }
+        .duel { grid-template-columns: 1fr; gap: 10px; }
+        .duel-card { min-height: 0; padding: 16px; }
+        .name { font-size: 22px; }
+        .desc { -webkit-line-clamp: 3; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="shell top-inner">
+        <a class="brand" href="index.html" aria-label="LP Globe home">LP GLOBE</a><span class="divider"></span>
+        <nav class="pane-nav" aria-label="App panes">
+          <a href="index.html">Globe</a><a href="pipeline.html">Pipe</a><a href="rank.html" aria-current="page">Rank</a>
+        </nav>
+        <div class="actions"><span class="picks"><b id="pick-count">0</b> picks</span></div>
+      </div>
+    </header>
+    <main class="shell">
+      <section class="stage" aria-label="Matchup">
+        <p class="prompt">Which LP is the stronger allocator?</p>
+        <div class="duel" id="duel"></div>
+        <div class="duel-row">
+          <button class="skip" id="skip" type="button">Skip pairing</button>
+          <span class="hint" id="hint">Tap a card to pick the winner</span>
+        </div>
+      </section>
+      <section class="board" aria-label="Calibrated ranking">
+        <h2>Calibrated top 25</h2>
+        <table>
+          <thead><tr><th>#</th><th>Firm</th><th class="num">Rating</th><th class="num">vs engine</th></tr></thead>
+          <tbody id="board-body"></tbody>
+        </table>
+      </section>
+      <div class="status" id="status">Loading firms…</div>
+    </main>
+    <script src="auth-lite.js"></script>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+      const K = 24;
+      let firms = [];
+      let ratings = new Map();   // firm index -> {elo, games}
+      let current = null;        // [i, j]
+      let busy = false;
+      let pickCount = 0;
+      const recentPairs = JSON.parse(localStorage.getItem("rank-recent") || "[]");
+
+      const seed = (f) => 1600 - 2 * (f.novaRank != null ? f.novaRank : f.rankNum * 60);
+      const eloOf = (i) => (ratings.get(i) || { elo: seed(firms[i]), games: 0 });
+
+      async function loadFirms() {
+        const source = await (await fetch("index.html")).text();
+        const line = source.split("\n").find((x) => x.startsWith('firms=[{"name":'));
+        if (!line || !line.endsWith("];")) throw new Error("Firm universe unavailable");
+        firms = JSON.parse(line.slice(6, -1));
+      }
+
+      async function loadRatings() {
+        const rows = await window.lpAuth.rankings();
+        for (const r of rows) if (r.firm_id >= 0 && r.firm_id < firms.length) ratings.set(r.firm_id, { elo: r.elo, games: r.games });
+        pickCount = [...ratings.values()].reduce((a, r) => a + r.games, 0) / 2;
+        $("pick-count").textContent = pickCount;
+      }
+
+      async function saveRating(i) {
+        const r = ratings.get(i);
+        await window.lpAuth.putRanking(i, Math.round(r.elo), r.games);
+      }
+
+      function pickPair() {
+        const n = firms.length;
+        const ai = Math.floor(Math.random() * n);
+        const a = eloOf(ai);
+        let best = -1, bestScore = 1e9;
+        for (let t = 0; t < 40; t++) {
+          const bi = Math.floor(Math.random() * n);
+          if (bi === ai) continue;
+          const b = eloOf(bi);
+          const pairKey = Math.min(ai, bi) + "-" + Math.max(ai, bi);
+          let score = Math.abs(a.elo - b.elo);
+          if (recentPairs.includes(pairKey)) score += 500;
+          score += Math.abs((a.games || 0) - (b.games || 0)) * 2;
+          if (score < bestScore) { bestScore = score; best = bi; }
+        }
+        return [ai, best];
+      }
+
+      function cardHtml(i, side) {
+        const f = firms[i];
+        const meta = [f.type, f.location].filter(Boolean).join(" · ");
+        return '<button class="duel-card" type="button" data-i="' + i + '" aria-label="Pick ' + esc(f.name) + '">'
+          + '<span class="kicker"><span>' + esc(meta) + '</span><span>' + esc(f.aum || "") + "</span></span>"
+          + '<span class="name">' + esc(f.name) + "</span>"
+          + '<span class="desc">' + esc(f.description || "") + "</span>"
+          + '<span class="choose">Pick ' + (side === 0 ? "1" : "2") + "</span>"
+          + "</button>";
+      }
+
+      function renderDuel() {
+        current = pickPair();
+        $("duel").innerHTML = cardHtml(current[0], 0) + cardHtml(current[1], 1);
+        for (const el of document.querySelectorAll(".duel-card")) {
+          el.addEventListener("click", () => decide(+el.dataset.i));
+        }
+      }
+
+      async function decide(winner) {
+        if (busy || !current) return;
+        busy = true;
+        const [i, j] = current;
+        const loser = winner === i ? j : i;
+        for (const el of document.querySelectorAll(".duel-card")) {
+          const mine = +el.dataset.i;
+          el.classList.add(mine === winner ? "won" : "lost");
+          el.disabled = true;
+        }
+        const ra = eloOf(winner), rb = eloOf(loser);
+        const ea = 1 / (1 + Math.pow(10, (rb.elo - ra.elo) / 400));
+        ratings.set(winner, { elo: ra.elo + K * (1 - ea), games: (ra.games || 0) + 1 });
+        ratings.set(loser, { elo: rb.elo + K * (0 - (1 - ea)), games: (rb.games || 0) + 1 });
+        const key = Math.min(i, j) + "-" + Math.max(i, j);
+        recentPairs.push(key);
+        while (recentPairs.length > 60) recentPairs.shift();
+        localStorage.setItem("rank-recent", JSON.stringify(recentPairs));
+        try {
+          await Promise.all([saveRating(winner), saveRating(loser)]);
+          pickCount += 1;
+          $("pick-count").textContent = pickCount;
+          renderBoard();
+          setTimeout(() => { busy = false; renderDuel(); }, 350);
+        } catch (e) {
+          $("status").textContent = "Could not save result: " + e.message;
+          busy = false;
+          renderDuel();
+        }
+      }
+
+      function renderBoard() {
+        const rows = firms.map((f, i) => ({ f, i, r: eloOf(i) }))
+          .sort((a, b) => b.r.elo - a.r.elo)
+          .slice(0, 25);
+        $("board-body").innerHTML = rows.map((x, k) => {
+          const engine = x.f.novaRank != null ? x.f.novaRank : "-";
+          const d = engine === "-" ? "" : engine - (k + 1);
+          const dTxt = d === "" || d === 0 ? "—" : (d > 0 ? "▲" + d : "▼" + (-d));
+          const cls = d > 0 ? "delta-up" : "delta-down";
+          return "<tr><td>" + (k + 1) + "</td><td>" + esc(x.f.name) + '</td><td class="num">'
+            + Math.round(x.r.elo) + '</td><td class="num ' + cls + '">' + dTxt + "</td></tr>";
+        }).join("");
+      }
+
+      $("skip").addEventListener("click", () => { if (!busy) renderDuel(); });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "1" && current) decide(current[0]);
+        if (e.key === "2" && current) decide(current[1]);
+      });
+
+      (async () => {
+        try {
+          await loadFirms();
+          $("status").textContent = "";
+          await loadRatings();
+          renderDuel();
+          renderBoard();
+        } catch (e) {
+          $("status").textContent = e.message;
+        }
+      })();
+    </script>
+  </body>
+</html>
