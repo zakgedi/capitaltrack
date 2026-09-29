@@ -4,7 +4,7 @@
 
 ## Machine-readable data
 
-- [firms.json](https://zakgedi.github.io/lp-globe/firms.json): the complete firm universe as structured JSON. Array `firms` (0-based index = the firm id used across the site). Per firm: name, type, location, aum, rank, description, notes, and contacts[] with name, role, email/orgEmail/personalEmail, linkedin, bio, and an `unverified` flag when a record is pattern-inferred or from a third-party directory.
+- [firms.json](https://zakgedi.github.io/lp-globe/firms.json): manifest for the complete firm universe as structured JSON. Its `shards` array lists shard files (firms-1.json, firms-2.json, ...); each shard is a JSON array of firm objects, and concatenating the shards in order yields the full firms array (0-based index = the firm id used across the site). Per firm: name, type, location, aum, rank, description, notes, and contacts[] with name, role, email/orgEmail/personalEmail, linkedin, bio, and an `unverified` flag when a record is pattern-inferred or from a third-party directory.
 - Live pipeline state (board stage, owner, stars, priority, connection notes per firm) is served by the site's public read API (PostgREST):
   - Base URL: https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1
   - Required headers on every request: `apikey: sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy` and `Authorization: Bearer sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy` (publishable key; already public in the site's own JavaScript).
