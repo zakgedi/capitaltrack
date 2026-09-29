@@ -1,0 +1,14 @@
+{
+ "site": "LP GLOBE",
+ "url": "https://zakgedi.github.io/lp-globe/",
+ "description": "Zakaria Gedi's map of the institutional allocator (limited partner) universe: endowments, foundations, family offices, pensions and sovereign funds, with investment-team rosters, roles, contact details, AUM and locations.",
+ "updated": "2026-09-29",
+ "count": 344,
+ "format": "The firm universe is split across shard files listed in `shards`. Each shard is a JSON array of firm objects; concatenating all shards in order yields the complete firms array. A firm's id is its 0-based index in that concatenated array. Per firm: name, type, location, aum, rank, description, notes, contacts[] (name, role, email/orgEmail/personalEmail, linkedin, bio, unverified flag when pattern-inferred or third-party-sourced).",
+ "shards": [
+  "firms-1.json",
+  "firms-2.json",
+  "firms-3.json",
+  "firms-4.json"
+ ]
+}
