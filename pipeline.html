@@ -132,7 +132,7 @@
       }
       .board {
         display: grid;
-        grid-template-columns: repeat(5, minmax(190px, 1fr));
+        grid-template-columns: repeat(7, minmax(190px, 1fr));
         gap: 14px;
         align-items: start;
         padding-bottom: 50px;
@@ -556,6 +556,9 @@
       }
       .feedback.show {
         opacity: 1;
+      }
+      @media (min-width: 1001px) {
+        .board { overflow-x: auto; grid-template-columns: repeat(7, minmax(210px, 1fr)); padding-bottom: 28px; }
       }
       @media (min-width: 601px) and (max-width: 1000px) {
         .board {
@@ -1907,4 +1910,4 @@
       })();
     </script>
   </body>
-  </html>
+</html>
