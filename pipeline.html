@@ -8,6 +8,9 @@
     />
     <meta name="theme-color" content="#ffffff" />
     <title>Pipeline · LP Globe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet" />
     <style>
       :root {
         --ink: #141414;
@@ -850,6 +853,41 @@
         }
       }
       .pane-nav a:focus-visible, .brand:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+      /* Shared LP Globe shell: same type, line work and controls on both pages. */
+      body { font-family: 'Newsreader', Georgia, serif; font-size: 15px; }
+      .top { border-bottom-color: var(--rule); }
+      .top-inner { min-height: 64px; gap: 12px; }
+      .brand { font-family: Arial, Helvetica, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .09em; }
+      .divider { height: 22px; }
+      .pane-nav { margin-left: 0; gap: 4px; }
+      .pane-nav a { border: 1px solid transparent; padding: 9px 12px; font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; }
+      .pane-nav a:hover, .pane-nav a[aria-current="page"] { border-color: var(--ink); background: #fff; color: var(--ink); }
+      .actions { gap: 8px; }
+      .search { font: 14px 'Newsreader', Georgia, serif; border: 0; border-bottom: 1px solid #777; padding: 0 8px; background: #fff; width: min(220px, 20vw); }
+      .add { background: #fff; color: var(--ink); font: 20px Arial, sans-serif; border-color: #aaa; }
+      .add:hover { background: #f7f6f2; }
+      .heading h2 { font-size: 29px; }
+      .heading { padding-top: 25px; padding-bottom: 15px; }
+      .tag-toolbar { font-family: Arial, Helvetica, sans-serif; font-size: 11px; }
+      .board { grid-template-columns: repeat(5, minmax(195px, 1fr)); gap: 12px; }
+      .stack { background: #faf9f7; min-height: 330px; border-top: 1px solid var(--ink); }
+      .stack-head h3, .stack-head button { font: 600 11px/1.4 Arial, Helvetica, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+      .card { border-color: #d7d7d7; padding: 13px 12px 10px; }
+      .card-name { font-size: 17px; font-weight: 500; }
+      .tags { margin-top: 9px; }
+      .card-edit { margin-top: 9px; font: 600 10px Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+      .empty { font-style: italic; font-family: 'Newsreader', Georgia, serif; font-size: 14px; }
+      @media (min-width: 1001px) { .board { grid-template-columns: repeat(5, minmax(195px, 1fr)); } }
+      @media (max-width: 600px) {
+        .top-inner { min-height: 0; gap: 8px; padding-top: 12px; padding-bottom: 12px; }
+        .brand { font-size: 12px; }
+        .divider { height: 18px; }
+        .pane-nav { margin-left: auto; }
+        .pane-nav a { padding: 8px 9px; }
+        .actions { flex-basis: 100%; }
+        .search { width: auto; flex: 1; font-size: 16px; }
+      }
     </style>
     <script src="page-transition.js" defer></script>
   </head>
@@ -1024,9 +1062,7 @@
           "Warm",
           "Cold",
           "Contacted",
-          "First meeting",
-          "Starting diligence",
-          "Final process",
+          "In Process",
           "Committed",
         ];
         const sections = [
@@ -1316,40 +1352,17 @@
                           id +
                           '" tabindex="0" aria-label="' +
                           esc(f.name) +
-                          ", " +
-                          category(f) +
-                          ", " +
-                          esc(f.aum || "AUM unknown") +
                           '; drag to move or use arrow keys"><div class="card-top"><a class="card-name" href="index.html" data-page-link data-firm="' +
                           id +
                           '">' +
                           esc(f.name) +
                           '</a><button class="grip" type="button" aria-label="Drag ' +
                           esc(f.name) +
-                          '">⋮⋮</button></div><div class="meta">' +
-                          category(f) +
-                          '</div><div class="aum">' +
-                          esc(f.aum || "AUM unknown") +
-                          "</div>" +
+                          '">⋮⋮</button></div>' +
                           (chips(id)
                             ? '<div class="tags">' + chips(id) + "</div>"
                             : "") +
-                          '<div class="card-detail">' +
-                          (state.details[id]?.owner
-                            ? "<strong>Owner</strong> " +
-                              esc(state.details[id].owner) +
-                              "<br>"
-                            : "") +
-                          (state.details[id]?.connection
-                            ? "<strong>Connection</strong> " +
-                              esc(state.details[id].connection) +
-                              "<br>"
-                            : "") +
-                          (state.details[id]?.notes
-                            ? "<strong>Notes</strong> " +
-                              esc(state.details[id].notes)
-                            : "") +
-                          '</div><button class="card-edit" type="button" data-edit-card="' +
+                          '<button class="card-edit" type="button" data-edit-card="' +
                           id +
                           '">Edit card</button></article>'
                         );
