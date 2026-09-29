@@ -19,7 +19,7 @@
     {
       name: 'Gates Foundation Trust', type: 'Foundation', location: 'Seattle, Washington',
       aum: '~$89.3B investments', rank: '5 (high)', rankNum: 5,
-      description: 'The trust holds and manages donated investment assets for the Gates Foundation. Its audited December 31, 2025 financial statement reports $89.346 billion in investments (and $93.168 billion in total assets). This is the investment trust, distinct from Cascade Investment and the foundation’s grant-making operations. Sources: https://www.gatesfoundation.org/about/financials/foundation-trust and https://docs.gatesfoundation.org/documents/2025_gatesfoundationtrust_fs.pdf',
+      description: 'The trust holds and manages donated investment assets for the Gates Foundation. Its audited December 31, 2025 financial statement reports $89.346 billion in investments (and $93.168 billion in total assets). This is the investment trust, not a separate investment team: its assets are managed by Cascade Asset Management Company, which already has a firm record here. Sources: https://www.gatesfoundation.org/about/financials/foundation-trust and https://docs.gatesfoundation.org/documents/2025_gatesfoundationtrust_fs.pdf',
       contacts: []
     },
     {
@@ -66,6 +66,67 @@
         {name:'Amyn Hassanally',role:'Partner, New York',decisionMaker:true,unverified:false,notes:'Source: https://www.pantheon.com/investment-approach/private-equity/'},
         {name:'Brian Lim',role:'Partner, Singapore',decisionMaker:true,unverified:false,notes:'Source: https://www.pantheon.com/investment-approach/private-equity/'}
       ]
+    },
+    {
+      name: 'National Pension Service Investment Management (South Korea)', type: 'Public pension', location: 'Jeonju, South Korea',
+      aum: '~KRW 1,865.6T', rank: '5 (high)', rankNum: 5,
+      description: 'The investment arm of South Korea’s National Pension Service manages the National Pension Fund, which reached KRW 1,865.6 trillion at June 30, 2026. Sources: https://fund.nps.or.kr/eng/main.do and https://fund.nps.or.kr/eng/aboutus/ognz/getOHFB0006M0.do',
+      contacts: [
+        {name:'Won-Joo Seo',role:'Executive Fund Director & Chief Investment Officer',decisionMaker:true,unverified:false,notes:'Source: https://fund.nps.or.kr/eng/aboutus/ognz/getOHFB0006M0.do'},
+        {name:'Hyung-Don Choe',role:'Head, Private Equity & Venture Capital Investment Division',decisionMaker:true,unverified:false,notes:'Source: https://fund.nps.or.kr/eng/aboutus/ognz/getOHFB0006M0.do'},
+        {name:'Hyup Son',role:'Head, Investment Strategy Division',decisionMaker:true,unverified:false,notes:'Source: https://fund.nps.or.kr/eng/aboutus/ognz/getOHFB0006M0.do'},
+        {name:'Jun-sang Ahn',role:'Head, Real Estate Investment Division',decisionMaker:true,unverified:false,notes:'Source: https://fund.nps.or.kr/eng/aboutus/ognz/getOHFB0006M0.do'}
+      ]
+    },
+    {
+      name: 'Alberta Investment Management Corporation (AIMCo)', type: 'Public pension', location: 'Edmonton, Alberta',
+      aum: '>C$200B', rank: '5 (high)', rankNum: 5,
+      description: 'AIMCo invests for Alberta pensions and public-sector institutions. It reported client assets exceeding C$200 billion in the first half of 2026. Sources: https://www.aimco.ca/insights/2026-mid-year-investment-performance and https://www.aimco.ca/who-we-are/leadership',
+      contacts: [
+        {name:'Justin Lord',role:'Chief Investment Officer',decisionMaker:true,unverified:false,notes:'Source: https://www.aimco.ca/who-we-are/leadership'},
+        {name:'Peter Teti',role:'Senior Executive Managing Director, Global Head of Private Assets',decisionMaker:true,unverified:false,notes:'Source: https://www.aimco.ca/who-we-are/leadership'},
+        {name:'Ben Hawkins',role:'Executive Managing Director, Global Head of Infrastructure, Renewable Resources and Energy Transition',decisionMaker:true,unverified:false,notes:'Source: https://www.aimco.ca/who-we-are/leadership'},
+        {name:'David Tiley',role:'Senior Managing Director, Global Head of Public Equities',decisionMaker:true,unverified:false,notes:'Source: https://www.aimco.ca/who-we-are/leadership'}
+      ]
+    },
+    {
+      name: 'AustralianSuper', type: 'Public pension', location: 'Melbourne, Australia',
+      aum: '>A$430B', rank: '5 (high)', rankNum: 5,
+      description: 'AustralianSuper is a profit-for-member superannuation fund managing more than A$430 billion in retirement savings for over 3.6 million members. Sources: https://www.australiansuper.com/about-us and https://www.australiansuper.com/global-investors/capabilities/investment-team',
+      contacts: [
+        {name:'Shaun Manuell',role:'Chief Investment Officer',decisionMaker:true,unverified:false,notes:'Source: https://www.australiansuper.com/global-investors/capabilities/investment-team'},
+        {name:'Mark Hargraves',role:'Head of International & Private Equity',decisionMaker:true,unverified:false,notes:'Source: https://www.australiansuper.com/global-investors/capabilities/investment-team'},
+        {name:'Alistair Barker',role:'Head of Asset Allocation',decisionMaker:true,unverified:false,notes:'Source: https://www.australiansuper.com/global-investors/capabilities/investment-team'},
+        {name:'Katie Dean',role:'Head of Fixed Income & Currency',decisionMaker:true,unverified:false,notes:'Source: https://www.australiansuper.com/global-investors/capabilities/investment-team'}
+      ]
+    },
+    {
+      name: 'APG Asset Management', type: 'Public pension', location: 'Amsterdam, Netherlands',
+      aum: '~€601B', rank: '5 (high)', rankNum: 5,
+      description: 'APG manages assets on behalf of four Dutch pension funds, reporting €601 billion at year-end 2025. Sources: https://assetmanagement.apg.nl/media/k3ybol42/apg-annual-report-2025.pdf and https://assetmanagement.apg.nl/our-leadership/',
+      contacts: [
+        {name:'Alineke van den Berge',role:'Chief Executive Officer and Chief Operating Officer',decisionMaker:true,unverified:false,notes:'Source: https://assetmanagement.apg.nl/our-leadership/'},
+        {name:'Herman Slooijer',role:'CIO, Capital Markets',decisionMaker:true,unverified:false,notes:'Source: https://assetmanagement.apg.nl/our-leadership/'},
+        {name:'Patrick Kanters',role:'CIO, Private Investments',decisionMaker:true,unverified:false,notes:'Source: https://assetmanagement.apg.nl/our-leadership/'},
+        {name:'Rianne Lemsom',role:'Chief Fiduciary Officer',decisionMaker:true,unverified:false,notes:'Source: https://assetmanagement.apg.nl/our-leadership/'}
+      ]
+    },
+    {
+      name: 'Builders Vision', type: 'SFO', location: 'Chicago, Illinois',
+      aum: '>$15B managed', rank: '4 (high)', rankNum: 4,
+      description: 'Lukas Walton’s investment and philanthropy platform manages more than $15 billion across taxable portfolios, a foundation endowment, donor-advised funds and catalytic capital. It is separate from Walton Enterprises. Sources: https://www.buildersvision.com/who-we-are/ and https://www.buildersvision.com/what-we-do/',
+      contacts: [
+        {name:'Noelle Laing',role:'Chief Investment Officer',decisionMaker:true,unverified:false,notes:'Source: https://www.buildersvision.com/who-we-are/noelle-laing/'},
+        {name:'Jamey Spencer',role:'Managing Director, Head of Private Markets',decisionMaker:true,unverified:false,notes:'Source: https://www.buildersvision.com/who-we-are/jamey-spencer/'},
+        {name:'Danielle Reed',role:'Managing Director, Investments',decisionMaker:true,unverified:false,notes:'Source: https://www.buildersvision.com/who-we-are/danielle-reed/'},
+        {name:'Kurt Braitberg',role:'Managing Director, Head of Public Markets',decisionMaker:true,unverified:false,notes:'Source: https://www.buildersvision.com/who-we-are/kurt-braitberg/'}
+      ]
+    },
+    {
+      name: 'Walton Enterprises / WIT, LLC', type: 'SFO', location: 'Washington, DC',
+      aum: '', rank: '4 (high)', rankNum: 4,
+      description: 'WIT, LLC is the investment team of Walton Enterprises, the family office serving descendants of Sam and Helen Walton. Its SEC 13F filing lists a Washington, DC office; the filing is not a measure of total assets. Sources: https://missioninvestors.org/redhen/org/3265 and https://www.sec.gov/Archives/edgar/data/1840025/000110465925078246/0001104659-25-078246.txt',
+      contacts: [{name:'Kevin Stephenson',role:'President, WIT, LLC',decisionMaker:true,unverified:false,notes:'Source: https://www.uarkfoundation.org/about/directors/'}]
     }
   ];
   const existing = new Set(firms.map(f => f.name.toLocaleLowerCase()));
