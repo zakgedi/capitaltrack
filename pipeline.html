@@ -888,6 +888,36 @@
         .actions { flex-basis: 100%; }
         .search { width: auto; flex: 1; font-size: 16px; }
       }
+
+      .card { cursor: pointer; }
+      .card:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .card-name { font: inherit; font-weight: 500; text-align: left; border: 0; padding: 0; background: none; color: inherit; cursor: pointer; }
+      .card-edit { display: none; }
+      .detail-panel { width: min(720px, 100%); max-height: min(760px, 90dvh); }
+      .detail-scroll { overflow-y: auto; overscroll-behavior: contain; padding: 0 24px 24px; }
+      .detail-meta { display: flex; flex-wrap: wrap; gap: 7px 18px; padding: 18px 0; border-bottom: 1px solid var(--rule); font: 11px/1.4 Arial, sans-serif; color: var(--sub); text-transform: uppercase; letter-spacing: .04em; }
+      .detail-meta .tags { margin: 0; }
+      .detail-field { padding: 13px 0; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 110px 1fr; gap: 12px; line-height: 1.45; }
+      .detail-field dt { color: var(--sub); font: 11px/1.5 Arial, sans-serif; text-transform: uppercase; letter-spacing: .04em; }
+      .detail-field dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .detail-section { margin: 26px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--ink); font: 600 11px/1.4 Arial, sans-serif; text-transform: uppercase; letter-spacing: .07em; }
+      .detail-description { font: 17px/1.48 'Newsreader', Georgia, serif; margin: 0; white-space: pre-wrap; }
+      .detail-person { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+      .detail-person strong { font-size: 14px; }
+      .detail-person .role { color: var(--sub); font-size: 12px; margin-top: 3px; }
+      .detail-person .person-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; font-size: 12px; }
+      .detail-person .person-links a { text-underline-offset: 3px; overflow-wrap: anywhere; }
+      .detail-person .bio { font: 14px/1.4 'Newsreader', Georgia, serif; margin: 7px 0 0; }
+      .detail-actions { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--rule); }
+      .detail-actions button { border: 1px solid var(--rule); background: white; padding: 10px 13px; font: 600 11px/1 Arial, sans-serif; text-transform: uppercase; letter-spacing: .05em; }
+      .detail-actions button:hover { border-color: var(--ink); }
+      .detail-actions .primary { background: var(--ink); color: white; border-color: var(--ink); margin-left: auto; }
+      @media (max-width: 600px) {
+        .detail-panel { max-height: 90dvh; min-height: 0; }
+        .detail-scroll { padding: 0 18px 18px; }
+        .detail-field { grid-template-columns: 82px 1fr; }
+        .detail-actions { padding: 12px 18px max(12px,env(safe-area-inset-bottom)); }
+      }
     </style>
     <script src="page-transition.js" defer></script>
   </head>
@@ -986,6 +1016,19 @@
           <div class="palette" id="tag-palette" aria-label="Tag color"></div>
           <button id="tag-submit" type="submit">Create tag</button>
         </form>
+      </div>
+    </div>
+    <div class="picker" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <div class="pick-panel detail-panel">
+        <div class="pick-head">
+          <h2 id="detail-title">Firm</h2>
+          <button class="close" id="detail-close" type="button" aria-label="Close details">×</button>
+        </div>
+        <div class="detail-scroll" id="detail-content"></div>
+        <div class="detail-actions">
+          <button type="button" id="detail-tags">Manage tags</button>
+          <button type="button" class="primary" id="detail-edit">Edit card</button>
+        </div>
       </div>
     </div>
     <div
@@ -1136,6 +1179,9 @@
           );
         let state = { pipeline: {}, details: {}, tags: [], cardTags: [] };
         let selectedStage = stages[0];
+        let profiles = null;
+        let detailFirm = null;
+        let detailReturn = null;
         let cardFirm = null;
         let cardIsNew = false;
         let activeFirm = null;
@@ -1352,19 +1398,17 @@
                           id +
                           '" tabindex="0" aria-label="' +
                           esc(f.name) +
-                          '; drag to move or use arrow keys"><div class="card-top"><a class="card-name" href="index.html" data-page-link data-firm="' +
+                          '; open details with Enter, drag to move or use arrow keys"><div class="card-top"><button class="card-name" type="button" data-open-detail="' +
                           id +
                           '">' +
                           esc(f.name) +
-                          '</a><button class="grip" type="button" aria-label="Drag ' +
+                          '</button><button class="grip" type="button" aria-label="Drag ' +
                           esc(f.name) +
                           '">⋮⋮</button></div>' +
                           (chips(id)
                             ? '<div class="tags">' + chips(id) + "</div>"
                             : "") +
-                          '<button class="card-edit" type="button" data-edit-card="' +
-                          id +
-                          '">Edit card</button></article>'
+                          '</article>'
                         );
                       })
                       .join("")
@@ -1475,7 +1519,9 @@
         $("tag-filter").onchange = render;
         $("board").addEventListener("click", (e) => {
           const b = e.target.closest("[data-edit-card]");
-          if (b) openCard(+b.dataset.editCard, false);
+          if (b) { openCard(+b.dataset.editCard, false); return; }
+          const card = e.target.closest(".card");
+          if (card && !e.target.closest(".grip")) openDetail(+card.dataset.id);
         });
         $("tag-close").onclick = closeTags;
         $("tag-modal").addEventListener("pointerdown", (e) => {
@@ -1622,6 +1668,83 @@
           $("picker").classList.remove("show");
           $("add").focus();
         }
+        function profileLink(url, label) {
+          if (!/^https:\/\//i.test(url || "")) return "";
+          return '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+        }
+        async function loadProfiles() {
+          if (profiles) return profiles;
+          const response = await fetch('index.html');
+          if (!response.ok) throw new Error('Could not load Globe profiles');
+          const source = await response.text();
+          const line = source.split('\n').find(x => x.startsWith('firms=[{"name":'));
+          if (!line || !line.endsWith('];')) throw new Error('Globe profiles unavailable');
+          const data = JSON.parse(line.slice(6, -1));
+          if (data.length !== firms.length || data.some((f, i) => f.name !== firms[i].name))
+            throw new Error('Globe profiles do not match pipeline firms');
+          profiles = data;
+          return data;
+        }
+        async function openDetail(id) {
+          if (loading || saving || !state.pipeline[id] || !firms[id]) return;
+          detailFirm = +id;
+          detailReturn = document.activeElement;
+          const f = firms[id], d = state.details[id] || {};
+          $("detail-title").textContent = f.name;
+          $("detail-content").textContent = "Loading firm profile…";
+          $("detail-modal").classList.add("show");
+          $("detail-close").focus();
+          let p = {};
+          try { p = (await loadProfiles())[id]; }
+          catch (error) { notice(error.message); }
+          if (detailFirm !== +id) return;
+          const tagChips = chips(id);
+          $("detail-title").textContent = f.name;
+          const row = (label, value) => '<div class="detail-field"><dt>' + label + '</dt><dd>' + esc(value || "—") + '</dd></div>';
+          const people = (p.contacts || f.contacts || []).map(c => {
+            const links = [
+              c.orgEmail && '<a href="mailto:' + encodeURIComponent(c.orgEmail) + '">Org email' + (c.unverified ? ' (unverified)' : '') + '</a>',
+              c.personalEmail && '<a href="mailto:' + encodeURIComponent(c.personalEmail) + '">Personal email</a>',
+              profileLink(c.linkedin, 'LinkedIn ↗')
+            ].filter(Boolean).join('');
+            return '<div class="detail-person"><strong>' + esc(c.name) + '</strong>' +
+              (c.role ? '<div class="role">' + esc(c.role) + '</div>' : '') +
+              (links ? '<div class="person-links">' + links + '</div>' : '') +
+              (c.bio ? '<p class="bio">' + esc(c.bio) + '</p>' : '') + '</div>';
+          }).join('');
+          $("detail-content").innerHTML =
+            '<div class="detail-meta"><span>' + esc(category(f)) + '</span><span>' + esc(f.location || 'Location unknown') + '</span><span>' + esc(f.aum || 'AUM unknown') + '</span>' + (tagChips ? '<div class="tags">' + tagChips + '</div>' : '') + '</div>' +
+            row('Stack', state.pipeline[id]) + row('Owner', d.owner || 'Unknown owner') +
+            row('Connection', d.connection) + row('Notes', d.notes) +
+            '<h3 class="detail-section">Firm profile</h3>' +
+            '<p class="detail-description">' + esc(p.description || 'No firm description yet.') + '</p>' +
+            '<h3 class="detail-section">People (' + (p.contacts || f.contacts || []).length + ')</h3>' +
+            (people || '<p>No people listed.</p>');
+          $("detail-content").scrollTop = 0;
+          $("detail-modal").classList.add("show");
+          $("detail-close").focus();
+        }
+        function closeDetail(restoreFocus = true) {
+          $("detail-modal").classList.remove("show");
+          detailFirm = null;
+          if (restoreFocus && detailReturn?.isConnected) detailReturn.focus();
+        }
+        $("detail-close").onclick = () => closeDetail();
+        $("detail-modal").addEventListener("pointerdown", e => {
+          if (e.target === $("detail-modal")) closeDetail();
+        });
+        $("detail-edit").onclick = () => {
+          const id = detailFirm;
+          if (id === null) return;
+          closeDetail(false);
+          openCard(id, false);
+        };
+        $("detail-tags").onclick = () => {
+          const id = detailFirm;
+          if (id === null) return;
+          closeDetail(false);
+          openTags(id);
+        };
         function openCard(id, isNew) {
           cardFirm = id;
           cardIsNew = isNew;
@@ -1727,7 +1850,9 @@
           if (e.target === $("picker")) close();
         });
         document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape" && $("card-modal").classList.contains("show"))
+          if (e.key === "Escape" && $("detail-modal").classList.contains("show"))
+            closeDetail();
+          else if (e.key === "Escape" && $("card-modal").classList.contains("show"))
             closeCard();
           else if (e.key === "Escape" && $("picker").classList.contains("show"))
             close();
@@ -1788,12 +1913,13 @@
         };
         $("board").addEventListener("keydown", (e) => {
           const c = e.target.closest(".card");
-          if (
-            !c ||
-            e.target !== c ||
-            !["ArrowRight", "ArrowLeft"].includes(e.key)
-          )
+          if (!c || e.target !== c) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openDetail(+c.dataset.id);
             return;
+          }
+          if (!["ArrowRight", "ArrowLeft"].includes(e.key)) return;
           e.preventDefault();
           const id = c.dataset.id;
           const n =
