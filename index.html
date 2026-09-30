@@ -1580,6 +1580,8 @@
           catch (e) { state.stageTimes = {}; state.hasStageTimes = false; }
           try { state.nextSteps = Object.fromEntries((await db.nextSteps()).map((r) => [r.firm_id, { step: r.next_step || "", date: r.next_step_date || null, kind: "" }])); state.hasNextStep = true; }
           catch (e) { state.nextSteps = {}; state.hasNextStep = false; }
+          try { state.pins = Object.fromEntries((await db.pins()).map((r) => [r.firm_id, !!r.pinned])); state.hasPin = true; }
+          catch (e) { state.pins = {}; state.hasPin = false; }
           try { state.commitStatus = Object.fromEntries((await db.commitmentsFull()).map((r) => [r.firm_id, r.status || "committed"])); state.hasCommitStatus = true; }
           catch (e) { state.commitStatus = {}; state.hasCommitStatus = false; }
           try {
