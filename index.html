@@ -1227,6 +1227,32 @@
       button.card-touch { background: none; border: 0; padding: 0; text-align: left; display: block; }
       button.card-touch.em::after, .em-link::after { content: " \2197"; }
       .em-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; text-decoration: underline; text-decoration-color: #bbb; text-underline-offset: 3px; }
+      @media (min-width: 1100px) { .board:not(.list) .stack[data-stage="Backlog"] { grid-column: 1 / -1; order: 9; min-height: 0; height: auto; max-height: none; } .stack[data-stage="Backlog"] .stack-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 8px; height: auto; max-height: 360px; overflow: auto; } .stack[data-stage="Backlog"] .stack-body .empty, .stack[data-stage="Backlog"] .stack-body > div:only-child { grid-column: 1 / -1; } }
+      .lg-ph { display: inline-block; width: 18px; height: 18px; flex: none; }
+      @media (min-width: 601px) and (max-width: 1099px) { .stack[data-stage="Backlog"] { order: 9; } }
+      @media (max-width: 600px) { .stack[data-stage="Backlog"] { order: 9; } }
+      .stack[data-stage="Backlog"] .stack-head h3 button { color: var(--sub); }
+      .cp-rows { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+      .cp-row { background: none; border: 0; border-right: 1px solid var(--rule); padding: 14px 12px; text-align: left; cursor: pointer; font: inherit; color: inherit; display: block; }
+      .cp-row:last-child { border-right: 0; }
+      .cp-row b { display: block; font: 500 26px/1.1 'Newsreader', Georgia, serif; margin: 6px 0 4px; }
+      .cp-row small { display: block; font: 11px/1.3 Arial, Helvetica, sans-serif; color: var(--sub); }
+      .cp-row:hover { background: #f6f6f4; }
+      .hm-cap, .hm-need { padding: 22px 0 6px; }
+      .hm-feed li.nd { display: flex; align-items: center; gap: 10px; }
+      .nd-ask { flex: none; border: 1px solid var(--ink); padding: 7px 10px; font: 600 10px Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); text-decoration: none; }
+      .cvw { padding: 22px 0; }
+      .cap-tabs { display: flex; gap: 0; border: 1px solid var(--ink); width: max-content; max-width: 100%; margin: 10px 0 14px; }
+      .cap-tabs button { background: #fff; border: 0; border-right: 1px solid var(--ink); padding: 10px 14px; font: 600 11px Arial, Helvetica, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); cursor: pointer; border-radius: 0; }
+      .cap-tabs button:last-child { border-right: 0; }
+      .cap-tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+      .cap-tabs button span { opacity: .6; margin-left: 4px; }
+      .cap-head { font: 13px/1.4 Arial, Helvetica, sans-serif; color: var(--sub); margin: 0 0 6px; }
+      li.cap-li { display: flex; align-items: center; gap: 10px; }
+      .cap-empty { padding: 18px 0; }
+      .pf-status { border: 1px solid var(--ink); padding: 10px 14px; margin: 14px 0; font: 14px/1.4 Arial, Helvetica, sans-serif; }
+      .pf-status.pass { background: #f6f6f4; }
+      @media (max-width: 600px) { .cp-row b { font-size: 22px; } .cp-row { padding: 12px 8px; } .cap-tabs button { padding: 10px 9px; font-size: 10px; } }
       /* Stack cards: flat, white, clear hierarchy (name, meta, next step, last touch). */
       .board:not(.list) .stack-body { padding: 2px 10px 10px; }
       .board:not(.list) .card, .board:not(.list) .card[data-stars] { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 0; background: #fff; border: 1px solid #e3e3e0; padding: 14px 14px 13px; margin-bottom: 8px; }
@@ -1292,7 +1318,7 @@
         <span class="count" id="total"></span>
         <div class="tools">
           <div class="view-toggle" role="group" aria-label="Pipe view">
-            <button type="button" id="view-home" aria-pressed="true">Home</button><button type="button" id="view-stacks" aria-pressed="false">Stacks</button><button type="button" id="view-list" aria-pressed="false">List</button>
+            <button type="button" id="view-home" aria-pressed="true">Home</button><button type="button" id="view-stacks" aria-pressed="false">Pipeline</button><button type="button" id="view-capital" aria-pressed="false">Capital</button><button type="button" id="view-list" aria-pressed="false">List</button>
           </div>
           <select id="tag-filter" aria-label="Filter by tag">
             <option value="">All tags</option></select
@@ -1555,6 +1581,7 @@
       (function () {
         "use strict";
         const stages = [
+          "Backlog",
           "Wishlist",
           "Warm",
           "Contacted",
@@ -1666,7 +1693,7 @@
           }
         }
         const LA = "America/Los_Angeles";
-        const pplOf = (t) => (Array.isArray(t.people) ? t.people.filter(Boolean) : []);
+        const pplOf = (t) => (Array.isArray(t.people) ? t.people.filter((x) => x && !/^zakaria\b/i.test(x)) : []);
         function whoShort(t) { const p = pplOf(t); return p.length ? p[0] + (p.length > 1 ? " +" + (p.length - 1) : "") : ""; }
         function emailTitle(t) { const p = pplOf(t); const fn = (firmOf(t.firm_id) || {}).name || "LP"; return p.length ? "Emailed " + p.join(", ") + " (" + fn + ")" : "Emailed " + fn; }
         function fmtTouch(t) {
@@ -1678,7 +1705,8 @@
           const dt = new Date(String(d).slice(0, 10) + "T00:00:00");
           return isNaN(dt) ? "" : dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
         }
-        let selectedStage = stages[0];
+        const pipeStages = stages.slice(1);
+        let selectedStage = stages[1];
         let view = "home";
         let profiles = null;
         let detailFirm = null;
@@ -1733,6 +1761,7 @@
           try { state.commitments = Object.fromEntries((await db.commitments()).map((r) => [r.firm_id, +r.amount])); }
           catch (e) { state.commitments = {}; }
           // Interaction layer tables: tolerate absence so the board works before the SQL update runs.
+          try { state.passInfo = Object.fromEntries((await api("/rest/v1/ct_pipeline?select=firm_id,pass_reason,passed_at,passed_by&stage=eq.Passed")).map((r) => [r.firm_id, r])); } catch (e) { state.passInfo = {}; }
           try { state.audit = await db.audit(40); } catch (e) { state.audit = []; }
           try { state.ctContacts = await db.contacts(); } catch (e) { state.ctContacts = []; }
           try { state.touches = await fetchTouches(); state.hasTouches = true; }
@@ -1815,6 +1844,7 @@
           }
         })();
         function notice(s) {
+          if (/ct_pipeline_stage_check/.test(String(s))) s = "Backlog and Passed need the SQL update first";
           $("feedback").textContent = s;
           $("feedback").classList.add("show");
           clearTimeout(notice.t);
@@ -1836,6 +1866,8 @@
           clearTimeout(notice.t);
           notice.t = setTimeout(() => el.classList.remove("show"), 8000);
         }
+        const passedRecords = () => Object.entries(state.pipeline).filter(([id, st]) => st === "Passed" && Number.isInteger(+id) && firmOf(+id));
+        const passOf = (id) => (state.passInfo || {})[+id] || {};
         function records() {
           return Object.entries(state.pipeline).filter(
             ([id, stage]) =>
@@ -1948,6 +1980,7 @@
         }
         function logoHTML(id, cls) {
           const d = LOGO_TOKEN && domainOf(id);
+          if (!d && cls === "row") return '<span class="lg-ph"></span>';
           return d ? '<img class="lg ' + (cls || "") + '" src="https://img.logo.dev/' + encodeURIComponent(d) + "?token=" + LOGO_TOKEN + '&size=96&format=png" alt="" loading="lazy" referrerpolicy="origin" onerror="this.remove()">' : "";
         }
         function openEmail(tid) {
@@ -2009,7 +2042,7 @@
           const committed = committedTotal();
           const goal = fundCap();
           const soft = softTotal();
-          const counts = stages.map((st) => all.filter(([, s2]) => s2 === st).length);
+          const counts = pipeStages.map((st) => all.filter(([, s2]) => s2 === st).length);
           const rows = all;
           const weekAgo = Date.now() - 7 * 864e5;
           const dayMs = (d) => new Date(String(d).slice(0, 10) + "T00:00:00").getTime();
@@ -2019,17 +2052,81 @@
           const nCommit = Object.keys(state.commitments).filter((id) => state.pipeline[id] === "Committed").length;
           const kpi = (v, l, sub) => '<div class="hm-kpi"><b>' + v + "</b><span>" + l + "</span>" + (sub ? "<small>" + sub + "</small>" : "") + "</div>";
           const feed = feedItems();
-          $("home").innerHTML =
+          const raiseHTML =
             '<div class="hm-raise"><span class="hm-lab">' + esc(state.fundName || "Nova III") + '</span><div class="hm-big">' + fmtM(committed) + ' <small>committed of ' + fmtM(FUND_TARGET) + ' target</small></div>' +
             '<div class="hm-bar"><i style="width:' + Math.min(100, (committed / goal) * 100) + '%"></i><u style="left:' + (FUND_TARGET / goal) * 100 + '%"></u></div>' +
             '<div class="hm-scale"><span>$0</span><span style="left:' + (FUND_TARGET / goal) * 100 + '%">Target ' + fmtM(FUND_TARGET) + '</span><span class="cap">Cap ' + fmtM(goal) + '</span></div>' +
-            '<div class="hm-funnel">' + stages.map((st, i) => '<div><span class="hm-lab">' + st + "</span><b>" + counts[i] + "</b></div>").join("") + "</div></div>" +
+            '<div class="hm-funnel">' + pipeStages.map((st, i) => '<div><span class="hm-lab">' + st + "</span><b>" + counts[i] + "</b></div>").join("") + "</div></div>";
+          const cp = capitalSplit();
+          const capHTML = '<section class="hm-cap"><h3 class="pf-h">Capital</h3><div class="cp-rows">' +
+            '<button type="button" class="cp-row" data-goto-cap="committed"><span class="hm-lab">Committed</span><b>' + fmtM(cp.committedT) + '</b><small>' + cp.committed.length + ' LP' + (cp.committed.length === 1 ? "" : "s") + '</small></button>' +
+            '<button type="button" class="cp-row" data-goto-cap="interested"><span class="hm-lab">Interested</span><b>' + (cp.softT ? fmtM(cp.softT) : "\u2014") + '</b><small>' + cp.interested.length + ' LP' + (cp.interested.length === 1 ? "" : "s") + (cp.softT ? " \u00b7 soft, not counted" : "") + '</small></button>' +
+            '<button type="button" class="cp-row" data-goto-cap="passed"><span class="hm-lab">Not interested</span><b>' + cp.passed.length + '</b><small>passed</small></button>' +
+            '</div></section>';
+          const need = needsYou(rows);
+          const needHTML = '<section class="hm-need"><h3 class="pf-h">Needs you</h3>' + (need.length ? '<ul class="hm-feed">' + need.map((n) => '<li class="nd"><button type="button" class="hm-row" data-open-detail="' + n.id + '">' + logoHTML(n.id) + '<span class="hm-t"><span>' + esc(n.text) + '</span><small>' + esc(n.sub) + '</small></span></button><a class="nd-ask" href="' + esc(reqLink("CapitalTrack: " + n.ask + " - " + n.name + "." + reqId(n.id))) + '">Ask</a></li>').join("") + "</ul>" : '<p class="pf-none">Nothing needs you today.</p>') + '</section>';
+          $("home").innerHTML = raiseHTML + capHTML + needHTML +
             '<div class="hm-cols"><section><h3 class="pf-h">Latest updates</h3>' +
-            (feed.length ? '<ul class="hm-feed">' + feed.map((it) => '<li>' + (it.email != null ? '<button type="button" class="hm-row em" data-open-email="' + it.email + '">' : it.id != null ? '<button type="button" class="hm-row" data-open-detail="' + it.id + '">' : '<div class="hm-row">') + (it.id != null ? logoHTML(it.id) : "") + '<span class="hm-t"><span>' + esc(it.text) + "</span>" + (it.sub ? "<small>" + esc(it.sub) + "</small>" : "") + '</span><time>' + esc(feedWhen(it.at, it.exact)) + "</time>" + (it.id != null ? "</button>" : "</div>") + "</li>").join("") + "</ul>" : '<p class="pf-none">No updates yet.</p>') +
+            (feed.length ? '<ul class="hm-feed">' + feed.map((it) => '<li>' + (it.email != null ? '<button type="button" class="hm-row em" data-open-email="' + it.email + '">' : it.id != null ? '<button type="button" class="hm-row" data-open-detail="' + it.id + '">' : '<div class="hm-row">') + (it.id != null ? logoHTML(it.id, "row") : "") + '<span class="hm-t"><span>' + esc(it.text) + "</span>" + (it.sub ? "<small>" + esc(it.sub) + "</small>" : "") + '</span><time>' + esc(feedWhen(it.at, it.exact)) + "</time>" + (it.id != null ? "</button>" : "</div>") + "</li>").join("") + "</ul>" : '<p class="pf-none">No updates yet.</p>') +
             '</section><section><h3 class="pf-h">Numbers</h3><div class="hm-kpis">' +
             kpi(tw, "Touches", "7 days") + kpi(stale, "Stale", "14d+ quiet") + (noNext == null ? "" : kpi(noNext, "No next step", "")) +
             kpi(nCommit, "Committed LPs", fmtM(committed)) + (soft.n ? kpi(fmtM(soft.t), "Soft indications", soft.n + " LPs, not counted") : "") + kpi(all.length, "In pipe", "") + "</div></section></div>";
         }
+        function capitalSplit() {
+          const all = records();
+          const committed = all.filter(([, st]) => st === "Committed").map(([id]) => +id);
+          const soft = Object.entries(state.commitments).filter(([id]) => ["Committed", "Passed"].indexOf(state.pipeline[id]) < 0 && firmOf(+id)).map(([id, a]) => [+id, +a]);
+          const inter = new Set(soft.map(([id]) => id));
+          for (const [id, st] of all) if (st === "Warm" || st === "In Process") inter.add(+id);
+          const passed = passedRecords().map(([id]) => +id);
+          return { committed, committedT: committedTotal(), interested: [...inter], softT: soft.reduce((t, [, a]) => t + a, 0), passed };
+        }
+        function needsYou(all) {
+          const out = []; const today = ymd(new Date());
+          const nm = (id) => (firmOf(+id) || {}).name || "LP";
+          const dayMs = (d) => new Date(String(d).slice(0, 10) + "T00:00:00").getTime();
+          const done = new Set();
+          for (const [id] of all) {
+            const t = schedTouches.get(+id);
+            if (t && String(t.touched_at).slice(0, 10) <= today) { out.push({ id: +id, name: nm(id), text: nm(id), sub: "Scheduled touch due " + fmtDay(t.touched_at), ask: "follow up", w: 0 }); done.add(+id); }
+          }
+          for (const [id, st] of all) {
+            if (done.has(+id)) continue;
+            const lt = lastTouches.get(+id); const q = lt ? Math.floor((Date.now() - dayMs(lt.touched_at)) / 864e5) : null;
+            if (st === "In Process" && state.hasNextStep && !((state.nextSteps[+id] || {}).step)) { out.push({ id: +id, name: nm(id), text: nm(id), sub: "In process, no next step", ask: "suggest a next step", w: 1 }); done.add(+id); }
+            else if ((st === "In Process" || st === "Contacted") && (q === null || q >= 14)) { out.push({ id: +id, name: nm(id), text: nm(id), sub: q === null ? "In " + st.toLowerCase() + ", never touched" : st + ", quiet " + q + " days", ask: "follow up", w: st === "In Process" ? 2 : 3 }); }
+          }
+          return out.sort((a, b) => a.w - b.w || starCount((state.details[b.id] || {}).tier) - starCount((state.details[a.id] || {}).tier)).slice(0, 5);
+        }
+        let capTab = "interested";
+        function renderCapital() {
+          if (loading) { $("home").innerHTML = '<p class="pf-none">Loading\u2026</p>'; return; }
+          const cp = capitalSplit();
+          const nm = (id) => (firmOf(+id) || {}).name || "LP";
+          const tab = (k, l, n) => '<button type="button" data-cap-tab="' + k + '" aria-pressed="' + (capTab === k) + '">' + l + ' <span>' + n + '</span></button>';
+          const row = (id, sub, amt, extra) => '<li class="cap-li"><button type="button" class="hm-row" data-open-detail="' + id + '">' + logoHTML(id, "row") + '<span class="hm-t"><span>' + esc(nm(id)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : "") + '</span>' + (amt ? '<time>' + esc(amt) + '</time>' : "") + '</button>' + (extra || "") + '</li>';
+          let head = "", list = "";
+          if (capTab === "committed") {
+            head = fmtM(cp.committedT) + " committed \u00b7 " + cp.committed.length + " LP" + (cp.committed.length === 1 ? "" : "s");
+            list = cp.committed.sort((a, b) => (state.commitments[b] || 0) - (state.commitments[a] || 0)).map((id) => row(id, state.stageTimes[id] ? "Since " + fmtDay(state.stageTimes[id]) : "", state.commitments[id] ? fmtM(state.commitments[id]) : "")).join("");
+            if (!list) list = '<li class="pf-none cap-empty">Nothing committed yet.</li>';
+          } else if (capTab === "passed") {
+            head = cp.passed.length + " passed";
+            list = cp.passed.sort((a, b) => String(passOf(b).passed_at || "").localeCompare(String(passOf(a).passed_at || ""))).map((id) => { const p = passOf(id); return row(id, [p.pass_reason || "No reason recorded", p.passed_by].filter(Boolean).join(" \u00b7 "), p.passed_at ? fmtDay(p.passed_at) : "", '<a class="nd-ask" href="' + esc(reqLink("CapitalTrack: reopen " + nm(id) + " to Warm." + reqId(id))) + '">Reopen</a>'); }).join("");
+            if (!list) list = '<li class="pf-none cap-empty">No passes recorded.</li>';
+          } else {
+            head = (cp.softT ? fmtM(cp.softT) + " soft indications \u00b7 " : "") + cp.interested.length + " LP" + (cp.interested.length === 1 ? "" : "s") + " \u00b7 not counted as committed";
+            const rk = { "In Process": 0, Warm: 1 };
+            list = cp.interested.sort((a, b) => (state.commitments[b] || 0) - (state.commitments[a] || 0) || (rk[state.pipeline[a]] ?? 2) - (rk[state.pipeline[b]] ?? 2)).map((id) => row(id, (state.pipeline[id] || "Not on board") + (lastTouches.get(id) ? " \u00b7 " + touchLabel(lastTouches.get(id).kind) + " " + fmtTouch(lastTouches.get(id)) : ""), state.commitments[id] ? fmtM(state.commitments[id]) : "")).join("");
+            if (!list) list = '<li class="pf-none cap-empty">No interested LPs yet.</li>';
+          }
+          $("home").innerHTML = '<div class="cvw"><h3 class="pf-h">Capital</h3><div class="cap-tabs" role="group">' + tab("interested", "Interested", cp.interested.length) + tab("committed", "Committed", cp.committed.length) + tab("passed", "Not interested", cp.passed.length) + '</div><p class="cap-head">' + esc(head) + '</p><ul class="hm-feed">' + list + "</ul></div>";
+        }
+        $("home").addEventListener("click", (e) => {
+          const t = e.target.closest("[data-cap-tab]"); if (t) { capTab = t.dataset.capTab; renderCapital(); return; }
+          const g = e.target.closest("[data-goto-cap]"); if (g) { capTab = g.dataset.gotoCap; setView("capital"); return; }
+          const d = e.target.closest("[data-open-detail]"); if (d) openDetail(+d.dataset.openDetail);
+        });
         const FUND_TARGET = 350000000;
         const fundCap = () => state.fundGoal || 500000000;
         function committedTotal() {
@@ -2039,7 +2136,7 @@
         }
         function softTotal() {
           let t = 0, n = 0;
-          for (const [id, amt] of Object.entries(state.commitments)) if (state.pipeline[id] !== "Committed") { t += amt; n++; }
+          for (const [id, amt] of Object.entries(state.commitments)) if (state.pipeline[id] !== "Committed" && state.pipeline[id] !== "Passed") { t += amt; n++; }
           return { t, n };
         }
         function renderFund() {
@@ -2125,9 +2222,10 @@
             if (!cur || d < String(cur.touched_at).slice(0, 10)) schedTouches.set(t.firm_id, t);
           }
           renderKpis();
-          document.body.classList.toggle("home-mode", view === "home");
-          if (view !== "home") $("home").innerHTML = "";
+          document.body.classList.toggle("home-mode", view === "home" || view === "capital");
+          if (view !== "home" && view !== "capital") $("home").innerHTML = "";
           if (view === "home") { $("board").innerHTML = ""; renderHome(all); return; }
+          if (view === "capital") { $("board").innerHTML = ""; renderCapital(); return; }
           $("board-search").disabled = loading;
           $("manage-tags").disabled = loading || saving;
           $("total").textContent =
@@ -2136,7 +2234,7 @@
           board.classList.toggle("list", view === "list");
           board.setAttribute("aria-label", view === "list" ? "LP pipeline list" : "LP pipeline board");
           if (view === "list") {
-            board.innerHTML = renderList(all, q, filter);
+            board.innerHTML = renderList(all.concat(passedRecords()), q, filter);
             return;
           }
           board.innerHTML = stages
@@ -2192,7 +2290,7 @@
             .join("");
         }
         function renderList(all, q, filter) {
-          const stageRank = { "In Process": 0, Contacted: 1, Warm: 2, Wishlist: 3, Committed: 4 };
+          const stageRank = { "In Process": 0, Contacted: 1, Warm: 2, Wishlist: 3, Committed: 4, Backlog: 5, Passed: 6 };
           const quietDays = (id) => {
             const t = lastTouches.get(+id);
             return t ? Math.floor((Date.now() - new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime()) / 864e5) : 9999;
@@ -2387,16 +2485,18 @@
         }
         $("manage-tags").onclick = () => openTags();
         function setView(v) {
-          if (view === v || !["home", "stacks", "list"].includes(v)) return;
+          if (view === v && v !== "capital") return; if (!["home", "stacks", "capital", "list"].includes(v)) return;
           view = v;
           $("view-home").setAttribute("aria-pressed", String(v === "home"));
           $("view-stacks").setAttribute("aria-pressed", String(v === "stacks"));
+          $("view-capital").setAttribute("aria-pressed", String(v === "capital"));
           $("view-list").setAttribute("aria-pressed", String(v === "list"));
           render();
         }
         $("view-home").onclick = () => setView("home");
         $("view-stacks").onclick = () => setView("stacks");
         $("view-list").onclick = () => setView("list");
+        $("view-capital").onclick = () => setView("capital");
         $("tag-filter").onchange = render;
         $("board").addEventListener("click", (e) => {
           const pb = e.target.closest("[data-pin]");
@@ -2550,7 +2650,7 @@
         }
         function open(stage = selectedStage) {
           if (loading || saving) return;
-          selectedStage = stages.includes(stage) ? stage : stages[0];
+          selectedStage = stages.includes(stage) ? stage : stages[1];
           $("pick-stage").value = selectedStage;
           $("picker").classList.add("show");
           $("pick-search").value = "";
@@ -2645,6 +2745,7 @@
             '<div class="pf-badges">' + (stars ? '<span class="pf-stars" aria-label="' + starCount(d.tier) + ' of 5 stars">' + stars + '</span>' : '') +
             (prio ? '<span class="pf-prio">' + prio[0].toUpperCase() + prio.slice(1) + ' priority</span>' : '') +
             (tagChips ? '<span class="tags">' + tagChips + '</span>' : '') + '</div></header>' +
+            (state.pipeline[id] === "Passed" ? '<div class="pf-status pass"><b>Passed</b> ' + esc([passOf(id).passed_at ? fmtDay(passOf(id).passed_at) : "", passOf(id).pass_reason || "no reason recorded", passOf(id).passed_by].filter(Boolean).join(" \u00b7 ")) + '</div>' : state.pipeline[id] === "Backlog" ? '<div class="pf-status"><b>Backlog</b> not worked yet</div>' : "") +
             '<dl class="pf-facts">' +
             fact("Stage", state.pipeline[id]) +
             fact("Committed", commitAmt ? fmtM(commitAmt) : "") +
@@ -2657,6 +2758,7 @@
               ['Intro', 'Touch base', 'Follow up', 'Meeting', 'Share materials', 'Thanks'].map((t) => '<a href="' + esc(reqLink('CapitalTrack: draft email to ' + f.name + ', ' + t.toLowerCase() + '.' + reqId(id))) + '">' + t + '</a>').join('') + '</span></span>' +
               '<span class="email-action"><button type="button" class="email-choice pf-askbtn" aria-expanded="false">Move stage</button><span class="email-templates">' +
               stages.filter((st) => st !== state.pipeline[id]).map((st) => '<a href="' + esc(reqLink('CapitalTrack: move ' + f.name + ' to ' + st + '.' + reqId(id))) + '">' + st + '</a>').join('') + '</span></span>' +
+              (state.pipeline[id] === "Passed" ? '<span class="email-action"><button type="button" class="email-choice pf-askbtn" aria-expanded="false">Reopen</button><span class="email-templates">' + pipeStages.map((st) => '<a href="' + esc(reqLink('CapitalTrack: reopen ' + f.name + ' to ' + st + '.' + reqId(id))) + '">' + st + '</a>').join('') + '</span></span>' : '<a class="pf-askbtn" href="' + esc(reqLink('CapitalTrack: pass on ' + f.name + ' - reason: ' + reqId(id).trim() + ' ')) + '">Pass</a>') +
               '<a class="pf-askbtn" href="' + esc(reqLink('CapitalTrack: set next step for ' + f.name + ': ' + reqId(id).trim() + ' ')) + '">Next step</a>' +
               '<a class="pf-askbtn" href="' + esc(reqLink('CapitalTrack: set ' + f.name + ' commitment to $' )) + '">Commitment</a></div>' +
             '<div class="pf-cols"><div class="pf-main">' +
@@ -2898,7 +3000,7 @@
           cardIsNew = isNew;
           const d = state.details[id] || {};
           $("card-title").textContent = firmOf(id).name;
-          $("card-stage").value = isNew ? selectedStage : (state.pipeline[id] || stages[0]);
+          $("card-stage").value = isNew ? selectedStage : (state.pipeline[id] || stages[1]);
           $("card-owner").value = d.owner || "";
           $("card-tier").value = d.tier || "";
           $("card-priority").value = priorityOf(id);
