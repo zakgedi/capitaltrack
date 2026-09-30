@@ -369,13 +369,22 @@ startApp();
 .pin-key{position:absolute;z-index:58;left:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:6px 13px;max-width:calc(100% - 480px);padding:8px 10px;background:rgba(255,255,255,.92);border:1px solid var(--line);font:10px/1.3 Arial,Helvetica,sans-serif;color:var(--mut)}
 .pin-key span{white-space:nowrap}
 .pin-key i{display:inline-block;width:7px;height:7px;margin-right:5px}
-@media(max-width:760px){.pin-key{left:12px;right:12px;bottom:auto;top:calc(112px + env(safe-area-inset-top,0px));max-width:none;gap:5px 9px;padding:6px 8px;font-size:9px}}</style><script>/* CapitalTrack chrome: masthead + pipe pins on the globe. */
+@media(max-width:760px){.pin-key{left:12px;right:12px;bottom:auto;top:calc(112px + env(safe-area-inset-top,0px));max-width:none;gap:5px 9px;padding:6px 8px;font-size:9px}}</style><style>html.framed .app-header{display:none}
+html.framed .gzoom{top:calc(12px + env(safe-area-inset-top,0px))}
+html.framed #stop{top:calc(12px + env(safe-area-inset-top,0px))}
+@media(max-width:600px){html.framed #stop{top:calc(12px + env(safe-area-inset-top,0px))}html.framed .gzoom{top:calc(12px + env(safe-area-inset-top,0px))}}
+@media(max-width:760px){html.framed .pin-key{top:calc(100px + env(safe-area-inset-top,0px))}}</style>
+<script>/* CapitalTrack chrome: masthead + pipe pins on the globe. */
 (function(){
+  var framed = window.self !== window.top;
+  if (framed) document.documentElement.classList.add('framed');
   var globe=document.getElementById('globe-pane');
+  if (!framed) {
   var header=document.createElement('header');
   header.className='app-header';
   header.innerHTML='<a class="app-brand" href="index.html" target="_top" aria-label="CapitalTrack home">CapitalTrack</a><span class="app-divider" aria-hidden="true"></span><nav aria-label="App panes"><a href="index.html" target="_top">Pipe</a><a href="rank.html" target="_top">1v1</a></nav>';
   if(globe)globe.prepend(header);
+  }
   /* Color only locations containing LPs in the live pipe; preserve all other dots. */
   var stages={Wishlist:'#ab708a',Warm:'#df721f',Contacted:'#7457a8','In Process':'#bd3c56',Committed:'#257c55'};
   var legend=document.createElement('aside');
