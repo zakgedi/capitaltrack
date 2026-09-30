@@ -1218,6 +1218,7 @@
       .em-login input { border: 1px solid var(--ink); padding: 11px 12px; font: 16px Arial, Helvetica, sans-serif; border-radius: 0; }
       .em-login button { border: 1px solid var(--ink); background: var(--ink); color: #fff; padding: 11px; font: 600 11px Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; border-radius: 0; }
       .em-err { color: #a3201b; font: 12px Arial, Helvetica, sans-serif; margin: 0; min-height: 1em; }
+      .em-sum { font: 500 20px/1.4 'Newsreader', Georgia, serif; margin: 0 0 16px; }
       .em-none { font: 400 16px/1.5 'Newsreader', Georgia, serif; color: var(--sub); margin: 18px 0; }
       .em-act { display: flex; gap: 8px; flex-wrap: wrap; }
       .em-act a { border: 1px solid var(--ink); padding: 10px 14px; font: 600 11px Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); text-decoration: none; }
@@ -1629,7 +1630,7 @@
                 "'": "&#39;",
               })[c],
           );
-        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, pins: {}, hasPin: false, emails: [] };
+        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, pins: {}, hasPin: false };
         let customFirmMap = new Map();
         let lastTouches = new Map();
         let schedTouches = new Map();
@@ -1658,10 +1659,16 @@
         const TOUCH_LABELS = { email: "Emailed", call: "Called", meeting: "Met", scheduled: "Scheduled", note: "Note" };
         const touchLabel = (k) => TOUCH_LABELS[k] || k;
         async function fetchTouches() {
-          try { return await api("/rest/v1/ct_touches?select=id,firm_id,kind,note,owner,touched_at,sent_at&order=touched_at.desc,sent_at.desc.nullslast,id.desc&limit=2000"); }
-          catch (e) { return await db.touches(); }
+          try { return await api("/rest/v1/ct_touches?select=id,firm_id,kind,note,owner,touched_at,sent_at,summary,people&order=touched_at.desc,sent_at.desc.nullslast,id.desc&limit=2000"); }
+          catch (e) {
+            try { return await api("/rest/v1/ct_touches?select=id,firm_id,kind,note,owner,touched_at,sent_at&order=touched_at.desc,sent_at.desc.nullslast,id.desc&limit=2000"); }
+            catch (e2) { return await db.touches(); }
+          }
         }
         const LA = "America/Los_Angeles";
+        const pplOf = (t) => (Array.isArray(t.people) ? t.people.filter(Boolean) : []);
+        function whoShort(t) { const p = pplOf(t); return p.length ? p[0] + (p.length > 1 ? " +" + (p.length - 1) : "") : ""; }
+        function emailTitle(t) { const p = pplOf(t); const fn = (firmOf(t.firm_id) || {}).name || "LP"; return p.length ? "Emailed " + p.join(", ") + " (" + fn + ")" : "Emailed " + fn; }
         function fmtTouch(t) {
           if (!t.sent_at) return fmtDay(t.touched_at);
           const d = new Date(t.sent_at); if (isNaN(d)) return fmtDay(t.touched_at);
@@ -1738,8 +1745,7 @@
           catch (e) { state.stageTimes = {}; state.hasStageTimes = false; }
           try { state.nextSteps = Object.fromEntries((await db.nextSteps()).map((r) => [r.firm_id, { step: r.next_step || "", date: r.next_step_date || null, kind: "" }])); state.hasNextStep = true; }
           catch (e) { state.nextSteps = {}; state.hasNextStep = false; }
-          await loadEmails();
-          try { state.pins = Object.fromEntries((await db.pins()).map((r) => [r.firm_id, !!r.pinned])); state.hasPin = true; }
+                    try { state.pins = Object.fromEntries((await db.pins()).map((r) => [r.firm_id, !!r.pinned])); state.hasPin = true; }
           catch (e) { state.pins = {}; state.hasPin = false; }
           try {
             const funds = await db.funds();
@@ -1944,70 +1950,16 @@
           const d = LOGO_TOKEN && domainOf(id);
           return d ? '<img class="lg ' + (cls || "") + '" src="https://img.logo.dev/' + encodeURIComponent(d) + "?token=" + LOGO_TOKEN + '&size=96&format=png" alt="" loading="lazy" referrerpolicy="origin" onerror="this.remove()">' : "";
         }
-        const OWNER_EMAIL = "zakaria.m.gedi@gmail.com";
-        const SB = "https://pkiliwsmcxseoczfsfar.supabase.co";
-        const SBKEY = "sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy";
-        function getSess() { try { return JSON.parse(localStorage.getItem("ct_sess") || "null"); } catch (e) { return null; } }
-        async function sbAuth(path, body) {
-          const r = await fetch(SB + "/auth/v1/" + path, { method: "POST", headers: { apikey: SBKEY, "Content-Type": "application/json" }, body: JSON.stringify(body) });
-          const j = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(j.error_description || j.msg || j.message || "Sign-in failed");
-          localStorage.setItem("ct_sess", JSON.stringify({ access_token: j.access_token, refresh_token: j.refresh_token, expires_at: Date.now() + (j.expires_in || 3600) * 1000 - 60000 }));
-          return j;
-        }
-        async function sessToken() {
-          let s = getSess(); if (!s) return null;
-          if (Date.now() > s.expires_at) { try { await sbAuth("token?grant_type=refresh_token", { refresh_token: s.refresh_token }); s = getSess(); } catch (e) { localStorage.removeItem("ct_sess"); return null; } }
-          return s.access_token;
-        }
-        async function loadEmails() {
-          const tok = await sessToken();
-          if (!tok) { state.emails = []; return; }
-          try {
-            const r = await fetch(SB + "/rest/v1/ct_email_copies?select=*&order=sent_at.desc&limit=1000", { headers: { apikey: SBKEY, Authorization: "Bearer " + tok } });
-            state.emails = r.ok ? await r.json() : [];
-          } catch (e) { state.emails = []; }
-        }
-        function emailFor(t) {
-          const list = state.emails || [];
-          let e = list.find((x) => x.touch_id != null && +x.touch_id === t.id);
-          if (!e) {
-            const day = String(t.touched_at).slice(0, 10);
-            e = list.find((x) => +x.firm_id === t.firm_id && String(x.sent_at || "").slice(0, 10) === day);
-          }
-          return e || null;
-        }
-        const joinAddr = (v) => Array.isArray(v) ? v.join(", ") : (v || "");
         function openEmail(tid) {
           const t = state.touches.find((x) => x.id === tid); if (!t) return;
-          const e = emailFor(t);
           const n = (firmOf(t.firm_id) || {}).name || "LP";
-          const when = (e && e.sent_at) || t.sent_at ? new Date((e && e.sent_at) || t.sent_at).toLocaleString("en-US", { timeZone: LA, weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : fmtDay(t.touched_at);
+          const when = t.sent_at ? new Date(t.sent_at).toLocaleString("en-US", { timeZone: LA, weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : fmtDay(t.touched_at) + " (time not recorded)";
+          const ppl = Array.isArray(t.people) ? t.people.filter(Boolean) : [];
           const row = (l, v) => v ? "<dt>" + l + "</dt><dd>" + esc(v) + "</dd>" : "";
-          let h;
-          if (!getSess()) {
-            h = '<h3 class="em-subj">Emailed ' + esc(n) + "</h3>" +
-              '<p class="em-none">Email copies are private. Sign in to read them.</p>' +
-              '<form class="em-login" id="em-login"><input type="email" name="email" value="' + OWNER_EMAIL + '" autocomplete="username" aria-label="Email"><input type="password" name="password" placeholder="Password" autocomplete="current-password" aria-label="Password" required><button type="submit" class="primary">Sign in</button><p class="em-err" id="em-err"></p></form>';
-            $("em-content").innerHTML = h;
-            $("em-login").addEventListener("submit", async (ev) => {
-              ev.preventDefault(); const f = ev.target;
-              try { await sbAuth("token?grant_type=password", { email: f.email.value.trim(), password: f.password.value }); await loadEmails(); openEmail(tid); }
-              catch (err) { $("em-err").textContent = err.message; }
-            });
-          } else if (e) {
-            const url = e.gmail_url || (e.thread_id ? "https://mail.google.com/mail/?authuser=" + encodeURIComponent(e.account_email || OWNER_EMAIL) + "#all/" + encodeURIComponent(e.thread_id) : "");
-            h = '<h3 class="em-subj">' + esc(e.subject || "(no subject)") + '</h3><dl class="em-meta">' + row("Firm", n) + row("From", e.from_addr) + row("To", joinAddr(e.to_addr)) + row("Cc", joinAddr(e.cc_addr)) + row("Date", when) + "</dl>" +
-              '<div class="em-body">' + esc(e.body_text || "") + "</div>" +
-              '<div class="em-act">' + (url ? '<a class="primary" href="' + esc(url) + '" target="_blank" rel="noopener">Open in Gmail</a>' : "") + '<a href="' + esc(reqLink("CapitalTrack: draft a follow-up email to " + n + "." + reqId(t.firm_id))) + '">Draft follow-up</a></div>';
-            $("em-content").innerHTML = h;
-          } else {
-            h = '<h3 class="em-subj">Emailed ' + esc(n) + "</h3><dl class=\"em-meta\">" + row("Firm", n) + row("Date", when) + row("By", t.owner) + "</dl>" +
-              '<p class="em-none">No copy of this email is stored yet. Ask for it and it will be attached here.</p>' +
-              '<div class="em-act"><a class="primary" href="' + esc(reqLink("CapitalTrack: attach the email I sent " + n + " on " + fmtDay(t.touched_at) + "." + reqId(t.firm_id))) + '">Get the copy</a></div>';
-            $("em-content").innerHTML = h;
-          }
-          $("em-content").scrollTop = 0;
+          const h = '<h3 class="em-subj">' + esc(pplOf(t).length ? "Emailed " + pplOf(t).join(", ") : "Emailed " + n) + "</h3>" +
+            (t.summary ? '<p class="em-sum">' + esc(t.summary) + "</p>" : '<p class="em-none">No summary recorded yet.</p>') +
+            '<dl class="em-meta">' + row("Firm", n) + row("Sent", when) + row("By", t.owner) + "</dl>";
+          $("em-content").innerHTML = h; $("em-content").scrollTop = 0;
           $("email-modal").classList.add("show"); $("em-close").focus();
         }
         function closeEmail() { $("email-modal").classList.remove("show"); }
@@ -2035,7 +1987,7 @@
           const nm = (id, fallback) => (firmOf(+id) || {}).name || fallback || "LP";
           for (const t of state.touches.slice(0, 40)) {
             if (t.kind === "scheduled") continue;
-            items.push({ at: t.sent_at || t.touched_at, exact: !!t.sent_at, id: t.firm_id, email: t.kind === "email" ? t.id : null, text: touchLabel(t.kind) + " " + nm(t.firm_id), sub: [t.owner, t.note].filter(Boolean).join(" \u00b7 ") });
+            items.push({ at: t.sent_at || t.touched_at, exact: !!t.sent_at, id: t.firm_id, email: t.kind === "email" ? t.id : null, text: t.kind === "email" && pplOf(t).length ? "Emailed " + pplOf(t).join(", ") : touchLabel(t.kind) + " " + nm(t.firm_id), sub: [t.kind === "email" && pplOf(t).length ? nm(t.firm_id) : "", t.summary || t.note || t.owner].filter(Boolean).join(" \u00b7 ") });
           }
           for (const a of state.audit || []) {
             const d = a.detail || {}; const n = a.firm_name || nm(a.firm_id);
@@ -2047,11 +1999,8 @@
             else if (a.action === "add") text = "Added " + n + " to " + (d.stage || "the pipe");
             else if (a.action === "remove") text = "Removed " + n + " from the pipe";
             else if (a.action === "person") text = "Added " + (d.name || "a contact") + " at " + n;
-            else if (a.action === "owner") text = "Owner for " + n + ": " + (d.to || "none");
-            else if (a.action === "stars") text = "Stars for " + n + ": " + (d.to ? ({ S: 5, A: 4, B: 3, C: 2, D: 1 }[d.to] || "") : "none");
-            else if (a.action === "priority") text = "Priority for " + n + ": " + d.to;
-            else text = a.action + " \u00b7 " + n;
-            items.push({ at: a.at, exact: true, id: a.firm_id, text, sub: a.why || "" });
+            else continue;
+            items.push({ at: a.at, exact: true, id: a.firm_id, text, sub: "" });
           }
           const ms = (i) => i.exact ? new Date(i.at).getTime() : new Date(String(i.at).slice(0, 10) + "T12:00:00").getTime(); return items.sort((x, y) => ms(y) - ms(x)).slice(0, 14);
         }
@@ -2122,7 +2071,7 @@
         function touchLineHTML(id) {
           const t = lastTouches.get(+id);
           if (!t) return "";
-          if (t.kind === "email") return '<button type="button" class="card-touch em" data-open-email="' + t.id + '">' + esc(touchLabel(t.kind) + " · " + fmtTouch(t)) + "</button>";
+          if (t.kind === "email") return '<button type="button" class="card-touch em" data-open-email="' + t.id + '">' + esc((t.kind === "email" && whoShort(t) ? "Emailed " + whoShort(t) : touchLabel(t.kind)) + " · " + fmtTouch(t)) + "</button>";
           return '<div class="card-touch">' + esc(touchLabel(t.kind) + " · " + fmtTouch(t)) + "</div>";
         }
         function renderKpis() {
@@ -2648,7 +2597,7 @@
               '</div>' +
               (firmTouches.length
                 ? '<ul class="touch-list">' + firmTouches.map((t) =>
-                    "<li>" + (t.kind === "email" ? '<button type="button" class="em-link" data-open-email="' + t.id + '">' : "<span>") + esc(fmtTouch(t) + " \u00b7 " + touchLabel(t.kind) + (t.owner ? " \u00b7 " + t.owner : "") + (t.note ? " \u2014 " + t.note : "")) + (t.kind === "email" ? "</button>" : "</span>") + '<button type="button" class="touch-del" data-del-touch="' + t.id + '" aria-label="Delete touch">\u00d7</button></li>').join("") + "</ul>"
+                    "<li>" + (t.kind === "email" ? '<button type="button" class="em-link" data-open-email="' + t.id + '">' : "<span>") + esc(fmtTouch(t) + " \u00b7 " + (t.kind === "email" ? emailTitle(t) : touchLabel(t.kind)) + (t.owner ? " \u00b7 " + t.owner : "") + (t.note ? " \u2014 " + t.note : "")) + (t.kind === "email" ? "</button>" : "</span>") + '<button type="button" class="touch-del" data-del-touch="' + t.id + '" aria-label="Delete touch">\u00d7</button></li>').join("") + "</ul>"
                 : '<p class="touch-empty">No touches yet.</p>') + '</section>'
             : "";
           const row = (label, value) => '<div class="detail-field"><dt>' + label + '</dt><dd>' + esc(value || "—") + '</dd></div>';
