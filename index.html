@@ -1076,7 +1076,12 @@
       .hm-raise { padding: 26px 0 22px; }
       .hm-big { font: 500 52px/1.05 'Newsreader', Georgia, serif; letter-spacing: -.01em; margin-top: 6px; }
       .hm-big small { font: 18px 'Newsreader', Georgia, serif; color: var(--sub); letter-spacing: 0; }
-      .hm-bar { height: 6px; background: #ececea; margin: 16px 0 14px; }
+      .hm-bar { position: relative; height: 6px; background: #ececea; margin: 16px 0 6px; }
+      .hm-bar u { position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--ink); }
+      .hm-scale { position: relative; height: 16px; margin-bottom: 14px; font: 600 10px/16px Arial, Helvetica, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--sub); }
+      .hm-scale span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+      .hm-scale span:first-child { left: 0; transform: none; }
+      .hm-scale .cap { right: 0; left: auto; transform: none; }
       .hm-bar i { display: block; height: 100%; background: var(--ink); }
       .hm-funnel { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--rule); }
       .hm-funnel div { padding: 12px 8px 0 0; }
@@ -1158,7 +1163,8 @@
       .fund-fill { display: block; height: 100%; width: 0; background: var(--ink); transition: width .3s; }
       .fund-nums { font: 600 11px/1 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); white-space: nowrap; }
       .fund-nums b { color: var(--ink); }
-      .fund-track { display: flex; }
+      .fund-track { display: flex; position: relative; }
+      .fund-tick { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); }
       .fund-soft { display: block; height: 100%; width: 0; background: repeating-linear-gradient(45deg, rgba(0,0,0,.28) 0 2px, transparent 2px 5px); transition: width .3s; }
       .pipe-head, .roster-head { font: 600 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); padding: 16px 2px 8px; }
       .list-side { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
@@ -1257,7 +1263,7 @@
         </div>
         <div class="fund" id="fund" role="status" aria-label="Fund commitment progress" hidden>
           <span class="fund-name">Nova III</span>
-          <span class="fund-track"><span class="fund-fill" id="fund-fill"></span></span>
+          <span class="fund-track"><span class="fund-fill" id="fund-fill"></span><i class="fund-tick" id="fund-target" aria-hidden="true"></i></span>
           <span class="fund-nums" id="fund-nums"></span>
         </div>
         <span class="count" id="total"></span>
@@ -1936,9 +1942,9 @@
         }
         function renderHome(all) {
           if (loading) { $("home").innerHTML = '<p class="pf-none">Loading\u2026</p>'; return; }
-          let committed = 0;
-          for (const amt of Object.values(state.commitments)) committed += amt;
-          const goal = state.fundGoal || 500000000;
+          const committed = committedTotal();
+          const goal = fundCap();
+          const soft = softTotal();
           const counts = stages.map((st) => all.filter(([, s2]) => s2 === st).length);
           const rows = all;
           const weekAgo = Date.now() - 7 * 864e5;
@@ -1946,27 +1952,39 @@
           const tw = state.touches.filter((t) => t.kind !== "scheduled" && dayMs(t.touched_at) >= weekAgo).length;
           const stale = rows.filter(([id]) => { const t = lastTouches.get(+id); return !t || Date.now() - dayMs(t.touched_at) >= 14 * 864e5; }).length;
           const noNext = state.hasNextStep ? rows.filter(([id]) => !((state.nextSteps[+id] || {}).step)).length : null;
-          const nCommit = Object.keys(state.commitments).filter((id) => state.pipeline[id]).length;
+          const nCommit = Object.keys(state.commitments).filter((id) => state.pipeline[id] === "Committed").length;
           const kpi = (v, l, sub) => '<div class="hm-kpi"><b>' + v + "</b><span>" + l + "</span>" + (sub ? "<small>" + sub + "</small>" : "") + "</div>";
           const feed = feedItems();
           $("home").innerHTML =
-            '<div class="hm-raise"><span class="hm-lab">' + esc(state.fundName || "Nova III") + '</span><div class="hm-big">' + fmtM(committed) + ' <small>of ' + fmtM(goal) + ' committed</small></div>' +
-            '<div class="hm-bar"><i style="width:' + Math.min(100, (committed / goal) * 100) + '%"></i></div>' +
+            '<div class="hm-raise"><span class="hm-lab">' + esc(state.fundName || "Nova III") + '</span><div class="hm-big">' + fmtM(committed) + ' <small>committed of ' + fmtM(FUND_TARGET) + ' target</small></div>' +
+            '<div class="hm-bar"><i style="width:' + Math.min(100, (committed / goal) * 100) + '%"></i><u style="left:' + (FUND_TARGET / goal) * 100 + '%"></u></div>' +
+            '<div class="hm-scale"><span>$0</span><span style="left:' + (FUND_TARGET / goal) * 100 + '%">Target ' + fmtM(FUND_TARGET) + '</span><span class="cap">Hard cap ' + fmtM(goal) + '</span></div>' +
             '<div class="hm-funnel">' + stages.map((st, i) => '<div><span class="hm-lab">' + st + "</span><b>" + counts[i] + "</b></div>").join("") + "</div></div>" +
             '<div class="hm-cols"><section><h3 class="pf-h">Latest updates</h3>' +
             (feed.length ? '<ul class="hm-feed">' + feed.map((it) => '<li>' + (it.id != null ? '<button type="button" class="hm-row" data-open-detail="' + it.id + '">' : '<div class="hm-row">') + (it.id != null ? logoHTML(it.id) : "") + '<span class="hm-t"><span>' + esc(it.text) + "</span>" + (it.sub ? "<small>" + esc(it.sub) + "</small>" : "") + '</span><time>' + esc(feedWhen(it.at)) + "</time>" + (it.id != null ? "</button>" : "</div>") + "</li>").join("") + "</ul>" : '<p class="pf-none">No updates yet.</p>') +
             '</section><section><h3 class="pf-h">Numbers</h3><div class="hm-kpis">' +
             kpi(tw, "Touches", "7 days") + kpi(stale, "Stale", "14d+ quiet") + (noNext == null ? "" : kpi(noNext, "No next step", "")) +
-            kpi(nCommit, "Committed LPs", fmtM(committed)) + kpi(all.length, "In pipe", "") + "</div></section></div>";
+            kpi(nCommit, "Committed LPs", fmtM(committed)) + (soft.n ? kpi(fmtM(soft.t), "Soft indications", soft.n + " LPs, not counted") : "") + kpi(all.length, "In pipe", "") + "</div></section></div>";
+        }
+        const FUND_TARGET = 350000000;
+        const fundCap = () => state.fundGoal || 500000000;
+        function committedTotal() {
+          let t = 0;
+          for (const [id, amt] of Object.entries(state.commitments)) if (state.pipeline[id] === "Committed") t += amt;
+          return t;
+        }
+        function softTotal() {
+          let t = 0, n = 0;
+          for (const [id, amt] of Object.entries(state.commitments)) if (state.pipeline[id] !== "Committed") { t += amt; n++; }
+          return { t, n };
         }
         function renderFund() {
-          let committed = 0;
-          for (const amt of Object.values(state.commitments)) committed += amt;
-          const goal = state.fundGoal || 500000000;
-          const cw = Math.min(100, (committed / goal) * 100);
+          const committed = committedTotal();
+          const cap = fundCap();
           $("fund").hidden = false;
-          $("fund-fill").style.width = cw + "%";
-          $("fund-nums").innerHTML = "<b>" + fmtM(committed) + "</b> of " + fmtM(goal) + " committed";
+          $("fund-fill").style.width = Math.min(100, (committed / cap) * 100) + "%";
+          $("fund-target").style.left = (FUND_TARGET / cap) * 100 + "%";
+          $("fund-nums").innerHTML = "<b>" + fmtM(committed) + "</b> of " + fmtM(FUND_TARGET) + " target \u00b7 " + fmtM(cap) + " cap";
         }
         function nextStepHTML(id) {
           if (!state.hasNextStep) return "";
