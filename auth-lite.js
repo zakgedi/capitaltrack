@@ -8,6 +8,7 @@ window.ctAuth={
   del(id){return api('/rest/v1/ct_pipeline?firm_id=eq.'+encodeURIComponent(id),{method:'DELETE'})},
   stageTimes(){return api('/rest/v1/ct_pipeline?select=firm_id,stage_changed_at&stage_changed_at=not.is.null')},
   nextSteps(){return api('/rest/v1/ct_pipeline?select=firm_id,next_step,next_step_date')},
+  pipeRow(id){return api('/rest/v1/ct_pipeline?firm_id=eq.'+encodeURIComponent(id)+'&select=*')},
   pins(){return api('/rest/v1/ct_pipeline?select=firm_id,pinned')},
   schedKinds(){return api('/rest/v1/ct_pipeline?select=firm_id,next_step_kind')},
   commitmentsFull(){return api('/rest/v1/ct_commitments?select=firm_id,amount,status')},
