@@ -11,6 +11,10 @@ window.lpAuth={
   createTag(name,color){return api('/rest/v1/lp_tags',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({name,color})})},
   updateTag(id,name,color){return api('/rest/v1/lp_tags?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({name,color})})},
   deleteTag(id){return api('/rest/v1/lp_tags?id=eq.'+encodeURIComponent(id),{method:'DELETE'})},
+  commitments(){return api('/rest/v1/lp_commitments?select=firm_id,amount,fund')},
+  putCommitment(firmId,amount){return api('/rest/v1/lp_commitments?on_conflict=firm_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({firm_id:+firmId,amount:+amount,fund:'III',updated_at:new Date().toISOString()})})},
+  deleteCommitment(firmId){return api('/rest/v1/lp_commitments?firm_id=eq.'+encodeURIComponent(firmId),{method:'DELETE'})},
+  funds(){return api('/rest/v1/lp_funds?select=fund,goal')},
   rankings(){return api('/rest/v1/lp_rankings?select=firm_id,elo,games')},
   putRanking(firmId,elo,games){return api('/rest/v1/lp_rankings?on_conflict=firm_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({firm_id:+firmId,elo:+elo,games:+games,updated_at:new Date().toISOString()})})},
   setCardTag(firmId,tagId,enabled){return enabled?api('/rest/v1/lp_card_tags',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({firm_id:+firmId,tag_id:+tagId})}):api('/rest/v1/lp_card_tags?firm_id=eq.'+encodeURIComponent(firmId)+'&tag_id=eq.'+encodeURIComponent(tagId),{method:'DELETE'})}
