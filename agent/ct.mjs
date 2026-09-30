@@ -69,8 +69,11 @@ const CMDS = {
   async touch({ pos, opt }) {
     const [q, kind] = pos; if (!KINDS.includes(kind)) throw new Error('kind must be ' + KINDS.join('|'));
     const f = await resolveFirm(q); const row = await pipeRow(f.id); if (!row) throw new Error(f.name + ' is not on the board; run add first');
-    const at = opt.date ? new Date(opt.date + 'T12:00:00').toISOString() : undefined;
-    const rec = { firm_id: f.id, kind, note: opt.note || '', owner: opt.owner ?? row.owner ?? '', ...(at ? { touched_at: at } : {}) };
+    let sent = null, day;
+    const exact = opt['sent-at'] || opt.at;
+    if (exact) { const d = new Date(exact); if (isNaN(d)) throw new Error('--sent-at must be an ISO timestamp'); sent = d.toISOString(); day = d.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); }
+    else if (opt.date) day = opt.date;
+    const rec = { firm_id: f.id, kind, note: opt.note || '', owner: opt.owner ?? row.owner ?? '', ...(day ? { touched_at: day } : {}), ...(sent ? { sent_at: sent } : {}) };
     if (opt.src) {
       const seen = (await CMDS.log({ opt: { n: 5000 } })).some((e) => e.action === 'touch' && e.detail && e.detail.src === opt.src);
       if (seen) return { ok: true, skipped: 'duplicate src ' + opt.src };
@@ -78,6 +81,34 @@ const CMDS = {
     if (opt.dry) return { dry: true, would: rec, src: opt.src || null };
     const r = await api('/ct_touches', 'POST', rec, 'return=representation');
     return { ok: true, touch: r[0], log: await audit({ action: 'touch', firm_id: f.id, firm_name: f.name, detail: { ...rec, ...(opt.src ? { src: opt.src } : {}) }, why: opt.why }) };
+  },
+  async 'touch-email'({ pos, opt }) {
+    const tid = +pos[0]; if (!tid) throw new Error('touch-email <touch_id> --email-file <json>');
+    const e = JSON.parse((await import('node:fs')).readFileSync(opt['email-file'], 'utf8'));
+    const t = (await api('/ct_touches?id=eq.' + tid + '&select=id,firm_id'))[0]; if (!t) throw new Error('no touch ' + tid);
+    const rec = { source_key: e.source_key || (e.account_email + ':' + e.message_id), touch_id: tid, firm_id: t.firm_id, provider: e.provider || 'gmail', account_email: e.account_email, message_id: e.message_id, thread_id: e.thread_id, subject: e.subject, from_addr: e.from, to_addr: e.to || [], cc_addr: e.cc || [], sent_at: e.sent_at, body_text: e.body_text, gmail_url: e.gmail_url || null };
+    if (opt.dry) return { dry: true, would: { ...rec, body_text: (rec.body_text || '').slice(0, 80) + '...' } };
+    const r = await fetch(API + '/ct_email_copies', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify(rec) });
+    if (r.status === 409) return { ok: true, skipped: 'already stored ' + rec.source_key };
+    if (!r.ok) throw new Error('store failed ' + r.status + ' ' + (await r.text()));
+    return { ok: true, stored: rec.source_key, log: await audit({ action: 'email_copy', firm_id: t.firm_id, detail: { touch_id: tid, source_key: rec.source_key }, why: opt.why }) };
+  },
+  async 'touch-delete'({ pos, opt }) {
+    const tid = +pos[0]; const t = (await api('/ct_touches?id=eq.' + tid + '&select=*'))[0]; if (!t) throw new Error('no touch ' + tid);
+    if (opt.dry) return { dry: true, would_delete: t };
+    await api('/ct_touches?id=eq.' + tid, 'DELETE', undefined, 'return=minimal');
+    return { ok: true, deleted: t, log: await audit({ action: 'touch_delete', firm_id: t.firm_id, detail: t, why: opt.why }) };
+  },
+  async 'touch-edit'({ pos, opt }) {
+    const tid = +pos[0]; const t = (await api('/ct_touches?id=eq.' + tid + '&select=*'))[0]; if (!t) throw new Error('no touch ' + tid);
+    const patch = {}; const exact = opt['sent-at'] || opt.at;
+    if (exact) { const d = new Date(exact); if (isNaN(d)) throw new Error('--at must be an ISO timestamp'); patch.sent_at = d.toISOString(); patch.touched_at = d.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); }
+    if (opt.note !== undefined) patch.note = opt.note; if (opt.owner !== undefined) patch.owner = opt.owner; if (opt.kind) patch.kind = opt.kind;
+    if (!Object.keys(patch).length) throw new Error('nothing to change: use --at, --note, --owner or --kind');
+    if (opt.dry) return { dry: true, from: t, patch };
+    await api('/ct_touches?id=eq.' + tid, 'PATCH', patch, 'return=minimal');
+    let copy = null; if (opt['email-file']) copy = await CMDS['touch-email']({ pos: [String(tid)], opt });
+    return { ok: true, touch: tid, patch, copy, log: await audit({ action: 'touch_edit', firm_id: t.firm_id, detail: { touch_id: tid, from: { touched_at: t.touched_at, sent_at: t.sent_at || null }, to: patch, ...(opt.src ? { src: opt.src } : {}) }, why: opt.why }) };
   },
   async stage({ pos, opt }) {
     const [q, stage] = pos; if (!STAGES.includes(stage)) throw new Error('stage must be ' + STAGES.join('|'));
@@ -154,6 +185,6 @@ const CMDS = {
 const [cmd, ...rest] = process.argv.slice(2);
 if (!cmd || !CMDS[cmd] || cmd === 'patchField') { console.error('commands: ' + Object.keys(CMDS).filter((c) => c !== 'patchField').join(', ')); process.exit(2); }
 const a = args(rest);
-const WRITES = new Set(['touch', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
+const WRITES = new Set(['touch', 'touch-email', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
 if (WRITES.has(cmd) && !a.opt.dry && !a.opt.why) { console.error('--why "<reason>" is required for writes'); process.exit(2); }
 try { console.log(JSON.stringify(await CMDS[cmd](a), null, 1)); } catch (e) { console.error('ERROR: ' + e.message); process.exit(1); }
