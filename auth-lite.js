@@ -32,5 +32,7 @@ window.ctAuth={
   putFirmProfile(firmId,minCommit,maxCommit){return api('/rest/v1/ct_firm_profiles?on_conflict=firm_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({firm_id:+firmId,min_commit:minCommit,max_commit:maxCommit,updated_at:new Date().toISOString()})})},
   customFirms(){return api('/rest/v1/ct_custom_firms?select=id,name,type,city,state,aum,notes&order=name.asc')},
   addCustomFirm(firm){return api('/rest/v1/ct_custom_firms',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(firm)})},
+  audit(n){return api('/rest/v1/ct_audit?select=at,action,firm_id,firm_name,detail,why&order=at.desc&limit='+(n||30))},
+  contacts(){return api('/rest/v1/ct_contacts?select=firm_id,name,role,email,linkedin,unverified')},
   probe(path){return api(path)}
 };
