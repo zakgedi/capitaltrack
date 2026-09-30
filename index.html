@@ -634,7 +634,6 @@
       .date-chips button { flex: 1; border: 1px solid var(--ink); background: #fff; padding: 11px 0; font: 600 11px/1 Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
       .date-chips button:hover { background: var(--ink); color: #fff; }
       .date-chips button.sel { background: var(--ink); color: #fff; }
-      #sched-note { width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid #777; padding: 8px 2px; margin: 8px 0 2px; font: 14px 'Newsreader', Georgia, serif; background: #fff; }
       .date-nav { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 6px; }
       .date-nav span { font: 600 12px/1 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; }
       .date-nav button { border: 1px solid var(--ink); background: #fff; width: 44px; height: 34px; font-size: 16px; line-height: 1; cursor: pointer; }
@@ -1088,9 +1087,15 @@
       .roster-add:hover { background: var(--ink); color: #fff; }
       .card-next { font: 12px/1.4 Arial, Helvetica, sans-serif; color: var(--sub); margin-top: 4px; }
       .card-next.missing { color: #bd3c56; }
+      .card-sched.due { color: #bd3c56; }
+      .pin-btn { background: none; border: 0; color: #a6a6a2; padding: 6px; margin: -6px 0 0 0; min-width: 32px; min-height: 32px; cursor: pointer; line-height: 0; }
+      .pin-btn:hover, .pin-btn:focus-visible, .pin-btn.on { color: var(--ink); }
+      .list-side .pin-btn { margin: -6px 0; }
       @media (max-width: 720px) {
         .board.list .list-head { flex-wrap: wrap; row-gap: 6px; }
         .board.list .list-head .card-name { flex: 1 1 100%; }
+        .board.list .list-side { flex: 1 1 100%; flex-wrap: wrap; row-gap: 6px; }
+        .list-touch { flex-wrap: wrap; }
         .roster-meta { display: none; }
       }
       /* List view: one ranked column of detailed cards. */
@@ -1382,7 +1387,6 @@
       <div class="date-panel">
         <div class="date-head"><span class="date-title" id="date-title"></span><button class="close" id="date-close" type="button" aria-label="Keep date and close">×</button></div>
         <div class="date-chips" id="date-chips"></div>
-        <input id="sched-note" type="text" maxlength="200" placeholder="Note (optional)" aria-label="Scheduled touch note" autocomplete="off" hidden />
         <div class="date-nav">
           <button type="button" id="date-prev" aria-label="Previous month">‹</button>
           <span id="date-month"></span>
@@ -1479,9 +1483,10 @@
                 "'": "&#39;",
               })[c],
           );
-        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, commitStatus: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, hasCommitStatus: false, hasSchedKind: false };
+        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, commitStatus: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, hasCommitStatus: false, pins: {}, hasPin: false };
         let customFirmMap = new Map();
         let lastTouches = new Map();
+        let schedTouches = new Map();
         const normalizeCustom = (r) => ({ name: r.name, type: r.type, location: [r.city, r.state].filter(Boolean).join(", "), aum: r.aum, notes: r.notes, contacts: [], customId: r.id });
         function rebuildCustom() {
           customFirmMap = new Map(state.customFirms.map((r) => [10000 + +r.id, normalizeCustom(r)]));
@@ -1504,7 +1509,7 @@
           id = +id;
           return id >= 10000 ? customFirmMap.get(id) : firms[id];
         }
-        const TOUCH_LABELS = { email: "Emailed", call: "Called", meeting: "Met", note: "Note" };
+        const TOUCH_LABELS = { email: "Emailed", call: "Called", meeting: "Met", scheduled: "Scheduled", note: "Note" };
         const touchLabel = (k) => TOUCH_LABELS[k] || k;
         function fmtDay(d) {
           const dt = new Date(String(d).slice(0, 10) + "T00:00:00");
@@ -1575,8 +1580,6 @@
           catch (e) { state.stageTimes = {}; state.hasStageTimes = false; }
           try { state.nextSteps = Object.fromEntries((await db.nextSteps()).map((r) => [r.firm_id, { step: r.next_step || "", date: r.next_step_date || null, kind: "" }])); state.hasNextStep = true; }
           catch (e) { state.nextSteps = {}; state.hasNextStep = false; }
-          try { for (const r of await db.schedKinds()) if (state.nextSteps[r.firm_id]) state.nextSteps[r.firm_id].kind = r.next_step_kind || ""; state.hasSchedKind = true; }
-          catch (e) { state.hasSchedKind = false; }
           try { state.commitStatus = Object.fromEntries((await db.commitmentsFull()).map((r) => [r.firm_id, r.status || "committed"])); state.hasCommitStatus = true; }
           catch (e) { state.commitStatus = {}; state.hasCommitStatus = false; }
           try {
@@ -1761,20 +1764,22 @@
         }
         function nextStepHTML(id) {
           if (!state.hasNextStep) return "";
-          const n = state.nextSteps[+id] || { step: "", date: null, kind: "" };
-          const today = ymd(new Date());
-          if (n.kind) {
-            const head = "\u2192 " + touchLabel(n.kind).toUpperCase() + (n.step ? " " + n.step : "");
-            if (!n.date) return '<div class="card-next">' + esc(head) + "</div>";
-            if (n.date < today) {
-              const dd = Math.floor((new Date(today + "T00:00:00") - new Date(String(n.date).slice(0, 10) + "T00:00:00").getTime()) / 864e5);
-              return '<div class="card-next missing">' + esc(head + " \u00b7 " + dd + "d overdue") + "</div>";
-            }
-            if (n.date === today) return '<div class="card-next missing">' + esc(head + " \u00b7 due today") + "</div>";
-            return '<div class="card-next">' + esc(head + " \u00b7 " + fmtDay(n.date)) + "</div>";
-          }
+          const n = state.nextSteps[+id] || { step: "" };
           return '<div class="card-next' + (n.step ? "" : " missing") + '">' + esc(n.step ? "\u2192 " + n.step : "No next step") + "</div>";
         }
+        function schedHTML(id) {
+          const t = schedTouches.get(+id);
+          if (!t) return "";
+          const today = ymd(new Date());
+          const d = String(t.touched_at).slice(0, 10);
+          if (d < today) {
+            const dd = Math.floor((new Date(today + "T00:00:00") - new Date(d + "T00:00:00").getTime()) / 864e5);
+            return '<div class="card-touch card-sched due">' + esc("Scheduled \u00b7 " + dd + "d overdue") + "</div>";
+          }
+          if (d === today) return '<div class="card-touch card-sched due">' + esc("Scheduled \u00b7 due today") + "</div>";
+          return '<div class="card-touch card-sched">' + esc("Scheduled \u00b7 " + fmtDay(d)) + "</div>";
+        }
+        const pinBtn = (id) => state.hasPin ? '<button type="button" class="pin-btn' + (state.pins[+id] ? " on" : "") + '" data-pin="' + id + '" aria-pressed="' + (state.pins[+id] ? "true" : "false") + '" aria-label="' + (state.pins[+id] ? "Unpin " : "Pin ") + esc((firmOf(+id) || {}).name || "") + '"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M5 1.5h6M6 1.5v5L3.5 9.5h9L10 6.5v-5M8 9.5v5" fill="' + (state.pins[+id] ? "currentColor" : "none") + '" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/></svg></button>' : "";
         function touchLineHTML(id) {
           const t = lastTouches.get(+id);
           if (!t) return "";
@@ -1785,7 +1790,7 @@
           const cells = [];
           if (state.hasTouches) {
             const weekAgo = Date.now() - 7 * 864e5;
-            const tw = state.touches.filter((t) => new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime() >= weekAgo).length;
+            const tw = state.touches.filter((t) => t.kind !== "scheduled").filter((t) => new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime() >= weekAgo).length;
             const stale = rows.filter(([id]) => {
               const t = lastTouches.get(+id);
               return !t || Date.now() - new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime() >= 14 * 864e5;
@@ -1820,7 +1825,16 @@
           const filter = $("tag-filter").value;
           const all = records();
           lastTouches = new Map();
-          for (const t of state.touches) if (!lastTouches.has(t.firm_id)) lastTouches.set(t.firm_id, t);
+          schedTouches = new Map();
+          for (const t of state.touches) if (t.kind !== "scheduled" && !lastTouches.has(t.firm_id)) lastTouches.set(t.firm_id, t);
+          for (const t of state.touches) {
+            if (t.kind !== "scheduled") continue;
+            const d = String(t.touched_at).slice(0, 10);
+            const lt = lastTouches.get(t.firm_id);
+            if (lt && String(lt.touched_at).slice(0, 10) >= d) continue;
+            const cur = schedTouches.get(t.firm_id);
+            if (!cur || d < String(cur.touched_at).slice(0, 10)) schedTouches.set(t.firm_id, t);
+          }
           renderKpis();
           $("board-search").disabled = loading;
           $("manage-tags").disabled = loading || saving;
@@ -1837,7 +1851,7 @@
             .map((stage) => {
               const cards = all.filter(
                 ([id, s]) => s === stage && cardVisible(id, q, filter),
-              );
+              ).map((c, i) => [c, i]).sort((a, b) => (state.pins[b[0][0]] ? 1 : 0) - (state.pins[a[0][0]] ? 1 : 0) || a[1] - b[1]).map((x) => x[0]);
               return (
                 '<section class="stack" data-stage="' +
                 stage +
@@ -1861,11 +1875,12 @@
                           id +
                           '">' +
                           esc(f.name) +
-                          '</button><button class="grip" type="button" aria-label="Drag ' +
+                          '</button>' + pinBtn(id) + '<button class="grip" type="button" aria-label="Drag ' +
                           esc(f.name) +
                           '">⋮⋮</button></div>' +
                           rankHTML(id, d, prio) +
                           touchLineHTML(id) +
+                          schedHTML(id) +
                           nextStepHTML(id) +
                           cardTagsHTML(id) +
                           '</article>'
@@ -1891,8 +1906,8 @@
             return t ? Math.floor((Date.now() - new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime()) / 864e5) : 9999;
           };
           const schedDue = (id) => {
-            const n = state.nextSteps[+id];
-            return n && n.kind && n.date && n.date <= ymd(new Date()) ? 1 : 0;
+            const t = schedTouches.get(+id);
+            return t && String(t.touched_at).slice(0, 10) <= ymd(new Date()) ? 1 : 0;
           };
           const rows = all
             .filter(([id]) => cardVisible(id, q, filter))
@@ -1902,6 +1917,7 @@
             })
             .sort(
               (a, b) =>
+                (state.pins[b.id] ? 1 : 0) - (state.pins[a.id] ? 1 : 0) ||
                 starCount(state.details[b.id]?.tier) - starCount(state.details[a.id]?.tier) ||
                 (PRIORITY_RANK[priorityOf(b.id)] || 0) - (PRIORITY_RANK[priorityOf(a.id)] || 0) ||
                 schedDue(b.id) - schedDue(a.id) ||
@@ -1909,8 +1925,7 @@
                 firmOf(a.id).name.localeCompare(firmOf(b.id).name, undefined, { sensitivity: "base", numeric: true }),
             );
           const touchRail = (id) =>
-            '<span class="list-touch">' + ["email", "call", "meeting"].map((k) => '<button type="button" class="touch-btn" data-list-touch="' + id + ":" + k + '" aria-label="Log ' + touchLabel(k) + ' for ' + esc(firmOf(id).name) + '">' + touchLabel(k) + "</button>").join("") +
-            (state.hasSchedKind ? '<button type="button" class="touch-btn" data-list-sched="' + id + '" aria-label="Schedule a touch for ' + esc(firmOf(id).name) + '">Schedule</button>' : "") + "</span>";
+            '<span class="list-touch">' + ["email", "call", "meeting", "scheduled"].map((k) => '<button type="button" class="touch-btn" data-list-touch="' + id + ":" + k + '" aria-label="Log ' + touchLabel(k) + ' for ' + esc(firmOf(id).name) + '">' + touchLabel(k) + "</button>").join("") + "</span>";
           const quietLine = (id) => {
             const t = lastTouches.get(+id);
             return '<div class="card-touch">' + esc(t ? touchLabel(t.kind) + " \u00b7 " + fmtDay(t.touched_at) : "Never touched") + "</div>";
@@ -1928,13 +1943,14 @@
                     esc(f.name) +
                     '; open details with Enter"><div class="list-head"><button class="card-name" type="button">' +
                     esc(f.name) +
-                    '</button><span class="list-side"><span class="list-stage">' +
+                    '</button><span class="list-side">' + pinBtn(id) + '<span class="list-stage">' +
                     esc(stage) +
                     '</span>' + touchRail(id) + '</span></div><div class="list-meta">' +
                     esc([category(f), f.location, f.aum].filter(Boolean).join(" · ")) +
                     '</div>' +
                     rankHTML(id, d, prio) +
                     quietLine(id) +
+                    schedHTML(id) +
                     nextStepHTML(id) +
                     (d.connection
                       ? '<div class="list-line"><strong>Connection</strong>' + esc(d.connection) + '</div>'
@@ -2091,8 +2107,8 @@
         $("board").addEventListener("click", (e) => {
           const tb = e.target.closest("[data-list-touch]");
           if (tb) { const parts = tb.dataset.listTouch.split(":"); logTouch(+parts[0], parts[1], ""); return; }
-          const sb = e.target.closest("[data-list-sched]");
-          if (sb) { openScheduleSheet(+sb.dataset.listSched); return; }
+          const pb = e.target.closest("[data-pin]");
+          if (pb) { e.stopPropagation(); togglePin(+pb.dataset.pin); return; }
           const ap = e.target.closest("[data-add-pipe]");
           if (ap) {
             const id = ap.dataset.addPipe;
@@ -2285,8 +2301,8 @@
           const touchUI = state.hasTouches
             ? '<h3 class="detail-section">Touches</h3>' +
               '<div class="touch-row" role="group" aria-label="Log a touch">' +
-              ["email", "call", "meeting", "note"].map((k) => '<button type="button" class="touch-btn" data-touch="' + k + '">' + touchLabel(k) + "</button>").join("") +
-              (state.hasSchedKind ? '<button type="button" class="touch-btn" data-sched="' + id + '">Schedule</button>' : '') +
+              ["email", "call", "meeting", "scheduled", "note"].map((k) => '<button type="button" class="touch-btn" data-touch="' + k + '">' + touchLabel(k) + "</button>").join("") +
+              (state.hasPin ? '<button type="button" class="touch-btn" data-pin="' + id + '">' + (state.pins[+id] ? "Unpin" : "Pin") + '</button>' : '') +
               '</div><div class="touch-note" id="touch-note" hidden><input id="touch-note-text" maxlength="500" placeholder="What was the note?" aria-label="Touch note" /><button type="button" id="touch-note-save">Log</button></div>' +
               (firmTouches.length
                 ? '<ul class="touch-list">' + firmTouches.map((t) =>
@@ -2380,31 +2396,26 @@
           const s = dateSheet;
           if (!s) return;
           const today = ymd(new Date());
-          const sched = s.mode === "schedule";
-          if (sched) {
-            $("date-chips").innerHTML = ["email", "call", "meeting"].map((k) => '<button type="button" data-chip-kind="' + k + '"' + (s.kind === k ? ' class="sel"' : "") + ">" + touchLabel(k) + "</button>").join("");
-            $("sched-note").hidden = false;
-            $("date-undo").textContent = "Cancel";
-            $("date-title").textContent = "Schedule \u00b7 " + touchLabel(s.kind);
-          } else {
-            const y = new Date(); y.setDate(y.getDate() - 1);
-            $("date-chips").innerHTML = '<button type="button" data-chip-day="' + today + '">Today</button><button type="button" data-chip-day="' + ymd(y) + '">Yesterday</button>';
-            $("sched-note").hidden = true;
-            $("date-undo").textContent = "Undo touch";
-            const t = state.touches.find((x) => x.id === s.id);
-            const cur = t ? String(t.touched_at).slice(0, 10) : "";
-            $("date-title").textContent = touchLabel(s.kind) + " \u00b7 " + fmtDay(cur || today);
-          }
+          const fut = s.kind === "scheduled";
+          const y = new Date(); y.setDate(y.getDate() + (fut ? 1 : -1));
+          const w = new Date(); w.setDate(w.getDate() + 7);
+          $("date-chips").innerHTML = fut
+            ? '<button type="button" data-chip-day="' + ymd(y) + '">Tomorrow</button><button type="button" data-chip-day="' + ymd(w) + '">Next week</button>'
+            : '<button type="button" data-chip-day="' + today + '">Today</button><button type="button" data-chip-day="' + ymd(y) + '">Yesterday</button>';
+          $("date-undo").textContent = fut ? "Remove" : "Undo touch";
+          const t = state.touches.find((x) => x.id === s.id);
+          const cur = t ? String(t.touched_at).slice(0, 10) : "";
+          $("date-title").textContent = touchLabel(s.kind) + " \u00b7 " + fmtDay(cur || today);
           $("date-month").textContent = s.cur.toLocaleDateString("en-US", { month: "long", year: "numeric" });
           const first = new Date(s.cur.getFullYear(), s.cur.getMonth(), 1);
           const days = new Date(s.cur.getFullYear(), s.cur.getMonth() + 1, 0).getDate();
           const t2 = state.touches.find((x) => x.id === s.id);
-          const sel = sched ? today : (t2 ? String(t2.touched_at).slice(0, 10) : today);
+          const sel = t2 ? String(t2.touched_at).slice(0, 10) : today;
           let html = ["S", "M", "T", "W", "T", "F", "S"].map((d) => '<span class="dow">' + d + "</span>").join("");
           for (let i = 0; i < first.getDay(); i++) html += '<span class="day pad"></span>';
           for (let d = 1; d <= days; d++) {
             const ds = ymd(new Date(s.cur.getFullYear(), s.cur.getMonth(), d));
-            const dis = sched ? ds < today : ds > today;
+            const dis = fut ? ds < today : ds > today;
             const cls = "day" + (ds === sel ? " sel" : "") + (ds === today ? " today" : "") + (dis ? " future" : "");
             html += '<button type="button" class="' + cls + '"' + (dis ? " disabled" : ' data-pick-date="' + ds + '"') + ">" + d + "</button>";
           }
@@ -2439,8 +2450,7 @@
         $("date-grid").addEventListener("click", (e) => {
           const b = e.target.closest("[data-pick-date]");
           if (!b || !dateSheet) return;
-          if (dateSheet.mode === "schedule") saveSchedule(b.dataset.pickDate);
-          else pickTouchDate(b.dataset.pickDate);
+          pickTouchDate(b.dataset.pickDate);
         });
         $("date-chips").addEventListener("click", (e) => {
           const k = e.target.closest("[data-chip-kind]");
@@ -2448,41 +2458,25 @@
           const d = e.target.closest("[data-chip-day]");
           if (d) pickTouchDate(d.dataset.chipDay);
         });
-        function openScheduleSheet(id) {
-          const existing = state.nextSteps[+id];
-          dateSheet = { mode: "schedule", firm: +id, kind: (existing && existing.kind) || "email", cur: new Date() };
-          dateSheet.cur.setDate(1);
-          $("sched-note").value = existing && existing.kind ? existing.step || "" : "";
-          renderDateSheet();
-          $("date-sheet").classList.add("show");
-        }
-        async function saveSchedule(ds) {
-          const s = dateSheet;
-          if (!s || s.mode !== "schedule") return;
-          const id = s.firm;
-          const note = ($("sched-note").value || "").trim();
-          try {
-            await db.put(id, state.pipeline[id], { next_step: note, next_step_date: ds, next_step_kind: s.kind });
-            state.nextSteps[id] = { step: note, date: ds, kind: s.kind };
-            closeDateSheet();
-            rerenderDetail();
-            render();
-            notice(touchLabel(s.kind) + " scheduled \u00b7 " + fmtDay(ds));
-          } catch (err) { notice("Not scheduled: " + err.message); }
+        async function togglePin(id) {
+          const on = !state.pins[id];
+          state.pins[id] = on;
+          render(); rerenderDetail();
+          try { await db.put(id, state.pipeline[id], { pinned: on }); notice(on ? "Pinned" : "Unpinned"); }
+          catch (err) { state.pins[id] = !on; render(); rerenderDetail(); notice("Not saved: " + err.message); }
         }
         $("date-prev").onclick = () => { if (dateSheet) { dateSheet.cur.setMonth(dateSheet.cur.getMonth() - 1); renderDateSheet(); } };
         $("date-next").onclick = () => { if (dateSheet) { dateSheet.cur.setMonth(dateSheet.cur.getMonth() + 1); renderDateSheet(); } };
         $("date-done").onclick = () => {
           const s = dateSheet;
           if (!s) return;
-          if (s.mode === "schedule") { saveSchedule(ymd(new Date())); return; }
           const t = state.touches.find((x) => x.id === s.id);
           const label = touchLabel(s.kind);
           closeDateSheet();
           notice(label + " \u00b7 " + fmtDay(t ? t.touched_at : new Date()));
         };
-        $("date-close").onclick = () => { if (dateSheet && dateSheet.mode === "schedule") closeDateSheet(); else $("date-done").click(); };
-        $("date-undo").onclick = () => { if (dateSheet && dateSheet.mode === "schedule") closeDateSheet(); else undoSheetTouch(); };
+        $("date-close").onclick = () => $("date-done").click();
+        $("date-undo").onclick = () => undoSheetTouch();
         $("date-sheet").addEventListener("pointerdown", (e) => { if (e.target === $("date-sheet")) $("date-close").click(); });
         async function logTouch(id, kind, note) {
           const owner = (state.details[id] || {}).owner || "";
@@ -2494,23 +2488,17 @@
             rerenderDetail();
             render();
             if (t && t.id != null) {
-              const ns = state.nextSteps[id];
-              if (ns && ns.kind && ns.kind === kind) {
-                try { await db.put(id, state.pipeline[id], { next_step: "", next_step_date: null, next_step_kind: "" }); state.nextSteps[id] = { step: "", date: null, kind: "" }; render(); } catch (e) {}
-              }
               openDateSheet(t, kind);
             }
             else notice(touchLabel(kind) + " logged");
           } catch (err) {
-            notice("Touch not saved: " + err.message);
+            notice(/ct_touches_kind_check/.test(err.message || "") ? "Scheduled needs the SQL update first" : "Touch not saved: " + err.message);
           }
         }
         function rerenderDetail() {
           if (detailFirm !== null) openDetail(detailFirm);
         }
         $("detail-content").addEventListener("click", async (e) => {
-          const sched = e.target.closest("[data-sched]");
-          if (sched && detailFirm !== null) { openScheduleSheet(detailFirm); return; }
           const btn = e.target.closest("[data-touch]");
           const del = e.target.closest("[data-del-touch]");
           if (btn && detailFirm !== null) {
