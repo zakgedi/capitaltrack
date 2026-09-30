@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const API = 'https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1';
 const KEY = 'sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy';
-const STAGES = ['Wishlist', 'Warm', 'Contacted', 'In Process', 'Committed'];
+const STAGES = ['Backlog', 'Wishlist', 'Warm', 'Contacted', 'In Process', 'Committed', 'Passed'];
 const KINDS = ['email', 'call', 'meeting', 'scheduled', 'note'];
 const TIER = { 5: 'S', 4: 'A', 3: 'B', 2: 'C', 1: 'D' };
 const FALLBACK_LOG = process.env.CT_AUDIT_FALLBACK || path.join(HERE, 'audit-fallback.jsonl');
@@ -58,6 +58,7 @@ async function audit(entry) {
 const pipeRow = async (id) => (await api('/ct_pipeline?firm_id=eq.' + id + '&select=*'))[0] || null;
 async function prioTagIds() { const tags = await api('/ct_tags?select=id,name'); const m = {}; for (const t of tags) m[t.name.toLowerCase()] = t.id; return m; }
 
+async function srcSeen(src) { return (await CMDS.log({ opt: { n: 5000 } })).some((e) => (e.action === 'touch' || e.action === 'touch_edit') && e.detail && e.detail.src === src); }
 const CMDS = {
   async find({ pos }) { FIRMS ||= await loadFirmsAsync(); CUSTOM ||= await api('/ct_custom_firms?select=id,name'); const n = pos.join(' ').toLowerCase(); return [...FIRMS.map((f, i) => ({ id: i, name: f.name })), ...CUSTOM.map((c) => ({ id: 10000 + c.id, name: c.name }))].filter((f) => f.name.toLowerCase().includes(n)).slice(0, 15); },
   async show({ pos }) {
@@ -75,7 +76,7 @@ const CMDS = {
     else if (opt.date) day = opt.date;
     const rec = { firm_id: f.id, kind, note: opt.note || '', owner: opt.owner ?? row.owner ?? '', ...(day ? { touched_at: day } : {}), ...(sent ? { sent_at: sent } : {}), ...(opt.summary ? { summary: opt.summary } : {}), ...(opt.people ? { people: opt.people.split(',').map((x) => x.trim()).filter(Boolean) } : {}) };
     if (opt.src) {
-      const seen = (await CMDS.log({ opt: { n: 5000 } })).some((e) => e.action === 'touch' && e.detail && e.detail.src === opt.src);
+      const seen = await srcSeen(opt.src);
       if (seen) return { ok: true, skipped: 'duplicate src ' + opt.src };
     }
     if (opt.dry) return { dry: true, would: rec, src: opt.src || null };
@@ -94,9 +95,26 @@ const CMDS = {
     if (exact) { const d = new Date(exact); if (isNaN(d)) throw new Error('--at must be an ISO timestamp'); patch.sent_at = d.toISOString(); patch.touched_at = d.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); }
     if (opt.summary !== undefined) patch.summary = opt.summary; if (opt.people !== undefined) patch.people = opt.people.split(',').map((x) => x.trim()).filter(Boolean); if (opt.note !== undefined) patch.note = opt.note; if (opt.owner !== undefined) patch.owner = opt.owner; if (opt.kind) patch.kind = opt.kind;
     if (!Object.keys(patch).length) throw new Error('nothing to change: use --at, --summary, --people, --note, --owner or --kind');
+    if (opt.src && await srcSeen(opt.src)) return { ok: true, skipped: 'duplicate src ' + opt.src };
     if (opt.dry) return { dry: true, from: t, patch };
     await api('/ct_touches?id=eq.' + tid, 'PATCH', patch, 'return=minimal');
     return { ok: true, touch: tid, patch, log: await audit({ action: 'touch_edit', firm_id: t.firm_id, detail: { touch_id: tid, from: { touched_at: t.touched_at, sent_at: t.sent_at || null }, to: patch, ...(opt.src ? { src: opt.src } : {}) }, why: opt.why }) };
+  },
+  async pass({ pos, opt }) {
+    const f = await resolveFirm(pos.join(' ')); const row = await pipeRow(f.id); if (!row) throw new Error(f.name + ' is not on the board; run add first');
+    if (!opt.reason) throw new Error('pass needs --reason "one line"');
+    const patch = { stage: 'Passed', stage_changed_at: new Date().toISOString(), pass_reason: opt.reason, passed_at: opt.at ? new Date(opt.at).toISOString() : new Date().toISOString(), passed_by: opt.by || '' };
+    if (opt.dry) return { dry: true, from: row.stage, patch };
+    await api('/ct_pipeline?firm_id=eq.' + f.id, 'PATCH', patch, 'return=minimal');
+    return { ok: true, from: row.stage, to: 'Passed', log: await audit({ action: 'stage', firm_id: f.id, firm_name: f.name, detail: { from: row.stage, to: 'Passed', reason: opt.reason }, why: opt.why }) };
+  },
+  async reopen({ pos, opt }) {
+    const f = await resolveFirm(pos.join(' ')); const row = await pipeRow(f.id); if (!row) throw new Error('not on board');
+    const st = opt.stage || 'Warm'; if (!STAGES.includes(st) || st === 'Passed') throw new Error('--stage must be one of ' + STAGES.filter((x) => x !== 'Passed').join('|'));
+    const patch = { stage: st, stage_changed_at: new Date().toISOString(), pass_reason: null, passed_at: null, passed_by: null };
+    if (opt.dry) return { dry: true, from: row.stage, patch };
+    await api('/ct_pipeline?firm_id=eq.' + f.id, 'PATCH', patch, 'return=minimal');
+    return { ok: true, from: row.stage, to: st, log: await audit({ action: 'stage', firm_id: f.id, firm_name: f.name, detail: { from: row.stage, to: st, reopened: true }, why: opt.why }) };
   },
   async stage({ pos, opt }) {
     const [q, stage] = pos; if (!STAGES.includes(stage)) throw new Error('stage must be ' + STAGES.join('|'));
@@ -173,6 +191,6 @@ const CMDS = {
 const [cmd, ...rest] = process.argv.slice(2);
 if (!cmd || !CMDS[cmd] || cmd === 'patchField') { console.error('commands: ' + Object.keys(CMDS).filter((c) => c !== 'patchField').join(', ')); process.exit(2); }
 const a = args(rest);
-const WRITES = new Set(['touch', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
+const WRITES = new Set(['pass', 'reopen', 'touch', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
 if (WRITES.has(cmd) && !a.opt.dry && !a.opt.why) { console.error('--why "<reason>" is required for writes'); process.exit(2); }
 try { console.log(JSON.stringify(await CMDS[cmd](a), null, 1)); } catch (e) { console.error('ERROR: ' + e.message); process.exit(1); }
