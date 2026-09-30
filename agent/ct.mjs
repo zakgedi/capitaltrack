@@ -100,6 +100,51 @@ const CMDS = {
     await api('/ct_touches?id=eq.' + tid, 'PATCH', patch, 'return=minimal');
     return { ok: true, touch: tid, patch, log: await audit({ action: 'touch_edit', firm_id: t.firm_id, detail: { touch_id: tid, from: { touched_at: t.touched_at, sent_at: t.sent_at || null }, to: patch, ...(opt.src ? { src: opt.src } : {}) }, why: opt.why }) };
   },
+  async meetings({ pos, opt }) {
+    const f = pos.length ? await resolveFirm(pos.join(' ')) : null;
+    return api('/ct_meetings?select=*' + (f ? '&firm_id=eq.' + f.id : '') + '&order=starts_at.asc');
+  },
+  async schedule({ pos, opt }) {
+    const f = await resolveFirm(pos.join(' '));
+    if (!opt.src) throw new Error('schedule requires --src opaque-account:event-id');
+    if (!opt.start || !/(Z|[+-]\d{2}:\d{2})$/.test(opt.start)) throw new Error('--start needs ISO timestamp with offset or Z');
+    const start = new Date(opt.start); if (isNaN(start)) throw new Error('invalid --start');
+    const end = opt.end ? new Date(opt.end) : null;
+    if (end && (isNaN(end) || !/(Z|[+-]\d{2}:\d{2})$/.test(opt.end) || end < start)) throw new Error('invalid --end');
+    const zone = opt.timezone || 'America/Los_Angeles'; new Intl.DateTimeFormat('en-US', {timeZone: zone});
+    const rows = await api('/ct_meetings?select=*');
+    let prev = rows.find(r => r.source_key === opt.src);
+    if (prev && prev.firm_id !== f.id) throw new Error('source key belongs to another firm; resolve mapping before update');
+    if (!prev && opt.uid) prev = rows.find(r => r.ical_uid === opt.uid && r.firm_id === f.id);
+    const status = opt.status || ((end || start).getTime() < Date.now() ? 'past-scheduled' : 'planned');
+    if (!['planned','cancelled','past-scheduled'].includes(status)) throw new Error('bad --status');
+    const rec = {firm_id:f.id, source_key:prev?.source_key || opt.src, ical_uid:opt.uid || prev?.ical_uid || null, starts_at:start.toISOString(), ends_at:end?.toISOString() || null, timezone:zone, people:(opt.people || '').split(',').map(x=>x.trim()).filter(Boolean), summary:opt.summary || '', status};
+    if (rec.people.some(x=>x.includes('@')) || /[\w.+-]+@[\w.-]+\.[a-z]{2,}/i.test(rec.summary) || /https?:\/\//i.test(rec.summary)) throw new Error('names and sanitized one-line summary only; no email addresses or meeting links');
+    rec.summary = rec.summary.replace(/[\r\n]+/g,' ').trim();
+    const same = prev && Object.entries(rec).every(([k,v])=>JSON.stringify(prev[k])===JSON.stringify(v));
+    if (same) return {ok:true, skipped:'unchanged / source deduped', meeting:prev};
+    if (opt.dry) return {dry:true, from:prev || null, would:rec};
+    rec.updated_at = new Date().toISOString();
+    const result = prev ? await api('/ct_meetings?id=eq.'+prev.id,'PATCH',rec,'return=representation') : await api('/ct_meetings','POST',rec,'return=representation');
+    const log = await audit({action:prev?'meeting_update':'meeting_schedule',firm_id:f.id,firm_name:f.name,detail:{from:prev || null,to:result[0],src:opt.src},why:opt.why});
+    const stored = (await api('/ct_meetings?id=eq.'+result[0].id+'&select=*'))[0];
+    return {ok:true,meeting:stored,log};
+  },
+  async 'schedule-cancel'({ pos, opt }) {
+    if (!opt.src && !opt.uid) throw new Error('schedule-cancel requires --src or --uid');
+    const rows = await api('/ct_meetings?select=*');
+    let matches = rows.filter(r=>opt.src ? r.source_key===opt.src : r.ical_uid===opt.uid);
+    if (!matches.length && opt.uid) matches = rows.filter(r=>r.ical_uid===opt.uid);
+    if (!matches.length) return {ok:true,skipped:'no matching schedule'};
+    const logs=[]; const out=[];
+    for (const prev of matches) {
+      if (prev.status==='cancelled') {out.push(prev);continue;}
+      if (opt.dry) {out.push({from:prev,would:{status:'cancelled'}});continue;}
+      const r = await api('/ct_meetings?id=eq.'+prev.id,'PATCH',{status:'cancelled',updated_at:new Date().toISOString()},'return=representation');
+      logs.push(await audit({action:'meeting_cancel',firm_id:prev.firm_id,detail:{from:prev,to:r[0],src:opt.src || null},why:opt.why}));out.push(r[0]);
+    }
+    return {ok:true,dry:!!opt.dry,meetings:out,logs};
+  },
   async pass({ pos, opt }) {
     const f = await resolveFirm(pos.join(' ')); const row = await pipeRow(f.id); if (!row) throw new Error(f.name + ' is not on the board; run add first');
     if (!opt.reason) throw new Error('pass needs --reason "one line"');
@@ -191,6 +236,6 @@ const CMDS = {
 const [cmd, ...rest] = process.argv.slice(2);
 if (!cmd || !CMDS[cmd] || cmd === 'patchField') { console.error('commands: ' + Object.keys(CMDS).filter((c) => c !== 'patchField').join(', ')); process.exit(2); }
 const a = args(rest);
-const WRITES = new Set(['pass', 'reopen', 'touch', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
+const WRITES = new Set(['schedule', 'schedule-cancel', 'pass', 'reopen', 'touch', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
 if (WRITES.has(cmd) && !a.opt.dry && !a.opt.why) { console.error('--why "<reason>" is required for writes'); process.exit(2); }
 try { console.log(JSON.stringify(await CMDS[cmd](a), null, 1)); } catch (e) { console.error('ERROR: ' + e.message); process.exit(1); }
