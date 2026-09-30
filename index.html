@@ -1043,6 +1043,18 @@
       .fund-fill { display: block; height: 100%; width: 0; background: var(--ink); transition: width .3s; }
       .fund-nums { font: 600 11px/1 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); white-space: nowrap; }
       .fund-nums b { color: var(--ink); }
+      .fund-track { display: flex; }
+      .fund-soft { display: block; height: 100%; width: 0; background: repeating-linear-gradient(45deg, rgba(0,0,0,.28) 0 2px, transparent 2px 5px); transition: width .3s; }
+      .today { border: 1px solid var(--rule); margin: 0 0 14px; }
+      .today-head { font: 600 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); padding: 10px 14px 2px; }
+      .today-row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-top: 1px solid var(--rule); }
+      .today-name { background: none; border: 0; padding: 0; font: inherit; text-align: left; cursor: pointer; flex: 1 1 auto; min-width: 0; }
+      .today-name:hover { text-decoration: underline; }
+      .today-meta { font: 600 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--sub); white-space: nowrap; }
+      .today-log { display: flex; gap: 4px; }
+      .today-log .touch-btn { padding: 5px 8px; font-size: 9px; }
+      .card-next { font: 12px/1.4 Arial, Helvetica, sans-serif; color: var(--sub); margin-top: 4px; }
+      .card-next.missing { color: #bd3c56; }
       /* List view: one ranked column of detailed cards. */
       .board.list { display: block; max-width: 1060px; overflow-x: visible; }
       .board.list .list-card { margin-bottom: 10px; padding: 16px 18px 14px; cursor: pointer; }
@@ -1092,7 +1104,7 @@
         </div>
         <div class="fund" id="fund" role="status" aria-label="Fund commitment progress" hidden>
           <span class="fund-name">Nova III</span>
-          <span class="fund-track"><span class="fund-fill" id="fund-fill"></span></span>
+          <span class="fund-track"><span class="fund-fill" id="fund-fill"></span><span class="fund-soft" id="fund-soft"></span></span>
           <span class="fund-nums" id="fund-nums"></span>
         </div>
         <span class="count" id="total"></span>
@@ -1106,6 +1118,7 @@
         </div>
       </div>
       <div class="kpis" id="kpis" aria-label="Pipe KPIs"></div>
+      <div class="today" id="today" hidden></div>
       <div class="board" id="board" aria-label="LP pipeline board"></div>
     </main>
     <div class="fab-wrap">
@@ -1285,6 +1298,20 @@
               maxlength="500"
               type="text"
               autocomplete="off" /></label
+          ><label id="card-next-wrap"
+            >Next step<input
+              id="card-next"
+              maxlength="200"
+              type="text"
+              autocomplete="off"
+              placeholder="Send deck, intro call…" /></label
+          ><label id="card-next-date-wrap"
+            >Next step date<input id="card-next-date" type="date" /></label
+          ><label id="card-commit-status-wrap"
+            >Commit status<select id="card-commit-status" aria-label="Commitment status">
+              <option value="committed">Committed</option>
+              <option value="soft">Soft circled</option>
+            </select></label
           ><label
             >Notes<textarea id="card-notes" maxlength="10000"></textarea>
           </label>
@@ -1394,7 +1421,7 @@
                 "'": "&#39;",
               })[c],
           );
-        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false };
+        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, commitStatus: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, hasCommitStatus: false };
         let customFirmMap = new Map();
         let lastTouches = new Map();
         const normalizeCustom = (r) => ({ name: r.name, type: r.type, location: [r.city, r.state].filter(Boolean).join(", "), aum: r.aum, notes: r.notes, contacts: [], customId: r.id });
@@ -1474,6 +1501,10 @@
           catch (e) { state.customFirms = []; state.hasCustomFirms = false; customFirmMap = new Map(); }
           try { state.stageTimes = Object.fromEntries((await db.stageTimes()).map((r) => [r.firm_id, r.stage_changed_at])); state.hasStageTimes = true; }
           catch (e) { state.stageTimes = {}; state.hasStageTimes = false; }
+          try { state.nextSteps = Object.fromEntries((await db.nextSteps()).map((r) => [r.firm_id, { step: r.next_step || "", date: r.next_step_date || null }])); state.hasNextStep = true; }
+          catch (e) { state.nextSteps = {}; state.hasNextStep = false; }
+          try { state.commitStatus = Object.fromEntries((await db.commitmentsFull()).map((r) => [r.firm_id, r.status || "committed"])); state.hasCommitStatus = true; }
+          catch (e) { state.commitStatus = {}; state.hasCommitStatus = false; }
           try {
             const funds = await db.funds();
             const iii = funds.find((f) => f.fund === "III");
@@ -1625,11 +1656,43 @@
           return "$" + (m >= 100 ? Math.round(m) : Math.round(m * 10) / 10) + "M";
         };
         function renderFund() {
-          const total = Object.values(state.commitments).reduce((a, b) => a + b, 0);
+          let committed = 0, soft = 0;
+          for (const [id, amt] of Object.entries(state.commitments)) {
+            if (state.hasCommitStatus && state.commitStatus[id] === "soft") soft += amt;
+            else committed += amt;
+          }
           const goal = state.fundGoal || 500000000;
+          const cw = Math.min(100, (committed / goal) * 100);
           $("fund").hidden = false;
-          $("fund-fill").style.width = Math.min(100, (total / goal) * 100) + "%";
-          $("fund-nums").innerHTML = "<b>" + fmtM(total) + "</b> of " + fmtM(goal) + " committed";
+          $("fund-fill").style.width = cw + "%";
+          $("fund-soft").style.width = Math.min(100 - cw, (soft / goal) * 100) + "%";
+          $("fund-nums").innerHTML = "<b>" + fmtM(committed) + "</b> of " + fmtM(goal) + " committed" + (state.hasCommitStatus && soft ? ' · <b>' + fmtM(soft) + "</b> soft" : "");
+        }
+        function nextStepHTML(id) {
+          if (!state.hasNextStep) return "";
+          const n = state.nextSteps[+id] || { step: "", date: null };
+          if (n.step && n.date) return '<div class="card-next">' + esc("\u2192 " + n.step + " \u00b7 " + fmtDay(n.date)) + "</div>";
+          return '<div class="card-next missing">' + esc(n.step ? "\u2192 " + n.step + " \u00b7 no date" : "No next step") + "</div>";
+        }
+        function renderToday() {
+          const el = $("today");
+          const stageRank = { "In Process": 0, Contacted: 1, Warm: 2, Wishlist: 3 };
+          const cands = records()
+            .filter(([, s]) => s !== "Committed")
+            .map(([id, s]) => {
+              const t = lastTouches.get(+id);
+              const days = t ? Math.floor((Date.now() - new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime()) / 864e5) : 9999;
+              const prof = state.firmProfiles[+id] || {};
+              return { id: +id, stage: s, days, check: prof.max || 0, rank: stageRank[s] != null ? stageRank[s] : 4 };
+            })
+            .sort((a, b) => b.days - a.days || a.rank - b.rank || b.check - a.check)
+            .slice(0, 5);
+          if (!cands.length) { el.hidden = true; return; }
+          el.hidden = false;
+          el.innerHTML = '<div class="today-head">Today</div>' + cands.map((c) => {
+            const meta = c.stage + " \u00b7 " + (c.days === 9999 ? "never touched" : c.days === 0 ? "touched today" : c.days + "d quiet");
+            return '<div class="today-row"><button type="button" class="today-name" data-open-detail="' + c.id + '">' + esc(firmOf(c.id).name) + '</button><span class="today-meta">' + esc(meta) + '</span><span class="today-log">' + ["email", "call", "meeting"].map((k) => '<button type="button" class="touch-btn" data-today-touch="' + c.id + ":" + k + '">' + touchLabel(k) + "</button>").join("") + "</span></div>";
+          }).join("");
         }
         function touchLineHTML(id) {
           const t = lastTouches.get(+id);
@@ -1678,6 +1741,7 @@
           lastTouches = new Map();
           for (const t of state.touches) if (!lastTouches.has(t.firm_id)) lastTouches.set(t.firm_id, t);
           renderKpis();
+          renderToday();
           $("board-search").disabled = loading;
           $("manage-tags").disabled = loading || saving;
           $("total").textContent =
@@ -1722,6 +1786,7 @@
                           '">⋮⋮</button></div>' +
                           rankHTML(id, d, prio) +
                           touchLineHTML(id) +
+                          nextStepHTML(id) +
                           cardTagsHTML(id) +
                           '</article>'
                         );
@@ -1899,6 +1964,16 @@
         $("view-stacks").onclick = () => setView("stacks");
         $("view-list").onclick = () => setView("list");
         $("tag-filter").onchange = render;
+        $("today").addEventListener("click", async (e) => {
+          const b = e.target.closest("[data-today-touch]");
+          if (b) {
+            const parts = b.dataset.todayTouch.split(":");
+            await logTouch(+parts[0], parts[1], "");
+            return;
+          }
+          const n = e.target.closest("[data-open-detail]");
+          if (n) openDetail(+n.dataset.openDetail);
+        });
         $("board").addEventListener("click", (e) => {
           const b = e.target.closest("[data-edit-card]");
           if (b) { openCard(+b.dataset.editCard, false); return; }
@@ -2232,6 +2307,12 @@
           $("card-min").value = prof.min != null ? prof.min : "";
           $("card-max").value = prof.max != null ? prof.max : "";
           $("card-connection").value = d.connection || "";
+          $("card-next-wrap").hidden = $("card-next-date-wrap").hidden = !state.hasNextStep;
+          const ns = state.nextSteps[id] || { step: "", date: null };
+          $("card-next").value = ns.step || "";
+          $("card-next-date").value = ns.date || "";
+          $("card-commit-status-wrap").hidden = !state.hasCommitStatus;
+          $("card-commit-status").value = state.commitStatus[id] || "committed";
           $("card-notes").value = d.notes || "";
           $("card-tag-name").value = "";
           $("card-tag-color").value = "blue";
@@ -2464,13 +2545,17 @@
               tier: $("card-tier").value,
               connection: $("card-connection").value.trim(),
               notes: $("card-notes").value.trim(),
-            },
-            chosen = new Set(
+            };
+          if (state.hasNextStep) {
+            detail.next_step = $("card-next").value.trim();
+            detail.next_step_date = $("card-next-date").value || null;
+          }
+          const chosen = new Set(
               [...$("card-tag-options").querySelectorAll("input:checked")].map(
                 (x) => +x.value,
               ),
-            ),
-            old = new Set(
+            );
+          const old = new Set(
               state.cardTags
                 .filter((x) => x.firm_id === id)
                 .map((x) => x.tag_id),
@@ -2501,7 +2586,7 @@
             const commitM = parseFloat($("card-commitment").value);
             const hadCommit = state.commitments[id] != null;
             if (commitM > 0) {
-              await db.putCommitment(id, Math.round(commitM * 1e6));
+              await db.putCommitment(id, Math.round(commitM * 1e6), state.hasCommitStatus ? $("card-commit-status").value : undefined);
             } else if (hadCommit) {
               await db.deleteCommitment(id);
             }
