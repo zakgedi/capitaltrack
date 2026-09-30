@@ -24,6 +24,7 @@ window.ctAuth={
   touches(){return api('/rest/v1/ct_touches?select=id,firm_id,kind,note,owner,touched_at&order=touched_at.desc,id.desc&limit=2000')},
   addTouch(firmId,kind,note,owner,touchedAt){return api('/rest/v1/ct_touches',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({firm_id:+firmId,kind,note:note||'',owner:owner||'',...(touchedAt?{touched_at:touchedAt}:{})})})},
   deleteTouch(id){return api('/rest/v1/ct_touches?id=eq.'+encodeURIComponent(id),{method:'DELETE'})},
+  updateTouch(id,touchedAt){return api('/rest/v1/ct_touches?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({touched_at:touchedAt})})},
   firmProfiles(){return api('/rest/v1/ct_firm_profiles?select=firm_id,min_commit,max_commit')},
   putFirmProfile(firmId,minCommit,maxCommit){return api('/rest/v1/ct_firm_profiles?on_conflict=firm_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({firm_id:+firmId,min_commit:minCommit,max_commit:maxCommit,updated_at:new Date().toISOString()})})},
   customFirms(){return api('/rest/v1/ct_custom_firms?select=id,name,type,city,state,aum,notes&order=name.asc')},
