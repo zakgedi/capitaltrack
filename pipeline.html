@@ -986,6 +986,13 @@
       .prio-pill[data-prio="mid"] { border: 1px solid var(--ink); color: var(--ink); padding: 0 3px; }
       .prio-pill[data-prio="low"] { color: #8a8a86; }
       .card-rank .prio-pill + .card-owner::before { content: '·'; margin-right: 9px; color: #b2b2ad; }
+      .commit-pill { display: inline-flex; align-items: center; height: 17px; background: var(--ink); color: #fff; padding: 0 5px; font: 700 10px/1 Arial, sans-serif; letter-spacing: .03em; }
+      .fund { display: flex; align-items: center; gap: 12px; padding: 10px 0 14px; border-bottom: 1px solid var(--rule); margin-bottom: 10px; }
+      .fund-name { font: 600 11px/1 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; }
+      .fund-track { flex: 1; height: 8px; border: 1px solid var(--ink); }
+      .fund-fill { display: block; height: 100%; width: 0; background: var(--ink); transition: width .3s; }
+      .fund-nums { font: 600 11px/1 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); white-space: nowrap; }
+      .fund-nums b { color: var(--ink); }
       /* List view: one ranked column of detailed cards. */
       .board.list { display: block; max-width: 1060px; overflow-x: visible; }
       .board.list .list-card { margin-bottom: 10px; padding: 16px 18px 14px; cursor: pointer; }
@@ -1035,6 +1042,11 @@
           <button type="button" id="view-stacks" aria-pressed="true">Stacks</button><button type="button" id="view-list" aria-pressed="false">List</button>
         </div>
         <span class="count" id="total"></span>
+      </div>
+      <div class="fund" id="fund" role="status" aria-label="Fund commitment progress" hidden>
+        <span class="fund-name">Nova III</span>
+        <span class="fund-track"><span class="fund-fill" id="fund-fill"></span></span>
+        <span class="fund-nums" id="fund-nums"></span>
       </div>
       <div class="tag-toolbar">
         <label for="tag-filter">Tags</label
@@ -1153,6 +1165,15 @@
             >Priority<select id="card-priority" aria-label="LP priority">
               <option value="">No priority</option><option value="high">High</option><option value="mid">Mid</option><option value="low">Low</option>
           </select></label><label
+            >Commitment ($M)<input
+              id="card-commitment"
+              type="number"
+              min="0"
+              step="any"
+              inputmode="decimal"
+              autocomplete="off"
+              aria-label="Commitment in millions of dollars" /></label
+          ><label
             >Connection<input
               id="card-connection"
               maxlength="500"
@@ -1273,7 +1294,7 @@
                 "'": "&#39;",
               })[c],
           );
-        let state = { pipeline: {}, details: {}, tags: [], cardTags: [] };
+        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000 };
         let selectedStage = stages[0];
         let view = "stacks";
         let profiles = null;
@@ -1335,6 +1356,15 @@
             notice(error.message);
             return;
           }
+          // Commitment tracker tables: tolerate absence so the board works before they exist.
+          try { state.commitments = Object.fromEntries((await db.commitments()).map((r) => [r.firm_id, +r.amount])); }
+          catch (e) { state.commitments = {}; }
+          try {
+            const funds = await db.funds();
+            const iii = funds.find((f) => f.fund === "III");
+            if (iii) state.fundGoal = +iii.goal;
+          } catch (e) { /* keep default goal */ }
+          renderFund();
           loading = false;
           state.pipeline = Object.fromEntries(
             data.map((row) => [row.firm_id, row.stage]),
@@ -1496,12 +1526,25 @@
               ))
           );
         }
+        const fmtM = (dollars) => {
+          const m = dollars / 1e6;
+          return "$" + (m >= 100 ? Math.round(m) : Math.round(m * 10) / 10) + "M";
+        };
+        function renderFund() {
+          const total = Object.values(state.commitments).reduce((a, b) => a + b, 0);
+          const goal = state.fundGoal || 500000000;
+          $("fund").hidden = false;
+          $("fund-fill").style.width = Math.min(100, (total / goal) * 100) + "%";
+          $("fund-nums").innerHTML = "<b>" + fmtM(total) + "</b> of " + fmtM(goal) + " committed";
+        }
         function rankHTML(id, d, prio) {
-          if (!d.tier && !d.owner && !prio) return "";
+          const commit = state.commitments[+id];
+          if (!d.tier && !d.owner && !prio && !commit) return "";
           return (
             '<div class="card-rank">' +
             (d.tier ? '<span class="tier-pill" data-stars="' + starCount(d.tier) + '" aria-label="' + starCount(d.tier) + ' stars">' + starLabel(d.tier) + '</span>' : '') +
             (prio ? '<span class="prio-pill" data-prio="' + prio + '" aria-label="' + prio + ' priority">' + prio[0].toUpperCase() + '</span>' : '') +
+            (commit ? '<span class="commit-pill" aria-label="Commitment ' + fmtM(commit) + '">' + fmtM(commit) + '</span>' : '') +
             (d.owner ? '<span class="card-owner" aria-label="Owner: ' + esc(d.owner) + '">' + esc(d.owner) + '</span>' : '') +
             '</div>'
           );
@@ -2008,6 +2051,7 @@
           $("card-owner").value = d.owner || "";
           $("card-tier").value = d.tier || "";
           $("card-priority").value = priorityOf(id);
+          $("card-commitment").value = state.commitments[id] ? state.commitments[id] / 1e6 : "";
           $("card-connection").value = d.connection || "";
           $("card-notes").value = d.notes || "";
           $("card-tag-name").value = "";
@@ -2167,6 +2211,13 @@
                 );
                 if (want !== has) await db.setCardTag(id, tid, want);
               }
+            }
+            const commitM = parseFloat($("card-commitment").value);
+            const hadCommit = state.commitments[id] != null;
+            if (commitM > 0) {
+              await db.putCommitment(id, Math.round(commitM * 1e6));
+            } else if (hadCommit) {
+              await db.deleteCommitment(id);
             }
             closeCard();
             await loadPipeline();
