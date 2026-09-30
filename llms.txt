@@ -1,21 +1,25 @@
-# LP GLOBE
+# CapitalTrack
 
-> LP GLOBE (https://zakgedi.github.io/lp-globe/) is Zakaria Gedi's map of the institutional allocator (limited partner) universe: 344 endowments, foundations, family offices, pensions and sovereign wealth funds, with investment-team rosters, roles, contact details, AUM and locations. A second pane, Pipe, is the pipeline board for Nova Global's LP fundraise.
+> CapitalTrack (https://zakgedi.github.io/capitaltrack/) is Nova Global's LP fundraising CRM: a pipeline board for the Nova III fundraise over a map of the institutional allocator (limited partner) universe - 357 endowments, foundations, family offices, pensions and sovereign wealth funds, with investment-team rosters, roles, contact details, AUM and locations.
 
 ## Machine-readable data
 
-- [firms.json](https://zakgedi.github.io/lp-globe/firms.json): manifest for the complete firm universe as structured JSON. Its `shards` array lists shard files (firms-1.json, firms-2.json, ...); each shard is a JSON array of firm objects, and concatenating the shards in order yields the full firms array (0-based index = the firm id used across the site). Per firm: name, type, location, aum, rank, description, notes, and contacts[] with name, role, email/orgEmail/personalEmail, linkedin, bio, and an `unverified` flag when a record is pattern-inferred or from a third-party directory.
-- Live pipeline state (board stage, owner, stars, priority, connection notes per firm) is served by the site's public read API (PostgREST):
+- [firms.json](https://zakgedi.github.io/capitaltrack/firms.json): manifest for the complete firm universe as structured JSON. Its `shards` array lists shard files (firms-1.json, firms-2.json, ...); each shard is a JSON array of firm objects, and concatenating the shards in order yields the full firms array (0-based index = the firm id used across the site). Per firm: name, type, location, aum, rank, description, notes, and contacts[] with name, role, email/orgEmail/personalEmail, linkedin, bio, and an `unverified` flag when a record is pattern-inferred or from a third-party directory. The same array ships to the app as firms-data.js.
+- Live pipeline state is served by the site's public read/write API (PostgREST):
   - Base URL: https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1
   - Required headers on every request: `apikey: sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy` and `Authorization: Bearer sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy` (publishable key; already public in the site's own JavaScript).
-  - `GET /lp_pipeline?select=firm_id,stage,owner,tier,connection,notes` - one row per firm on the board. `firm_id` is the 0-based index into firms.json. `stage` is one of Wishlist, Warm, Contacted, In Process, Committed. `tier` maps to stars: S=5, A=4, B=3, C=2, D=1.
-  - `GET /lp_tags?select=id,name,color` and `GET /lp_card_tags?select=firm_id,tag_id` - card tags. Tags named High, Mid, Low are the card's priority designation.
-  - `GET /lp_rankings?select=firm_id,elo,games` - head-to-head calibration ratings from the Rank page. `firm_id` is the 0-based index into firms.json. `elo` is the calibrated rating (seeded from the engine order, updated Elo-style, K=24); `games` is how many pairings the firm has been in.
-  - `GET /lp_commitments?select=firm_id,amount,fund` - LP commitments by fund. `firm_id` is the 0-based index into firms.json; `amount` is in US dollars; `fund` is e.g. III.
-  - `GET /lp_funds?select=fund,goal` - fundraising goals per fund (goal in US dollars).
-  - Example: `curl -H "apikey: sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy" -H "Authorization: Bearer sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy" "https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1/lp_pipeline?select=firm_id,stage,tier"`
+  - `GET /ct_pipeline?select=firm_id,stage,owner,tier,connection,notes` - one row per firm on the board. `firm_id` is the 0-based index into firms.json; custom LPs added in the app use ids 10001+. `stage` is one of Wishlist, Warm, Contacted, In Process, Committed. `tier` maps to stars: S=5, A=4, B=3, C=2, D=1. `stage_changed_at` (when present) is when the card entered its current stage.
+  - `GET /ct_tags?select=id,name,color` and `GET /ct_card_tags?select=firm_id,tag_id` - card tags. Tags named High, Mid, Low are the card's priority designation.
+  - `GET /ct_touches?select=id,firm_id,kind,note,owner,touched_at` - interaction log per LP. `kind` is email, call, meeting or note.
+  - `GET /ct_firm_profiles?select=firm_id,min_commit,max_commit` - typical check-size range per firm, in US dollars.
+  - `GET /ct_custom_firms?select=id,name,type,city,state,aum,notes` - LPs added in the app beyond the built-in universe. Board id = 10000 + row id.
+  - `GET /ct_rankings?select=firm_id,elo,games` - head-to-head calibration ratings from the 1v1 page. `elo` is the calibrated rating (seeded from the engine order, updated Elo-style, K=24); `games` is how many pairings the firm has been in.
+  - `GET /ct_commitments?select=firm_id,amount,fund` - LP commitments by fund. `amount` is in US dollars; `fund` is e.g. III.
+  - `GET /ct_funds?select=fund,goal` - fundraising goals per fund (goal in US dollars).
+  - Example: `curl -H "apikey: sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy" -H "Authorization: Bearer sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy" "https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1/ct_touches?select=firm_id,kind,touched_at"`
 
 ## Pages
 
-- [Globe](https://zakgedi.github.io/lp-globe/index.html): interactive globe and searchable firm directory. Firm cards carry stable data attributes (data-id, data-stars, data-priority).
-- [Pipe](https://zakgedi.github.io/lp-globe/pipeline.html): the fundraise pipeline. Two views: Stacks (board by stage) and List (every card ranked by stars, then High/Mid/Low priority). Cards carry data-id, data-stage, data-stars and data-priority attributes.
+- [Pipe](https://zakgedi.github.io/capitaltrack/index.html): the pipeline board and root page. Two views: Stacks (board by stage) and List (every card ranked by stars, then High/Mid/Low priority). KPI band tracks $ and count by stage, touches, stale LPs and average days in stage. Cards carry data-id, data-stage, data-stars and data-priority attributes. The floating + button adds a card or a new LP.
+- [Globe](https://zakgedi.github.io/capitaltrack/globe.html): interactive globe and searchable firm directory; opens as a modal from the masthead globe icon. Dots for LPs on the board are colored by stage.
+- [1v1](https://zakgedi.github.io/capitaltrack/rank.html): head-to-head LP calibration; updates ct_rankings.
