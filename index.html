@@ -1638,11 +1638,7 @@
         }
         function renderKpis() {
           const rows = records();
-          const cells = stages.map((stage) => {
-            const ids = rows.filter(([, s]) => s === stage).map(([id]) => +id);
-            const dollars = ids.reduce((a, id) => a + (state.commitments[id] || 0), 0);
-            return '<div class="kpi"><b>' + ids.length + "</b><span>" + stage + "</span><small>" + (dollars ? fmtM(dollars) : "\u2014") + "</small></div>";
-          });
+          const cells = [];
           if (state.hasTouches) {
             const weekAgo = Date.now() - 7 * 864e5;
             const tw = state.touches.filter((t) => new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime() >= weekAgo).length;
