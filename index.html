@@ -633,6 +633,8 @@
       .date-chips { display: flex; gap: 8px; margin: 12px 0 4px; }
       .date-chips button { flex: 1; border: 1px solid var(--ink); background: #fff; padding: 11px 0; font: 600 11px/1 Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
       .date-chips button:hover { background: var(--ink); color: #fff; }
+      .date-chips button.sel { background: var(--ink); color: #fff; }
+      #sched-note { width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid #777; padding: 8px 2px; margin: 8px 0 2px; font: 14px 'Newsreader', Georgia, serif; background: #fff; }
       .date-nav { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 6px; }
       .date-nav span { font: 600 12px/1 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; }
       .date-nav button { border: 1px solid var(--ink); background: #fff; width: 44px; height: 34px; font-size: 16px; line-height: 1; cursor: pointer; }
@@ -1345,8 +1347,6 @@
               type="text"
               autocomplete="off"
               placeholder="Send deck, intro call…" /></label
-          ><label id="card-next-date-wrap"
-            >Next step date<input id="card-next-date" type="date" /></label
           ><label id="card-commit-status-wrap"
             >Commit status<select id="card-commit-status" aria-label="Commitment status">
               <option value="uncommitted">Uncommitted</option>
@@ -1381,10 +1381,8 @@
     <div class="date-sheet" id="date-sheet" role="dialog" aria-modal="true" aria-label="Touch date">
       <div class="date-panel">
         <div class="date-head"><span class="date-title" id="date-title"></span><button class="close" id="date-close" type="button" aria-label="Keep date and close">×</button></div>
-        <div class="date-chips">
-          <button type="button" id="date-today">Today</button>
-          <button type="button" id="date-yesterday">Yesterday</button>
-        </div>
+        <div class="date-chips" id="date-chips"></div>
+        <input id="sched-note" type="text" maxlength="200" placeholder="Note (optional)" aria-label="Scheduled touch note" autocomplete="off" hidden />
         <div class="date-nav">
           <button type="button" id="date-prev" aria-label="Previous month">‹</button>
           <span id="date-month"></span>
@@ -1481,7 +1479,7 @@
                 "'": "&#39;",
               })[c],
           );
-        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, commitStatus: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, hasCommitStatus: false };
+        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, commitStatus: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, hasCommitStatus: false, hasSchedKind: false };
         let customFirmMap = new Map();
         let lastTouches = new Map();
         const normalizeCustom = (r) => ({ name: r.name, type: r.type, location: [r.city, r.state].filter(Boolean).join(", "), aum: r.aum, notes: r.notes, contacts: [], customId: r.id });
@@ -1575,8 +1573,10 @@
           catch (e) { state.customFirms = []; state.hasCustomFirms = false; customFirmMap = new Map(); }
           try { state.stageTimes = Object.fromEntries((await db.stageTimes()).map((r) => [r.firm_id, r.stage_changed_at])); state.hasStageTimes = true; }
           catch (e) { state.stageTimes = {}; state.hasStageTimes = false; }
-          try { state.nextSteps = Object.fromEntries((await db.nextSteps()).map((r) => [r.firm_id, { step: r.next_step || "", date: r.next_step_date || null }])); state.hasNextStep = true; }
+          try { state.nextSteps = Object.fromEntries((await db.nextSteps()).map((r) => [r.firm_id, { step: r.next_step || "", date: r.next_step_date || null, kind: "" }])); state.hasNextStep = true; }
           catch (e) { state.nextSteps = {}; state.hasNextStep = false; }
+          try { for (const r of await db.schedKinds()) if (state.nextSteps[r.firm_id]) state.nextSteps[r.firm_id].kind = r.next_step_kind || ""; state.hasSchedKind = true; }
+          catch (e) { state.hasSchedKind = false; }
           try { state.commitStatus = Object.fromEntries((await db.commitmentsFull()).map((r) => [r.firm_id, r.status || "committed"])); state.hasCommitStatus = true; }
           catch (e) { state.commitStatus = {}; state.hasCommitStatus = false; }
           try {
@@ -1761,9 +1761,19 @@
         }
         function nextStepHTML(id) {
           if (!state.hasNextStep) return "";
-          const n = state.nextSteps[+id] || { step: "", date: null };
-          if (n.step && n.date) return '<div class="card-next">' + esc("\u2192 " + n.step + " \u00b7 " + fmtDay(n.date)) + "</div>";
-          return '<div class="card-next missing">' + esc(n.step ? "\u2192 " + n.step + " \u00b7 no date" : "No next step") + "</div>";
+          const n = state.nextSteps[+id] || { step: "", date: null, kind: "" };
+          const today = ymd(new Date());
+          if (n.kind) {
+            const head = "\u2192 " + touchLabel(n.kind).toUpperCase() + (n.step ? " " + n.step : "");
+            if (!n.date) return '<div class="card-next">' + esc(head) + "</div>";
+            if (n.date < today) {
+              const dd = Math.floor((new Date(today + "T00:00:00") - new Date(String(n.date).slice(0, 10) + "T00:00:00").getTime()) / 864e5);
+              return '<div class="card-next missing">' + esc(head + " \u00b7 " + dd + "d overdue") + "</div>";
+            }
+            if (n.date === today) return '<div class="card-next missing">' + esc(head + " \u00b7 due today") + "</div>";
+            return '<div class="card-next">' + esc(head + " \u00b7 " + fmtDay(n.date)) + "</div>";
+          }
+          return '<div class="card-next' + (n.step ? "" : " missing") + '">' + esc(n.step ? "\u2192 " + n.step : "No next step") + "</div>";
         }
         function touchLineHTML(id) {
           const t = lastTouches.get(+id);
@@ -1880,15 +1890,27 @@
             const t = lastTouches.get(+id);
             return t ? Math.floor((Date.now() - new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime()) / 864e5) : 9999;
           };
+          const schedDue = (id) => {
+            const n = state.nextSteps[+id];
+            return n && n.kind && n.date && n.date <= ymd(new Date()) ? 1 : 0;
+          };
           const rows = all
             .filter(([id]) => cardVisible(id, q, filter))
             .map(([id, stage]) => {
               const prof = state.firmProfiles[+id] || {};
               return { id: +id, stage, days: quietDays(id), check: prof.max || 0, rank: stageRank[stage] != null ? stageRank[stage] : 4 };
             })
-            .sort((a, b) => b.days - a.days || a.rank - b.rank || b.check - a.check);
+            .sort(
+              (a, b) =>
+                starCount(state.details[b.id]?.tier) - starCount(state.details[a.id]?.tier) ||
+                (PRIORITY_RANK[priorityOf(b.id)] || 0) - (PRIORITY_RANK[priorityOf(a.id)] || 0) ||
+                schedDue(b.id) - schedDue(a.id) ||
+                b.days - a.days ||
+                firmOf(a.id).name.localeCompare(firmOf(b.id).name, undefined, { sensitivity: "base", numeric: true }),
+            );
           const touchRail = (id) =>
-            '<span class="list-touch">' + ["email", "call", "meeting"].map((k) => '<button type="button" class="touch-btn" data-list-touch="' + id + ":" + k + '" aria-label="Log ' + touchLabel(k) + ' for ' + esc(firmOf(id).name) + '">' + touchLabel(k) + "</button>").join("") + "</span>";
+            '<span class="list-touch">' + ["email", "call", "meeting"].map((k) => '<button type="button" class="touch-btn" data-list-touch="' + id + ":" + k + '" aria-label="Log ' + touchLabel(k) + ' for ' + esc(firmOf(id).name) + '">' + touchLabel(k) + "</button>").join("") +
+            (state.hasSchedKind ? '<button type="button" class="touch-btn" data-list-sched="' + id + '" aria-label="Schedule a touch for ' + esc(firmOf(id).name) + '">Schedule</button>' : "") + "</span>";
           const quietLine = (id) => {
             const t = lastTouches.get(+id);
             return '<div class="card-touch">' + esc(t ? touchLabel(t.kind) + " \u00b7 " + fmtDay(t.touched_at) : "Never touched") + "</div>";
@@ -2069,6 +2091,8 @@
         $("board").addEventListener("click", (e) => {
           const tb = e.target.closest("[data-list-touch]");
           if (tb) { const parts = tb.dataset.listTouch.split(":"); logTouch(+parts[0], parts[1], ""); return; }
+          const sb = e.target.closest("[data-list-sched]");
+          if (sb) { openScheduleSheet(+sb.dataset.listSched); return; }
           const ap = e.target.closest("[data-add-pipe]");
           if (ap) {
             const id = ap.dataset.addPipe;
@@ -2262,6 +2286,7 @@
             ? '<h3 class="detail-section">Touches</h3>' +
               '<div class="touch-row" role="group" aria-label="Log a touch">' +
               ["email", "call", "meeting", "note"].map((k) => '<button type="button" class="touch-btn" data-touch="' + k + '">' + touchLabel(k) + "</button>").join("") +
+              (state.hasSchedKind ? '<button type="button" class="touch-btn" data-sched="' + id + '">Schedule</button>' : '') +
               '</div><div class="touch-note" id="touch-note" hidden><input id="touch-note-text" maxlength="500" placeholder="What was the note?" aria-label="Touch note" /><button type="button" id="touch-note-save">Log</button></div>' +
               (firmTouches.length
                 ? '<ul class="touch-list">' + firmTouches.map((t) =>
@@ -2354,19 +2379,34 @@
         function renderDateSheet() {
           const s = dateSheet;
           if (!s) return;
-          const t = state.touches.find((x) => x.id === s.id);
-          const sel = t ? String(t.touched_at).slice(0, 10) : "";
           const today = ymd(new Date());
-          $("date-title").textContent = touchLabel(s.kind) + " \u00b7 " + fmtDay(sel || today);
+          const sched = s.mode === "schedule";
+          if (sched) {
+            $("date-chips").innerHTML = ["email", "call", "meeting"].map((k) => '<button type="button" data-chip-kind="' + k + '"' + (s.kind === k ? ' class="sel"' : "") + ">" + touchLabel(k) + "</button>").join("");
+            $("sched-note").hidden = false;
+            $("date-undo").textContent = "Cancel";
+            $("date-title").textContent = "Schedule \u00b7 " + touchLabel(s.kind);
+          } else {
+            const y = new Date(); y.setDate(y.getDate() - 1);
+            $("date-chips").innerHTML = '<button type="button" data-chip-day="' + today + '">Today</button><button type="button" data-chip-day="' + ymd(y) + '">Yesterday</button>';
+            $("sched-note").hidden = true;
+            $("date-undo").textContent = "Undo touch";
+            const t = state.touches.find((x) => x.id === s.id);
+            const cur = t ? String(t.touched_at).slice(0, 10) : "";
+            $("date-title").textContent = touchLabel(s.kind) + " \u00b7 " + fmtDay(cur || today);
+          }
           $("date-month").textContent = s.cur.toLocaleDateString("en-US", { month: "long", year: "numeric" });
           const first = new Date(s.cur.getFullYear(), s.cur.getMonth(), 1);
           const days = new Date(s.cur.getFullYear(), s.cur.getMonth() + 1, 0).getDate();
+          const t2 = state.touches.find((x) => x.id === s.id);
+          const sel = sched ? today : (t2 ? String(t2.touched_at).slice(0, 10) : today);
           let html = ["S", "M", "T", "W", "T", "F", "S"].map((d) => '<span class="dow">' + d + "</span>").join("");
           for (let i = 0; i < first.getDay(); i++) html += '<span class="day pad"></span>';
           for (let d = 1; d <= days; d++) {
             const ds = ymd(new Date(s.cur.getFullYear(), s.cur.getMonth(), d));
-            const cls = "day" + (ds === sel ? " sel" : "") + (ds === today ? " today" : "") + (ds > today ? " future" : "");
-            html += '<button type="button" class="' + cls + '"' + (ds > today ? " disabled" : ' data-pick-date="' + ds + '"') + ">" + d + "</button>";
+            const dis = sched ? ds < today : ds > today;
+            const cls = "day" + (ds === sel ? " sel" : "") + (ds === today ? " today" : "") + (dis ? " future" : "");
+            html += '<button type="button" class="' + cls + '"' + (dis ? " disabled" : ' data-pick-date="' + ds + '"') + ">" + d + "</button>";
           }
           $("date-grid").innerHTML = html;
         }
@@ -2398,16 +2438,52 @@
         }
         $("date-grid").addEventListener("click", (e) => {
           const b = e.target.closest("[data-pick-date]");
-          if (b) pickTouchDate(b.dataset.pickDate);
+          if (!b || !dateSheet) return;
+          if (dateSheet.mode === "schedule") saveSchedule(b.dataset.pickDate);
+          else pickTouchDate(b.dataset.pickDate);
         });
-        $("date-today").onclick = () => pickTouchDate(ymd(new Date()));
-        $("date-yesterday").onclick = () => { const d = new Date(); d.setDate(d.getDate() - 1); pickTouchDate(ymd(d)); };
+        $("date-chips").addEventListener("click", (e) => {
+          const k = e.target.closest("[data-chip-kind]");
+          if (k && dateSheet) { dateSheet.kind = k.dataset.chipKind; renderDateSheet(); return; }
+          const d = e.target.closest("[data-chip-day]");
+          if (d) pickTouchDate(d.dataset.chipDay);
+        });
+        function openScheduleSheet(id) {
+          const existing = state.nextSteps[+id];
+          dateSheet = { mode: "schedule", firm: +id, kind: (existing && existing.kind) || "email", cur: new Date() };
+          dateSheet.cur.setDate(1);
+          $("sched-note").value = existing && existing.kind ? existing.step || "" : "";
+          renderDateSheet();
+          $("date-sheet").classList.add("show");
+        }
+        async function saveSchedule(ds) {
+          const s = dateSheet;
+          if (!s || s.mode !== "schedule") return;
+          const id = s.firm;
+          const note = ($("sched-note").value || "").trim();
+          try {
+            await db.put(id, state.pipeline[id], { next_step: note, next_step_date: ds, next_step_kind: s.kind });
+            state.nextSteps[id] = { step: note, date: ds, kind: s.kind };
+            closeDateSheet();
+            rerenderDetail();
+            render();
+            notice(touchLabel(s.kind) + " scheduled \u00b7 " + fmtDay(ds));
+          } catch (err) { notice("Not scheduled: " + err.message); }
+        }
         $("date-prev").onclick = () => { if (dateSheet) { dateSheet.cur.setMonth(dateSheet.cur.getMonth() - 1); renderDateSheet(); } };
         $("date-next").onclick = () => { if (dateSheet) { dateSheet.cur.setMonth(dateSheet.cur.getMonth() + 1); renderDateSheet(); } };
-        $("date-done").onclick = () => { const s = dateSheet; if (!s) return; const t = state.touches.find((x) => x.id === s.id); const label = touchLabel(s.kind); closeDateSheet(); notice(label + " \u00b7 " + fmtDay(t ? t.touched_at : new Date())); };
-        $("date-close").onclick = () => $("date-done").click();
-        $("date-undo").onclick = undoSheetTouch;
-        $("date-sheet").addEventListener("pointerdown", (e) => { if (e.target === $("date-sheet")) $("date-done").click(); });
+        $("date-done").onclick = () => {
+          const s = dateSheet;
+          if (!s) return;
+          if (s.mode === "schedule") { saveSchedule(ymd(new Date())); return; }
+          const t = state.touches.find((x) => x.id === s.id);
+          const label = touchLabel(s.kind);
+          closeDateSheet();
+          notice(label + " \u00b7 " + fmtDay(t ? t.touched_at : new Date()));
+        };
+        $("date-close").onclick = () => { if (dateSheet && dateSheet.mode === "schedule") closeDateSheet(); else $("date-done").click(); };
+        $("date-undo").onclick = () => { if (dateSheet && dateSheet.mode === "schedule") closeDateSheet(); else undoSheetTouch(); };
+        $("date-sheet").addEventListener("pointerdown", (e) => { if (e.target === $("date-sheet")) $("date-close").click(); });
         async function logTouch(id, kind, note) {
           const owner = (state.details[id] || {}).owner || "";
           try {
@@ -2417,7 +2493,13 @@
             else state.touches = await db.touches();
             rerenderDetail();
             render();
-            if (t && t.id != null) openDateSheet(t, kind);
+            if (t && t.id != null) {
+              const ns = state.nextSteps[id];
+              if (ns && ns.kind && ns.kind === kind) {
+                try { await db.put(id, state.pipeline[id], { next_step: "", next_step_date: null, next_step_kind: "" }); state.nextSteps[id] = { step: "", date: null, kind: "" }; render(); } catch (e) {}
+              }
+              openDateSheet(t, kind);
+            }
             else notice(touchLabel(kind) + " logged");
           } catch (err) {
             notice("Touch not saved: " + err.message);
@@ -2427,6 +2509,8 @@
           if (detailFirm !== null) openDetail(detailFirm);
         }
         $("detail-content").addEventListener("click", async (e) => {
+          const sched = e.target.closest("[data-sched]");
+          if (sched && detailFirm !== null) { openScheduleSheet(detailFirm); return; }
           const btn = e.target.closest("[data-touch]");
           const del = e.target.closest("[data-del-touch]");
           if (btn && detailFirm !== null) {
@@ -2488,10 +2572,9 @@
           $("card-min").value = prof.min != null ? prof.min : "";
           $("card-max").value = prof.max != null ? prof.max : "";
           $("card-connection").value = d.connection || "";
-          $("card-next-wrap").hidden = $("card-next-date-wrap").hidden = !state.hasNextStep;
+          $("card-next-wrap").hidden = !state.hasNextStep;
           const ns = state.nextSteps[id] || { step: "", date: null };
           $("card-next").value = ns.step || "";
-          $("card-next-date").value = ns.date || "";
           $("card-commit-status-wrap").hidden = !state.hasCommitStatus;
           $("card-commit-status").value = state.commitStatus[id] || "uncommitted";
           $("card-notes").value = d.notes || "";
@@ -2732,7 +2815,6 @@
             };
           if (state.hasNextStep) {
             detail.next_step = $("card-next").value.trim();
-            detail.next_step_date = $("card-next-date").value || null;
           }
           const chosen = new Set(
               [...$("card-tag-options").querySelectorAll("input:checked")].map(
