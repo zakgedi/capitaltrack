@@ -121,7 +121,7 @@ const CMDS = {
     const rec = {firm_id:f.id, source_key:prev?.source_key || opt.src, ical_uid:opt.uid || prev?.ical_uid || null, starts_at:start.toISOString(), ends_at:end?.toISOString() || null, timezone:zone, people:(opt.people || '').split(',').map(x=>x.trim()).filter(Boolean), summary:opt.summary || '', status};
     if (rec.people.some(x=>x.includes('@')) || /[\w.+-]+@[\w.-]+\.[a-z]{2,}/i.test(rec.summary) || /https?:\/\//i.test(rec.summary)) throw new Error('names and sanitized one-line summary only; no email addresses or meeting links');
     rec.summary = rec.summary.replace(/[\r\n]+/g,' ').trim();
-    const same = prev && Object.entries(rec).every(([k,v])=>JSON.stringify(prev[k])===JSON.stringify(v));
+    const same = prev && Object.entries(rec).every(([k,v])=>(['starts_at','ends_at'].includes(k) ? (prev[k] == null && v == null || new Date(prev[k]).getTime() === new Date(v).getTime()) : JSON.stringify(prev[k])===JSON.stringify(v)));
     if (same) return {ok:true, skipped:'unchanged / source deduped', meeting:prev};
     if (opt.dry) return {dry:true, from:prev || null, would:rec};
     rec.updated_at = new Date().toISOString();
