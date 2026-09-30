@@ -1981,7 +1981,7 @@
         function logoHTML(id, cls) {
           const d = LOGO_TOKEN && domainOf(id);
           if (!d && cls === "row") return '<span class="lg-ph"></span>';
-          return d ? '<img class="lg ' + (cls || "") + '" src="https://img.logo.dev/' + encodeURIComponent(d) + "?token=" + LOGO_TOKEN + '&size=96&format=png" alt="" loading="lazy" referrerpolicy="origin" onerror="this.remove()">' : "";
+          return d ? '<img class="lg ' + (cls || "") + '" src="https://img.logo.dev/' + encodeURIComponent(d) + "?token=" + LOGO_TOKEN + '&size=96&format=png" alt="" loading="lazy" referrerpolicy="origin" onerror="' + (cls === "row" ? "this.outerHTML=\'<span class=lg-ph></span>\'" : "this.remove()") + '">' : "";
         }
         function openEmail(tid) {
           const t = state.touches.find((x) => x.id === tid); if (!t) return;
