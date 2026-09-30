@@ -624,6 +624,34 @@
       .feedback.show {
         opacity: 1;
       }
+      .feedback .undo-btn { pointer-events: auto; background: none; border: 0; border-bottom: 1px solid #fff; padding: 0 0 1px; margin-left: 8px; color: #fff; font: 600 12px/1 Arial, sans-serif; letter-spacing: .04em; cursor: pointer; }
+      .date-sheet { position: fixed; inset: 0; z-index: 80; background: #0005; display: none; align-items: flex-end; justify-content: center; }
+      .date-sheet.show { display: flex; }
+      .date-panel { background: #fff; width: 100%; max-width: 420px; border: 1px solid var(--ink); border-bottom: 0; padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
+      .date-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .date-title { font: 600 10px/1 Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); }
+      .date-chips { display: flex; gap: 8px; margin: 12px 0 4px; }
+      .date-chips button { flex: 1; border: 1px solid var(--ink); background: #fff; padding: 11px 0; font: 600 11px/1 Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+      .date-chips button:hover { background: var(--ink); color: #fff; }
+      .date-nav { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 6px; }
+      .date-nav span { font: 600 12px/1 Arial, sans-serif; letter-spacing: .07em; text-transform: uppercase; }
+      .date-nav button { border: 1px solid var(--ink); background: #fff; width: 44px; height: 34px; font-size: 16px; line-height: 1; cursor: pointer; }
+      .date-nav button:hover { background: var(--ink); color: #fff; }
+      .date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+      .date-grid .dow { font: 600 9px/1 Arial, sans-serif; letter-spacing: .05em; color: var(--sub); text-align: center; padding: 4px 0 6px; text-transform: uppercase; }
+      .date-grid .day { border: 1px solid transparent; background: #fff; min-height: 46px; font: 14px/1 'Newsreader', Georgia, serif; cursor: pointer; padding: 0; }
+      .date-grid .day:hover { border-color: var(--ink); }
+      .date-grid .day.sel { background: var(--ink); color: #fff; }
+      .date-grid .day.today { border-color: var(--ink); }
+      .date-grid .day.future { color: #c9c9c4; cursor: default; }
+      .date-grid .day.future:hover { border-color: transparent; }
+      .date-grid .day.pad { visibility: hidden; }
+      .date-foot { display: flex; gap: 8px; margin-top: 12px; }
+      .date-foot button { flex: 1; padding: 12px 0; font: 600 11px/1 Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--ink); background: #fff; }
+      .date-foot button:hover { background: var(--ink); color: #fff; }
+      .date-foot .primary { background: var(--ink); color: #fff; }
+      .date-foot .primary:hover { background: #000; }
+      @media (min-width: 721px) { .date-sheet { align-items: center; } .date-panel { border-bottom: 1px solid var(--ink); } }
       @media (min-width: 1001px) {
         .board { overflow-x: auto; grid-template-columns: repeat(7, minmax(210px, 1fr)); padding-bottom: 28px; }
       }
@@ -1047,19 +1075,21 @@
       .fund-nums b { color: var(--ink); }
       .fund-track { display: flex; }
       .fund-soft { display: block; height: 100%; width: 0; background: repeating-linear-gradient(45deg, rgba(0,0,0,.28) 0 2px, transparent 2px 5px); transition: width .3s; }
-      .today { border: 1px solid var(--rule); margin: 0 0 14px; }
-      .today-head { font: 600 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); padding: 10px 14px 2px; }
-      .today-row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-top: 1px solid var(--rule); }
-      .today-name { background: none; border: 0; padding: 0; font: inherit; text-align: left; cursor: pointer; flex: 1 1 auto; min-width: 0; }
-      .today-name:hover { text-decoration: underline; }
-      .today-meta { font: 600 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--sub); white-space: nowrap; }
-      .today-log { display: flex; gap: 4px; }
-      .today-log .touch-btn { padding: 5px 8px; font-size: 9px; }
+      .pipe-head, .roster-head { font: 600 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); padding: 16px 2px 8px; }
+      .list-side { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+      .list-touch { display: flex; gap: 4px; }
+      .list-touch .touch-btn { padding: 5px 8px; font-size: 9px; }
+      .roster-row { display: flex; align-items: center; gap: 12px; padding: 7px 2px; border-top: 1px solid var(--rule); }
+      .roster-name { flex: 1 1 auto; min-width: 0; opacity: .55; }
+      .roster-meta { font: 600 9px/1 Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--sub); white-space: nowrap; opacity: .8; flex: 0 0 auto; }
+      .roster-add { border: 1px solid var(--ink); background: #fff; width: 26px; height: 26px; padding: 0; font: 400 15px/1 Arial, sans-serif; cursor: pointer; flex: 0 0 auto; }
+      .roster-add:hover { background: var(--ink); color: #fff; }
       .card-next { font: 12px/1.4 Arial, Helvetica, sans-serif; color: var(--sub); margin-top: 4px; }
       .card-next.missing { color: #bd3c56; }
       @media (max-width: 720px) {
-        .today-row { flex-wrap: wrap; row-gap: 6px; }
-        .today-name { flex: 1 1 100%; }
+        .board.list .list-head { flex-wrap: wrap; row-gap: 6px; }
+        .board.list .list-head .card-name { flex: 1 1 100%; }
+        .roster-meta { display: none; }
       }
       /* List view: one ranked column of detailed cards. */
       .board.list { display: block; max-width: 1060px; overflow-x: visible; }
@@ -1124,7 +1154,6 @@
         </div>
       </div>
       <div class="kpis" id="kpis" aria-label="Pipe KPIs"></div>
-      <div class="today" id="today" hidden></div>
       <div class="board" id="board" aria-label="LP pipeline board"></div>
     </main>
     <div class="fab-wrap">
@@ -1320,8 +1349,9 @@
             >Next step date<input id="card-next-date" type="date" /></label
           ><label id="card-commit-status-wrap"
             >Commit status<select id="card-commit-status" aria-label="Commitment status">
-              <option value="committed">Committed</option>
+              <option value="uncommitted">Uncommitted</option>
               <option value="soft">Soft circled</option>
+              <option value="committed">Committed</option>
             </select></label
           ><label
             >Notes<textarea id="card-notes" maxlength="10000"></textarea>
@@ -1348,6 +1378,25 @@
       </div>
     </div>
     <div class="feedback" id="feedback" role="status"></div>
+    <div class="date-sheet" id="date-sheet" role="dialog" aria-modal="true" aria-label="Touch date">
+      <div class="date-panel">
+        <div class="date-head"><span class="date-title" id="date-title"></span><button class="close" id="date-close" type="button" aria-label="Keep date and close">×</button></div>
+        <div class="date-chips">
+          <button type="button" id="date-today">Today</button>
+          <button type="button" id="date-yesterday">Yesterday</button>
+        </div>
+        <div class="date-nav">
+          <button type="button" id="date-prev" aria-label="Previous month">‹</button>
+          <span id="date-month"></span>
+          <button type="button" id="date-next" aria-label="Next month">›</button>
+        </div>
+        <div class="date-grid" id="date-grid"></div>
+        <div class="date-foot">
+          <button type="button" id="date-undo">Undo touch</button>
+          <button type="button" id="date-done" class="primary">Done</button>
+        </div>
+      </div>
+    </div>
     <script>
       let firms = [];
     </script>
@@ -1573,7 +1622,10 @@
                 );
               saving = false;
               render();
-              notice(stage === null ? "Removed" : "Saved to pipeline");
+              if (stage === null) noticeUndo("Removed from pipe", () => save(id, old));
+              else if (old === undefined) noticeUndo("Added to " + stage, () => save(id, null));
+              else if (old !== stage) noticeUndo("Moved to " + stage, () => save(id, old));
+              else notice("Saved to pipeline");
             } catch (error) {
               saving = false;
               if (old === undefined) delete state.pipeline[id];
@@ -1602,6 +1654,19 @@
             () => $("feedback").classList.remove("show"),
             2300,
           );
+        }
+        function noticeUndo(s, undoFn) {
+          const el = $("feedback");
+          el.textContent = s + " ";
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "undo-btn";
+          b.textContent = "Undo";
+          b.addEventListener("click", () => { el.classList.remove("show"); undoFn(); });
+          el.appendChild(b);
+          el.classList.add("show");
+          clearTimeout(notice.t);
+          notice.t = setTimeout(() => el.classList.remove("show"), 8000);
         }
         function records() {
           return Object.entries(state.pipeline).filter(
@@ -1683,8 +1748,9 @@
         function renderFund() {
           let committed = 0, soft = 0;
           for (const [id, amt] of Object.entries(state.commitments)) {
-            if (state.hasCommitStatus && state.commitStatus[id] === "soft") soft += amt;
-            else committed += amt;
+            const st = state.hasCommitStatus ? state.commitStatus[id] || "committed" : "committed";
+            if (st === "soft") soft += amt;
+            else if (st !== "uncommitted") committed += amt;
           }
           const goal = state.fundGoal || 500000000;
           const cw = Math.min(100, (committed / goal) * 100);
@@ -1698,26 +1764,6 @@
           const n = state.nextSteps[+id] || { step: "", date: null };
           if (n.step && n.date) return '<div class="card-next">' + esc("\u2192 " + n.step + " \u00b7 " + fmtDay(n.date)) + "</div>";
           return '<div class="card-next missing">' + esc(n.step ? "\u2192 " + n.step + " \u00b7 no date" : "No next step") + "</div>";
-        }
-        function renderToday() {
-          const el = $("today");
-          const stageRank = { "In Process": 0, Contacted: 1, Warm: 2, Wishlist: 3 };
-          const cands = records()
-            .filter(([, s]) => s !== "Committed")
-            .map(([id, s]) => {
-              const t = lastTouches.get(+id);
-              const days = t ? Math.floor((Date.now() - new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime()) / 864e5) : 9999;
-              const prof = state.firmProfiles[+id] || {};
-              return { id: +id, stage: s, days, check: prof.max || 0, rank: stageRank[s] != null ? stageRank[s] : 4 };
-            })
-            .sort((a, b) => b.days - a.days || a.rank - b.rank || b.check - a.check)
-            .slice(0, 5);
-          if (!cands.length) { el.hidden = true; return; }
-          el.hidden = false;
-          el.innerHTML = '<div class="today-head">Today</div>' + cands.map((c) => {
-            const meta = c.stage + " \u00b7 " + (c.days === 9999 ? "never touched" : c.days === 0 ? "touched today" : c.days + "d quiet");
-            return '<div class="today-row"><button type="button" class="today-name" data-open-detail="' + c.id + '">' + esc(firmOf(c.id).name) + '</button><span class="today-meta">' + esc(meta) + '</span><span class="today-log">' + ["email", "call", "meeting"].map((k) => '<button type="button" class="touch-btn" data-today-touch="' + c.id + ":" + k + '">' + touchLabel(k) + "</button>").join("") + "</span></div>";
-          }).join("");
         }
         function touchLineHTML(id) {
           const t = lastTouches.get(+id);
@@ -1766,7 +1812,6 @@
           lastTouches = new Map();
           for (const t of state.touches) if (!lastTouches.has(t.firm_id)) lastTouches.set(t.firm_id, t);
           renderKpis();
-          renderToday();
           $("board-search").disabled = loading;
           $("manage-tags").disabled = loading || saving;
           $("total").textContent =
@@ -1830,60 +1875,92 @@
             .join("");
         }
         function renderList(all, q, filter) {
+          const stageRank = { "In Process": 0, Contacted: 1, Warm: 2, Wishlist: 3, Committed: 4 };
+          const quietDays = (id) => {
+            const t = lastTouches.get(+id);
+            return t ? Math.floor((Date.now() - new Date(String(t.touched_at).slice(0, 10) + "T00:00:00").getTime()) / 864e5) : 9999;
+          };
           const rows = all
             .filter(([id]) => cardVisible(id, q, filter))
-            .map(([id, stage]) => ({ id: +id, stage }))
-            .sort(
-              (a, b) =>
-                starCount(state.details[b.id]?.tier) -
-                  starCount(state.details[a.id]?.tier) ||
-                (PRIORITY_RANK[priorityOf(b.id)] || 0) -
-                  (PRIORITY_RANK[priorityOf(a.id)] || 0) ||
-                firmOf(a.id).name.localeCompare(firmOf(b.id).name, undefined, {
-                  sensitivity: "base",
-                  numeric: true,
-                }),
-            );
-          if (!rows.length)
-            return (
-              '<div class="empty">' +
-              (loading
-                ? "Loading…"
-                : q || filter
-                  ? "No matches"
-                  : "No LPs in the pipe yet") +
-              "</div>"
-            );
-          return rows
-            .map(({ id, stage }) => {
-              const f = firmOf(id);
-              const d = state.details[id] || {};
-              const prio = priorityOf(id);
-              return (
-                '<article class="card list-card" data-stars="' + (starCount(d.tier) || '') + '" data-priority="' + prio + '" data-stage="' + esc(stage) + '" data-id="' +
-                id +
-                '" tabindex="0" aria-label="' +
-                esc(f.name) +
-                '; open details with Enter"><div class="list-head"><button class="card-name" type="button">' +
-                esc(f.name) +
-                '</button><span class="list-stage">' +
-                esc(stage) +
-                '</span></div><div class="list-meta">' +
-                esc([category(f), f.location, f.aum].filter(Boolean).join(" · ")) +
-                '</div>' +
-                rankHTML(id, d, prio) +
-                touchLineHTML(id) +
-                (d.connection
-                  ? '<div class="list-line"><strong>Connection</strong>' + esc(d.connection) + '</div>'
-                  : '') +
-                (d.notes
-                  ? '<div class="list-line list-notes"><strong>Notes</strong>' + esc(d.notes) + '</div>'
-                  : '') +
-                cardTagsHTML(id) +
-                '</article>'
-              );
+            .map(([id, stage]) => {
+              const prof = state.firmProfiles[+id] || {};
+              return { id: +id, stage, days: quietDays(id), check: prof.max || 0, rank: stageRank[stage] != null ? stageRank[stage] : 4 };
             })
-            .join("");
+            .sort((a, b) => b.days - a.days || a.rank - b.rank || b.check - a.check);
+          const touchRail = (id) =>
+            '<span class="list-touch">' + ["email", "call", "meeting"].map((k) => '<button type="button" class="touch-btn" data-list-touch="' + id + ":" + k + '" aria-label="Log ' + touchLabel(k) + ' for ' + esc(firmOf(id).name) + '">' + touchLabel(k) + "</button>").join("") + "</span>";
+          const quietLine = (id) => {
+            const t = lastTouches.get(+id);
+            return '<div class="card-touch">' + esc(t ? touchLabel(t.kind) + " \u00b7 " + fmtDay(t.touched_at) : "Never touched") + "</div>";
+          };
+          const pipeHTML = rows.length
+            ? rows
+                .map(({ id, stage }) => {
+                  const f = firmOf(id);
+                  const d = state.details[id] || {};
+                  const prio = priorityOf(id);
+                  return (
+                    '<article class="card list-card" data-stars="' + (starCount(d.tier) || '') + '" data-priority="' + prio + '" data-stage="' + esc(stage) + '" data-id="' +
+                    id +
+                    '" tabindex="0" aria-label="' +
+                    esc(f.name) +
+                    '; open details with Enter"><div class="list-head"><button class="card-name" type="button">' +
+                    esc(f.name) +
+                    '</button><span class="list-side"><span class="list-stage">' +
+                    esc(stage) +
+                    '</span>' + touchRail(id) + '</span></div><div class="list-meta">' +
+                    esc([category(f), f.location, f.aum].filter(Boolean).join(" · ")) +
+                    '</div>' +
+                    rankHTML(id, d, prio) +
+                    quietLine(id) +
+                    nextStepHTML(id) +
+                    (d.connection
+                      ? '<div class="list-line"><strong>Connection</strong>' + esc(d.connection) + '</div>'
+                      : '') +
+                    (d.notes
+                      ? '<div class="list-line list-notes"><strong>Notes</strong>' + esc(d.notes) + '</div>'
+                      : '') +
+                    cardTagsHTML(id) +
+                    '</article>'
+                  );
+                })
+                .join("")
+            : '<div class="empty">' +
+              (loading ? "Loading…" : q || filter ? "No matches" : "No LPs in the pipe yet") +
+              "</div>";
+          const pool = firms.map((f, id) => ({ f, id }));
+          for (const [cid, cf] of customFirmMap) pool.push({ f: cf, id: cid });
+          const roster = pool
+            .filter(
+              ({ f, id }) =>
+                !state.pipeline[id] &&
+                (!q ||
+                  [f.name, f.type, f.location, ...(f.contacts || []).map((c) => c.name)].some((x) =>
+                    String(x || "").toLowerCase().includes(q),
+                  )),
+            )
+            .sort((a, b) => a.f.name.localeCompare(b.f.name, undefined, { sensitivity: "base", numeric: true }));
+          const rosterHTML =
+            '<div class="roster-head">Roster · ' +
+            roster.length +
+            '</div>' +
+            (roster.length
+              ? roster
+                  .map(
+                    ({ f, id }) =>
+                      '<div class="roster-row"><span class="roster-name">' +
+                      esc(f.name) +
+                      '</span><span class="roster-meta">' +
+                      esc([f.type, f.location].filter(Boolean).join(" · ")) +
+                      '</span><button type="button" class="roster-add" data-add-pipe="' +
+                      id +
+                      '" aria-label="Add ' +
+                      esc(f.name) +
+                      ' to pipe">+</button></div>',
+                  )
+                  .join("")
+              : '<div class="empty">Every roster LP is in the pipe</div>');
+          return '<div class="pipe-head">In pipe · ' + rows.length + "</div>" + pipeHTML + rosterHTML;
         }
         function renderFilter() {
           const old = $("tag-filter").value;
@@ -1989,17 +2066,17 @@
         $("view-stacks").onclick = () => setView("stacks");
         $("view-list").onclick = () => setView("list");
         $("tag-filter").onchange = render;
-        $("today").addEventListener("click", async (e) => {
-          const b = e.target.closest("[data-today-touch]");
-          if (b) {
-            const parts = b.dataset.todayTouch.split(":");
-            await logTouch(+parts[0], parts[1], "");
+        $("board").addEventListener("click", (e) => {
+          const tb = e.target.closest("[data-list-touch]");
+          if (tb) { const parts = tb.dataset.listTouch.split(":"); logTouch(+parts[0], parts[1], ""); return; }
+          const ap = e.target.closest("[data-add-pipe]");
+          if (ap) {
+            const id = ap.dataset.addPipe;
+            if (!firmOf(+id)) return;
+            if (!state.details[id]) state.details[id] = { owner: "", tier: "", connection: "", notes: "" };
+            save(id, "Wishlist");
             return;
           }
-          const n = e.target.closest("[data-open-detail]");
-          if (n) openDetail(+n.dataset.openDetail);
-        });
-        $("board").addEventListener("click", (e) => {
           const b = e.target.closest("[data-edit-card]");
           if (b) { openCard(+b.dataset.editCard, false); return; }
           const card = e.target.closest(".card");
@@ -2265,6 +2342,72 @@
           closeDetail(false);
           openCard(id, false);
         };
+        let dateSheet = null;
+        const ymd = (dt) => dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+        function openDateSheet(t, kind) {
+          dateSheet = { id: t.id, kind, cur: new Date() };
+          dateSheet.cur.setDate(1);
+          renderDateSheet();
+          $("date-sheet").classList.add("show");
+        }
+        function closeDateSheet() { $("date-sheet").classList.remove("show"); dateSheet = null; }
+        function renderDateSheet() {
+          const s = dateSheet;
+          if (!s) return;
+          const t = state.touches.find((x) => x.id === s.id);
+          const sel = t ? String(t.touched_at).slice(0, 10) : "";
+          const today = ymd(new Date());
+          $("date-title").textContent = touchLabel(s.kind) + " \u00b7 " + fmtDay(sel || today);
+          $("date-month").textContent = s.cur.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+          const first = new Date(s.cur.getFullYear(), s.cur.getMonth(), 1);
+          const days = new Date(s.cur.getFullYear(), s.cur.getMonth() + 1, 0).getDate();
+          let html = ["S", "M", "T", "W", "T", "F", "S"].map((d) => '<span class="dow">' + d + "</span>").join("");
+          for (let i = 0; i < first.getDay(); i++) html += '<span class="day pad"></span>';
+          for (let d = 1; d <= days; d++) {
+            const ds = ymd(new Date(s.cur.getFullYear(), s.cur.getMonth(), d));
+            const cls = "day" + (ds === sel ? " sel" : "") + (ds === today ? " today" : "") + (ds > today ? " future" : "");
+            html += '<button type="button" class="' + cls + '"' + (ds > today ? " disabled" : ' data-pick-date="' + ds + '"') + ">" + d + "</button>";
+          }
+          $("date-grid").innerHTML = html;
+        }
+        async function pickTouchDate(ds) {
+          const s = dateSheet;
+          if (!s) return;
+          try {
+            await db.updateTouch(s.id, ds);
+            const t = state.touches.find((x) => x.id === s.id);
+            if (t) t.touched_at = ds;
+            const label = touchLabel(s.kind);
+            closeDateSheet();
+            rerenderDetail();
+            render();
+            notice(label + " \u00b7 " + fmtDay(ds));
+          } catch (err) { notice("Date not saved: " + err.message); }
+        }
+        async function undoSheetTouch() {
+          const s = dateSheet;
+          if (!s) return;
+          closeDateSheet();
+          try {
+            await db.deleteTouch(s.id);
+            state.touches = state.touches.filter((x) => x.id !== s.id);
+            rerenderDetail();
+            render();
+            notice("Touch removed");
+          } catch (err) { notice("Not removed: " + err.message); }
+        }
+        $("date-grid").addEventListener("click", (e) => {
+          const b = e.target.closest("[data-pick-date]");
+          if (b) pickTouchDate(b.dataset.pickDate);
+        });
+        $("date-today").onclick = () => pickTouchDate(ymd(new Date()));
+        $("date-yesterday").onclick = () => { const d = new Date(); d.setDate(d.getDate() - 1); pickTouchDate(ymd(d)); };
+        $("date-prev").onclick = () => { if (dateSheet) { dateSheet.cur.setMonth(dateSheet.cur.getMonth() - 1); renderDateSheet(); } };
+        $("date-next").onclick = () => { if (dateSheet) { dateSheet.cur.setMonth(dateSheet.cur.getMonth() + 1); renderDateSheet(); } };
+        $("date-done").onclick = () => { const s = dateSheet; if (!s) return; const t = state.touches.find((x) => x.id === s.id); const label = touchLabel(s.kind); closeDateSheet(); notice(label + " \u00b7 " + fmtDay(t ? t.touched_at : new Date())); };
+        $("date-close").onclick = () => $("date-done").click();
+        $("date-undo").onclick = undoSheetTouch;
+        $("date-sheet").addEventListener("pointerdown", (e) => { if (e.target === $("date-sheet")) $("date-done").click(); });
         async function logTouch(id, kind, note) {
           const owner = (state.details[id] || {}).owner || "";
           try {
@@ -2274,7 +2417,8 @@
             else state.touches = await db.touches();
             rerenderDetail();
             render();
-            notice(touchLabel(kind) + " logged");
+            if (t && t.id != null) openDateSheet(t, kind);
+            else notice(touchLabel(kind) + " logged");
           } catch (err) {
             notice("Touch not saved: " + err.message);
           }
@@ -2301,12 +2445,24 @@
             return;
           }
           if (del) {
+            const tid = +del.dataset.delTouch;
+            const gone = state.touches.find((t) => t.id === tid);
             try {
-              await db.deleteTouch(+del.dataset.delTouch);
-              state.touches = state.touches.filter((t) => t.id !== +del.dataset.delTouch);
+              await db.deleteTouch(tid);
+              state.touches = state.touches.filter((t) => t.id !== tid);
               rerenderDetail();
               render();
-              notice("Touch deleted");
+              if (gone)
+                noticeUndo("Touch deleted", async () => {
+                  try {
+                    await db.addTouch(gone.firm_id, gone.kind, gone.note || "", gone.owner || "", gone.touched_at);
+                    state.touches = await db.touches();
+                    rerenderDetail();
+                    render();
+                    notice("Touch restored");
+                  } catch (err) { notice("Not restored: " + err.message); }
+                });
+              else notice("Touch deleted");
             } catch (err) {
               notice("Not deleted: " + err.message);
             }
@@ -2337,7 +2493,7 @@
           $("card-next").value = ns.step || "";
           $("card-next-date").value = ns.date || "";
           $("card-commit-status-wrap").hidden = !state.hasCommitStatus;
-          $("card-commit-status").value = state.commitStatus[id] || "committed";
+          $("card-commit-status").value = state.commitStatus[id] || "uncommitted";
           $("card-notes").value = d.notes || "";
           $("card-tag-name").value = "";
           $("card-tag-color").value = "blue";
@@ -2529,7 +2685,9 @@
           if (e.target === $("picker")) close();
         });
         document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape" && !fabMenu.hidden)
+          if (e.key === "Escape" && $("date-sheet").classList.contains("show"))
+            $("date-done").click();
+          else if (e.key === "Escape" && !fabMenu.hidden)
             closeFab();
           else if (e.key === "Escape" && $("lp-modal").classList.contains("show"))
             closeLp();
