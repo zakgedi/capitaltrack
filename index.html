@@ -1117,11 +1117,25 @@
         .board.list { padding: 0 0 24px; }
         .board.list .list-card { padding: 13px 14px 12px; }
       }
+      /* Compact stack cards: about 8 per stack. Same fields, tighter rows. */
+      .board:not(.list) .stack-body { padding: 0 8px 8px; }
+      .board:not(.list) .card { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 0; padding: 5px 10px 5px; margin-bottom: 3px; }
+      .board:not(.list) .card-top { order: 1; flex: 1 1 100%; min-width: 0; gap: 4px; align-items: center; }
+      .board:not(.list) .card-name { flex: 1 1 auto; min-width: 0; font-size: 15px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .board:not(.list) .grip { padding: 0 2px 0 4px; font-size: 16px; line-height: 18px; }
+      .board:not(.list) .pin-btn { margin: 0; padding: 2px; min-width: 24px; min-height: 24px; }
+      .board:not(.list) .card-rank { order: 2; flex: 0 1 auto; margin-top: 1px; min-width: 0; }
+      .board:not(.list) .card .tags { order: 3; flex: 1 1 0; min-width: 0; margin: 1px 0 0; padding: 0; border: 0; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; gap: 0 8px; }
+      .board:not(.list) .card > :not(.card-top):not(.card-rank):not(.tags):not(.brk) { order: 4; flex: 1 1 100%; min-width: 0; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .board:not(.list) .card > .card-touch:not(.x):not(.y):not(.z) { flex: 0 0 auto; max-width: 100%; }
+      .board:not(.list) .card > .card-next:not(.x):not(.y):not(.z) { flex: 1 1 0; min-width: 60px; }
+      .board:not(.list) .card > .brk { order: 3; flex: 1 0 100%; height: 0; }
+      .board:not(.list) .card > :not(.card-top):not(.card-rank):not(.tags):not(.brk) { order: 4; }
       /* Stacks: fixed-height columns that scroll inside instead of growing the page. */
       .board:not(.list) .stack { display: flex; flex-direction: column; }
       .board:not(.list) .stack-head { flex: 0 0 auto; }
       .board:not(.list) .stack-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-      @media (min-width: 1100px) { .board:not(.list) .stack { height: calc(100dvh - 300px); min-height: 420px; } }
+      @media (min-width: 1100px) { .board:not(.list) .stack { height: calc(100dvh - 250px); min-height: 420px; } }
       @media (max-width: 1099px) { .board:not(.list) .stack { max-height: 70dvh; } }
     </style>
     <!-- Machine-readable: /llms.txt describes this site's JSON surface (/firms.json) and live pipeline API for AI agents. -->
@@ -1890,7 +1904,7 @@
                           schedHTML(id) +
                           nextStepHTML(id) +
                           cardTagsHTML(id) +
-                          '</article>'
+                          '<i class="brk"></i></article>'
                         );
                       })
                       .join("")
