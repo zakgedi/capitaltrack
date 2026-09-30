@@ -1024,6 +1024,90 @@
       .detail-actions button { border: 1px solid var(--rule); background: white; padding: 10px 13px; font: 600 11px/1 Arial, sans-serif; text-transform: uppercase; letter-spacing: .05em; }
       .detail-actions button:hover { border-color: var(--ink); }
       .detail-actions .primary { background: var(--ink); color: white; border-color: var(--ink); margin-left: auto; }
+      /* Profile page: the firm detail is a profile, not a form. */
+      .pf-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+      #detail-modal .detail-panel { width: min(1080px, 100%); max-height: min(860px, 94dvh); height: min(860px, 94dvh); }
+      #detail-modal .pick-head { padding: 14px 24px; }
+      .pf-stage { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: var(--sub); margin-right: auto; }
+      #detail-modal .detail-scroll { flex: 1 1 auto; padding: 0 32px 32px; }
+      .pf-hero { padding: 30px 0 22px; }
+      .pf-kicker { display: flex; flex-wrap: wrap; gap: 4px 16px; font: 600 11px/1.4 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); }
+      .pf-name { font: 500 42px/1.08 'Newsreader', Georgia, serif; letter-spacing: -.01em; margin: 12px 0 14px; overflow-wrap: anywhere; }
+      .pf-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font: 12px/1.4 Arial, Helvetica, sans-serif; }
+      .pf-stars { font-size: 16px; letter-spacing: 2px; }
+      .pf-prio { font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 11px; }
+      .pf-badges .tags { margin: 0; }
+      .pf-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+      .pf-fact { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+      .pf-fact:nth-last-child(-n+3) { border-bottom: 0; }
+      .pf-fact dt { font: 600 10px/1.4 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); }
+      .pf-fact dd { margin: 4px 0 0; font: 500 18px/1.3 'Newsreader', Georgia, serif; overflow-wrap: anywhere; }
+      .pf-none { color: #9a9a96; }
+      .pf-cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0 44px; }
+      .pf-block { margin-top: 28px; }
+      .pf-h { margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--ink); font: 600 11px/1.4 Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+      .pf-next { margin: 0; font: 500 22px/1.3 'Newsreader', Georgia, serif; overflow-wrap: anywhere; }
+      .pf-notes { margin: 0; font: 16px/1.5 'Newsreader', Georgia, serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .pf .touch-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+      .pf .touch-btn { padding: 11px 4px; text-align: center; }
+      @media (max-width: 1099px) { #detail-modal .detail-panel { width: min(860px, 100%); height: 94dvh; max-height: 94dvh; } .pf-name { font-size: 36px; } }
+      @media (max-width: 700px) { .pf-cols { grid-template-columns: minmax(0, 1fr); } .pf-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); } .pf-fact:nth-last-child(-n+3) { border-bottom: 1px solid var(--rule); } .pf-fact:last-child { border-bottom: 0; } }
+      @media (max-width: 600px) {
+        #detail-modal .detail-panel { width: 100%; height: 100dvh; max-height: 100dvh; border: 0; }
+        #detail-modal .pick-head { padding: 12px 18px; }
+        #detail-modal .detail-scroll { padding: 0 18px 24px; }
+        .pf-hero { padding: 20px 0 18px; }
+        .pf-name { font-size: 32px; margin: 10px 0 12px; }
+        .pf-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .pf-fact { padding: 12px 12px 12px 0; }
+        .pf-fact:nth-last-child(-n+3) { border-bottom: 1px solid var(--rule); }
+        .pf-fact:last-child { border-bottom: 0; }
+        .pf-fact dd { font-size: 17px; }
+        .pf-next { font-size: 20px; }
+      }
+      /* Command home, logos, request buttons. */
+      .lg { width: 18px; height: 18px; object-fit: contain; flex: none; filter: grayscale(1); background: #fff; border: 1px solid #ececea; }
+      .lg-hero { width: 44px; height: 44px; display: block; margin-bottom: 14px; }
+      .board:not(.list) .card-top .lg { margin-right: 2px; }
+      .home { display: none; }
+      body.home-mode .home { display: block; }
+      body.home-mode #tag-filter, body.home-mode #manage-tags, body.home-mode #fund, body.home-mode #total, body.home-mode #kpis, body.home-mode #board, body.home-mode .board-search-row { display: none !important; }
+      .hm-lab { font: 600 10px/1.4 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); }
+      .hm-raise { padding: 26px 0 22px; }
+      .hm-big { font: 500 52px/1.05 'Newsreader', Georgia, serif; letter-spacing: -.01em; margin-top: 6px; }
+      .hm-big small { font: 18px 'Newsreader', Georgia, serif; color: var(--sub); letter-spacing: 0; }
+      .hm-bar { height: 6px; background: #ececea; margin: 16px 0 14px; }
+      .hm-bar i { display: block; height: 100%; background: var(--ink); }
+      .hm-funnel { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--rule); }
+      .hm-funnel div { padding: 12px 8px 0 0; }
+      .hm-funnel b { display: block; font: 500 26px/1.2 'Newsreader', Georgia, serif; }
+      .hm-cols { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 0 48px; padding-bottom: 40px; }
+      .hm-feed { list-style: none; margin: 0; padding: 0; }
+      .hm-feed li { border-bottom: 1px solid var(--rule); }
+      .hm-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+      button.hm-row:hover .hm-t > span { text-decoration: underline; text-underline-offset: 3px; }
+      .hm-t { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .hm-t > span { font: 500 17px/1.25 'Newsreader', Georgia, serif; overflow-wrap: anywhere; }
+      .hm-t small { font: 11px/1.3 Arial, Helvetica, sans-serif; color: var(--sub); }
+      .hm-row time { flex: none; font: 11px/1 Arial, Helvetica, sans-serif; color: var(--sub); white-space: nowrap; }
+      .hm-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 0; }
+      .hm-kpi { padding: 14px 12px 14px 0; border-bottom: 1px solid var(--rule); }
+      .hm-kpi b { display: block; font: 500 34px/1.1 'Newsreader', Georgia, serif; }
+      .hm-kpi span { display: block; margin-top: 4px; font: 600 10px/1.3 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); }
+      .hm-kpi small { display: block; margin-top: 2px; font: 11px/1.3 Arial, Helvetica, sans-serif; color: var(--sub); }
+      a.touch-btn { display: inline-block; text-decoration: none; color: var(--ink); text-align: center; }
+      a.touch-btn:hover { background: var(--ink); color: #fff; }
+      .pf-ask { display: flex; flex-wrap: wrap; gap: 8px; padding: 18px 0 4px; align-items: flex-start; }
+      .pf-ask .email-action { position: relative; }
+      .pf-askbtn { border: 1px solid var(--ink); background: #fff; color: var(--ink); padding: 11px 14px; font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; cursor: pointer; display: inline-block; }
+      .pf-askbtn:hover { background: var(--ink); color: #fff; }
+      .pf-ask .email-templates { position: absolute; z-index: 2; top: 100%; left: 0; min-width: 190px; flex-direction: column; background: #fff; border: 1px solid var(--ink); padding: 6px 0; gap: 0; margin-top: -1px; }
+      .pf-ask .email-templates.show { display: flex; }
+      .pf-ask .email-templates a { padding: 9px 14px; text-decoration: none; }
+      .pf-ask .email-templates a:hover { background: var(--ink); color: #fff; }
+      .list-touch a.touch-btn { padding: 5px 8px; font-size: 9px; }
+      @media (max-width: 820px) { .hm-cols section + section { margin-top: 32px; } .hm-cols { grid-template-columns: minmax(0, 1fr); } .hm-big { font-size: 44px; } }
+      @media (max-width: 600px) { .hm-big { font-size: 38px; } .hm-big small { font-size: 15px; } .hm-funnel b { font-size: 20px; } .hm-raise { padding-top: 18px; } .pf-ask .pf-askbtn { padding: 12px; } .hm-row time { font-size: 10px; } }
       /* Star-rating colors lightly wash the whole card; unranked remains white. */
       .card[data-stars="5"] { background: #fcf8eb; border-color: #e8d9ab; }
       .card[data-stars="4"] { background: #f2f8f3; border-color: #cce1d1; }
@@ -1119,14 +1203,14 @@
       }
       /* Compact stack cards: about 8 per stack. Same fields, tighter rows. */
       .board:not(.list) .stack-body { padding: 0 8px 8px; }
-      .board:not(.list) .card { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 0; padding: 5px 10px 5px; margin-bottom: 3px; }
-      .board:not(.list) .card-top { order: 1; flex: 1 1 100%; min-width: 0; gap: 4px; align-items: center; }
-      .board:not(.list) .card-name { flex: 1 1 auto; min-width: 0; font-size: 15px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .board:not(.list) .card { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 0; padding: 11px 13px 10px; margin-bottom: 7px; }
+      .board:not(.list) .card-top { order: 1; flex: 1 1 100%; min-width: 0; gap: 6px; align-items: flex-start; }
+      .board:not(.list) .card-name { flex: 1 1 auto; min-width: 0; font-size: 16px; line-height: 1.28; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
       .board:not(.list) .grip { padding: 0 2px 0 4px; font-size: 16px; line-height: 18px; }
       .board:not(.list) .pin-btn { margin: 0; padding: 2px; min-width: 24px; min-height: 24px; }
-      .board:not(.list) .card-rank { order: 2; flex: 0 1 auto; margin-top: 1px; min-width: 0; }
-      .board:not(.list) .card .tags { order: 3; flex: 1 1 0; min-width: 0; margin: 1px 0 0; padding: 0; border: 0; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; gap: 0 8px; }
-      .board:not(.list) .card > :not(.card-top):not(.card-rank):not(.tags):not(.brk) { order: 4; flex: 1 1 100%; min-width: 0; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .board:not(.list) .card-rank { order: 2; flex: 0 1 auto; margin-top: 7px; min-width: 0; }
+      .board:not(.list) .card .tags { order: 3; flex: 1 1 0; min-width: 0; margin: 7px 0 0; padding: 0; border: 0; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; gap: 0 8px; }
+      .board:not(.list) .card > :not(.card-top):not(.card-rank):not(.tags):not(.brk) { order: 4; flex: 1 1 100%; min-width: 0; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .board:not(.list) .card > .card-touch:not(.x):not(.y):not(.z) { flex: 0 0 auto; max-width: 100%; }
       .board:not(.list) .card > .card-next:not(.x):not(.y):not(.z) { flex: 1 1 0; min-width: 60px; }
       .board:not(.list) .card > .brk { order: 3; flex: 1 0 100%; height: 0; }
@@ -1179,13 +1263,14 @@
         <span class="count" id="total"></span>
         <div class="tools">
           <div class="view-toggle" role="group" aria-label="Pipe view">
-            <button type="button" id="view-stacks" aria-pressed="true">Stacks</button><button type="button" id="view-list" aria-pressed="false">List</button>
+            <button type="button" id="view-home" aria-pressed="true">Home</button><button type="button" id="view-stacks" aria-pressed="false">Stacks</button><button type="button" id="view-list" aria-pressed="false">List</button>
           </div>
           <select id="tag-filter" aria-label="Filter by tag">
             <option value="">All tags</option></select
           ><button id="manage-tags" type="button">Manage tags</button>
         </div>
       </div>
+      <section class="home" id="home" aria-label="Home"></section>
       <div class="kpis" id="kpis" aria-label="Pipe KPIs"></div>
       <div class="board" id="board" aria-label="LP pipeline board"></div>
     </main>
@@ -1288,8 +1373,9 @@
     <div class="picker" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
       <div class="pick-panel detail-panel">
         <div class="pick-head">
-          <h2 id="detail-title">Firm</h2>
-          <button class="close" id="detail-close" type="button" aria-label="Close details">×</button>
+          <h2 id="detail-title" class="pf-sr">Firm</h2>
+          <span class="pf-stage" id="detail-stage"></span>
+          <button class="close" id="detail-close" type="button" aria-label="Close profile">×</button>
         </div>
         <div class="detail-scroll" id="detail-content"></div>
         <div class="detail-actions">
@@ -1542,7 +1628,7 @@
           return isNaN(dt) ? "" : dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
         }
         let selectedStage = stages[0];
-        let view = "stacks";
+        let view = "home";
         let profiles = null;
         let detailFirm = null;
         let detailReturn = null;
@@ -1596,6 +1682,8 @@
           try { state.commitments = Object.fromEntries((await db.commitments()).map((r) => [r.firm_id, +r.amount])); }
           catch (e) { state.commitments = {}; }
           // Interaction layer tables: tolerate absence so the board works before the SQL update runs.
+          try { state.audit = await db.audit(40); } catch (e) { state.audit = []; }
+          try { state.ctContacts = await db.contacts(); } catch (e) { state.ctContacts = []; }
           try { state.touches = await db.touches(); state.hasTouches = true; }
           catch (e) { state.touches = []; state.hasTouches = false; }
           try { state.firmProfiles = Object.fromEntries((await db.firmProfiles()).map((r) => [r.firm_id, { min: r.min_commit, max: r.max_commit }])); state.hasFirmProfiles = true; }
@@ -1774,6 +1862,103 @@
           const m = dollars / 1e6;
           return "$" + (m >= 100 ? Math.round(m) : Math.round(m * 10) / 10) + "M";
         };
+        /* Instinct-first actions: every action is a prefilled text to the assistant. */
+        const ASSISTANT_SMS = "+16506439147";
+        const reqLink = (text) => "sms:" + ASSISTANT_SMS + "?&body=" + encodeURIComponent(text);
+        const reqId = (id) => +id < 10000 || firmOf(+id) ? " [id " + id + "]" : "";
+        const LOGO_TOKEN = "pk_Q-QfFvlrRTCfq6aWoWO8JA";
+        const GENERIC_MAIL = /^(gmail|yahoo|hotmail|outlook|icloud|aol|me|msn|live|comcast|protonmail)\./i;
+        const DOMAIN_FIX = { 114: "jasperridge.com", 344: "goldenbellpartners.com", 42: "willettadvisors.com", 111: "horsleybridge.com", 10005: "a16z.com", 10006: "nyp.org" };
+        const domainCache = new Map();
+        function regDomain(d) {
+          const p = d.toLowerCase().split(".");
+          if (p.length <= 2) return p.join(".");
+          const sld = p[p.length - 2];
+          return (p[p.length - 1].length === 2 && ["co", "com", "org", "ac", "gov", "net"].includes(sld) ? p.slice(-3) : p.slice(-2)).join(".");
+        }
+        function domainOf(id) {
+          id = +id;
+          if (domainCache.has(id)) return domainCache.get(id);
+          let out = DOMAIN_FIX[id] || "";
+          if (!out) {
+            const f = firmOf(id) || {}; const cnt = {};
+            for (const c of [...(f.contacts || []), ...(state.ctContacts || []).filter((x) => x.firm_id === id)]) {
+              for (const e of [c.email, c.orgEmail]) {
+                if (!e || !e.includes("@")) continue;
+                const d = e.split("@")[1].toLowerCase();
+                if (GENERIC_MAIL.test(d) || /alumni|forward/.test(d)) continue;
+                const r = regDomain(d); cnt[r] = (cnt[r] || 0) + 1;
+              }
+            }
+            out = (Object.entries(cnt).sort((a, b) => b[1] - a[1])[0] || [""])[0];
+          }
+          domainCache.set(id, out);
+          return out;
+        }
+        function logoHTML(id, cls) {
+          const d = LOGO_TOKEN && domainOf(id);
+          return d ? '<img class="lg ' + (cls || "") + '" src="https://img.logo.dev/' + encodeURIComponent(d) + "?token=" + LOGO_TOKEN + '&size=96&format=png" alt="" loading="lazy" referrerpolicy="origin" onerror="this.remove()">' : "";
+        }
+        function touchReq(id, kind) {
+          const n = (firmOf(+id) || {}).name || "LP";
+          const text = kind === "scheduled" ? "CapitalTrack: schedule a touch with " + n + "." + reqId(id) : "CapitalTrack: log " + ({ email: "an email", call: "a call", meeting: "a meeting" }[kind] || "a touch") + " with " + n + " today." + reqId(id);
+          return reqLink(text);
+        }
+        function feedWhen(ts) {
+          const d = new Date(ts); if (isNaN(d)) return "";
+          const same = d.toDateString() === new Date().toDateString();
+          return same ? d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + ", " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+        }
+        function feedItems() {
+          const items = [];
+          const nm = (id, fallback) => (firmOf(+id) || {}).name || fallback || "LP";
+          for (const t of state.touches.slice(0, 40)) {
+            if (t.kind === "scheduled") continue;
+            items.push({ at: t.touched_at, id: t.firm_id, text: touchLabel(t.kind) + " " + nm(t.firm_id), sub: [t.owner, t.note].filter(Boolean).join(" \u00b7 ") });
+          }
+          for (const a of state.audit || []) {
+            const d = a.detail || {}; const n = a.firm_name || nm(a.firm_id);
+            let text = "";
+            if (a.action === "touch") continue;
+            else if (a.action === "stage") text = "Moved " + n + ": " + d.from + " \u2192 " + d.to;
+            else if (a.action === "next_step") text = "Next step for " + n + ": " + (d.to || "cleared");
+            else if (a.action === "commit") text = "Commitment for " + n + ": " + (d.to ? fmtM(d.to) : "cleared");
+            else if (a.action === "add") text = "Added " + n + " to " + (d.stage || "the pipe");
+            else if (a.action === "remove") text = "Removed " + n + " from the pipe";
+            else if (a.action === "person") text = "Added " + (d.name || "a contact") + " at " + n;
+            else if (a.action === "owner") text = "Owner for " + n + ": " + (d.to || "none");
+            else if (a.action === "stars") text = "Stars for " + n + ": " + (d.to ? ({ S: 5, A: 4, B: 3, C: 2, D: 1 }[d.to] || "") : "none");
+            else if (a.action === "priority") text = "Priority for " + n + ": " + d.to;
+            else text = a.action + " \u00b7 " + n;
+            items.push({ at: a.at, id: a.firm_id, text, sub: a.why || "" });
+          }
+          return items.sort((x, y) => new Date(y.at) - new Date(x.at)).slice(0, 14);
+        }
+        function renderHome(all) {
+          if (loading) { $("home").innerHTML = '<p class="pf-none">Loading\u2026</p>'; return; }
+          let committed = 0;
+          for (const amt of Object.values(state.commitments)) committed += amt;
+          const goal = state.fundGoal || 500000000;
+          const counts = stages.map((st) => all.filter(([, s2]) => s2 === st).length);
+          const rows = all;
+          const weekAgo = Date.now() - 7 * 864e5;
+          const dayMs = (d) => new Date(String(d).slice(0, 10) + "T00:00:00").getTime();
+          const tw = state.touches.filter((t) => t.kind !== "scheduled" && dayMs(t.touched_at) >= weekAgo).length;
+          const stale = rows.filter(([id]) => { const t = lastTouches.get(+id); return !t || Date.now() - dayMs(t.touched_at) >= 14 * 864e5; }).length;
+          const noNext = state.hasNextStep ? rows.filter(([id]) => !((state.nextSteps[+id] || {}).step)).length : null;
+          const nCommit = Object.keys(state.commitments).filter((id) => state.pipeline[id]).length;
+          const kpi = (v, l, sub) => '<div class="hm-kpi"><b>' + v + "</b><span>" + l + "</span>" + (sub ? "<small>" + sub + "</small>" : "") + "</div>";
+          const feed = feedItems();
+          $("home").innerHTML =
+            '<div class="hm-raise"><span class="hm-lab">' + esc(state.fundName || "Nova III") + '</span><div class="hm-big">' + fmtM(committed) + ' <small>of ' + fmtM(goal) + ' committed</small></div>' +
+            '<div class="hm-bar"><i style="width:' + Math.min(100, (committed / goal) * 100) + '%"></i></div>' +
+            '<div class="hm-funnel">' + stages.map((st, i) => '<div><span class="hm-lab">' + st + "</span><b>" + counts[i] + "</b></div>").join("") + "</div></div>" +
+            '<div class="hm-cols"><section><h3 class="pf-h">Latest updates</h3>' +
+            (feed.length ? '<ul class="hm-feed">' + feed.map((it) => '<li>' + (it.id != null ? '<button type="button" class="hm-row" data-open-detail="' + it.id + '">' : '<div class="hm-row">') + (it.id != null ? logoHTML(it.id) : "") + '<span class="hm-t"><span>' + esc(it.text) + "</span>" + (it.sub ? "<small>" + esc(it.sub) + "</small>" : "") + '</span><time>' + esc(feedWhen(it.at)) + "</time>" + (it.id != null ? "</button>" : "</div>") + "</li>").join("") + "</ul>" : '<p class="pf-none">No updates yet.</p>') +
+            '</section><section><h3 class="pf-h">Numbers</h3><div class="hm-kpis">' +
+            kpi(tw, "Touches", "7 days") + kpi(stale, "Stale", "14d+ quiet") + (noNext == null ? "" : kpi(noNext, "No next step", "")) +
+            kpi(nCommit, "Committed LPs", fmtM(committed)) + kpi(all.length, "In pipe", "") + "</div></section></div>";
+        }
         function renderFund() {
           let committed = 0;
           for (const amt of Object.values(state.commitments)) committed += amt;
@@ -1857,6 +2042,9 @@
             if (!cur || d < String(cur.touched_at).slice(0, 10)) schedTouches.set(t.firm_id, t);
           }
           renderKpis();
+          document.body.classList.toggle("home-mode", view === "home");
+          if (view !== "home") $("home").innerHTML = "";
+          if (view === "home") { $("board").innerHTML = ""; renderHome(all); return; }
           $("board-search").disabled = loading;
           $("manage-tags").disabled = loading || saving;
           $("total").textContent =
@@ -1892,7 +2080,7 @@
                           id +
                           '" tabindex="0" aria-label="' +
                           esc(f.name) +
-                          '; open details with Enter, drag to move or use arrow keys"><div class="card-top"><button class="card-name" type="button" data-open-detail="' +
+                          '; open details with Enter, drag to move or use arrow keys"><div class="card-top">' + logoHTML(id) + '<button class="card-name" type="button" data-open-detail="' +
                           id +
                           '">' +
                           esc(f.name) +
@@ -1946,7 +2134,7 @@
                 firmOf(a.id).name.localeCompare(firmOf(b.id).name, undefined, { sensitivity: "base", numeric: true }),
             );
           const touchRail = (id) =>
-            '<span class="list-touch">' + ["email", "call", "meeting", "scheduled"].map((k) => '<button type="button" class="touch-btn" data-list-touch="' + id + ":" + k + '" aria-label="Log ' + touchLabel(k) + ' for ' + esc(firmOf(id).name) + '">' + touchLabel(k) + "</button>").join("") + "</span>";
+            '<span class="list-touch">' + ["email", "call", "meeting", "scheduled"].map((k) => '<a class="touch-btn" href="' + esc(touchReq(id, k)) + '" aria-label="Ask to log ' + touchLabel(k) + ' for ' + esc(firmOf(id).name) + '">' + touchLabel(k) + "</a>").join("") + "</span>";
           const quietLine = (id) => {
             const t = lastTouches.get(+id);
             return '<div class="card-touch">' + esc(t ? touchLabel(t.kind) + " \u00b7 " + fmtDay(t.touched_at) : "Never touched") + "</div>";
@@ -2116,18 +2304,18 @@
         }
         $("manage-tags").onclick = () => openTags();
         function setView(v) {
-          if (view === v || !["stacks", "list"].includes(v)) return;
+          if (view === v || !["home", "stacks", "list"].includes(v)) return;
           view = v;
+          $("view-home").setAttribute("aria-pressed", String(v === "home"));
           $("view-stacks").setAttribute("aria-pressed", String(v === "stacks"));
           $("view-list").setAttribute("aria-pressed", String(v === "list"));
           render();
         }
+        $("view-home").onclick = () => setView("home");
         $("view-stacks").onclick = () => setView("stacks");
         $("view-list").onclick = () => setView("list");
         $("tag-filter").onchange = render;
         $("board").addEventListener("click", (e) => {
-          const tb = e.target.closest("[data-list-touch]");
-          if (tb) { const parts = tb.dataset.listTouch.split(":"); logTouch(+parts[0], parts[1], ""); return; }
           const pb = e.target.closest("[data-pin]");
           if (pb) { e.stopPropagation(); togglePin(+pb.dataset.pin); return; }
           const ap = e.target.closest("[data-add-pipe]");
@@ -2318,21 +2506,21 @@
           const checkSize = prof2 && (prof2.min != null || prof2.max != null)
             ? '<div class="detail-field"><dt>Check size</dt><dd>' + esc((prof2.min != null ? "$" + prof2.min + "M" : "\u2014") + " \u2013 " + (prof2.max != null ? "$" + prof2.max + "M" : "\u2014")) + "</dd></div>"
             : "";
-          const firmTouches = state.touches.filter((t) => t.firm_id === +id).slice(0, 5);
+          const firmTouches = state.touches.filter((t) => t.firm_id === +id).slice(0, 10);
           const touchUI = state.hasTouches
-            ? '<h3 class="detail-section">Touches</h3>' +
+            ? '<section class="pf-block"><h3 class="pf-h">Touches</h3>' +
               '<div class="touch-row" role="group" aria-label="Log a touch">' +
-              ["email", "call", "meeting", "scheduled"].map((k) => '<button type="button" class="touch-btn" data-touch="' + k + '">' + touchLabel(k) + "</button>").join("") +
+              ["email", "call", "meeting", "scheduled"].map((k) => '<a class="touch-btn" href="' + esc(touchReq(id, k)) + '">' + touchLabel(k) + "</a>").join("") +
               '</div>' +
               (firmTouches.length
                 ? '<ul class="touch-list">' + firmTouches.map((t) =>
                     "<li><span>" + esc(fmtDay(t.touched_at) + " \u00b7 " + touchLabel(t.kind) + (t.owner ? " \u00b7 " + t.owner : "") + (t.note ? " \u2014 " + t.note : "")) + '</span><button type="button" class="touch-del" data-del-touch="' + t.id + '" aria-label="Delete touch">\u00d7</button></li>').join("") + "</ul>"
-                : '<p class="touch-empty">No touches yet.</p>')
+                : '<p class="touch-empty">No touches yet.</p>') + '</section>'
             : "";
           const row = (label, value) => '<div class="detail-field"><dt>' + label + '</dt><dd>' + esc(value || "—") + '</dd></div>';
           // Merge Globe profile details with the pipeline's freshest roster additions.
           const roster = new Map();
-          for (const c of [...(p.contacts || []), ...(f.contacts || [])]) {
+          for (const c of [...(p.contacts || []), ...(f.contacts || []), ...(state.ctContacts || []).filter((x) => x.firm_id === +id).map((x) => ({ name: x.name, role: x.role || "", email: x.email || "", linkedin: x.linkedin || "", unverified: !!x.unverified }))]) {
             const key = String(c.name || '').trim().toLocaleLowerCase();
             if (!key) continue;
             roster.set(key, {...(roster.get(key) || {}), ...c});
@@ -2341,20 +2529,11 @@
           const emailTemplates = (address, label, person) => {
             const email = String(address || '').trim();
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return '';
-            const first = String(person.name || '').trim().split(/\s+/)[0] || 'there';
-            const signoff = '\n\nBest,\nZakaria\nNova Global | Capital Partnerships';
-            const drafts = [
-              ['Intro', 'Introduction', 'I work in Capital Partnerships at Nova Global and wanted to introduce myself. I would enjoy learning more about your work at ' + f.name + '. Would you be open to a brief conversation?'],
-              ['Touch Base', 'Touching base', 'Wanted to touch base and see if a brief conversation would be useful. Let me know what works for you.'],
-              ['Follow Up', 'Following up', 'Following up on my note. Let me know if a short conversation would be useful.'],
-              ['Meeting', 'Connecting', 'Would you have time for a brief conversation in the coming weeks? I would be glad to connect.'],
-              ['Thanks', 'Thank you', 'Thanks for your time. I appreciated the conversation.']
-            ];
-            const links = drafts.map(([title, subject, body]) => {
-              const href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subject + ' - ' + f.name) + '&body=' + encodeURIComponent('Hi ' + first + ',\n\n' + body + signoff);
-              return '<a href="' + esc(href) + '" aria-label="' + esc(title + ' email to ' + person.name) + '">' + esc(title) + '</a>';
+            const links = ['Intro', 'Touch base', 'Follow up', 'Meeting', 'Share materials', 'Thanks'].map((title) => {
+              const href = reqLink('CapitalTrack: draft email to ' + person.name + ' at ' + f.name + ', ' + title.toLowerCase() + '.' + reqId(id));
+              return '<a href="' + esc(href) + '" aria-label="' + esc('Ask for a ' + title + ' draft to ' + person.name) + '">' + esc(title) + '</a>';
             }).join('');
-            return '<span class="email-action"><button type="button" class="email-choice" aria-expanded="false" aria-label="Email ' + esc(person.name) + ' at ' + esc(email) + '">' + label + '</button><span class="email-templates" aria-label="Email templates">' + links + '</span></span>';
+            return '<span class="email-action"><button type="button" class="email-choice" aria-expanded="false" aria-label="Draft email to ' + esc(person.name) + ' at ' + esc(email) + '">' + label + '</button><span class="email-templates" aria-label="Email drafts">' + links + '</span></span>';
           };
           const people = contacts.map(c => {
             const links = [
@@ -2367,16 +2546,44 @@
               (links ? '<div class="person-links">' + links + '</div>' : '') +
               (c.bio ? '<p class="bio">' + esc(c.bio) + '</p>' : '') + '</div>';
           }).join('');
+          const stars = d.tier ? starLabel(d.tier) : "";
+          const commitAmt = state.commitments[+id];
+          const nextStep = state.hasNextStep ? (state.nextSteps[+id] || {}).step : "";
+          const fact = (label, value) => '<div class="pf-fact"><dt>' + label + '</dt><dd>' + (value ? esc(value) : '<span class="pf-none">\u2014</span>') + '</dd></div>';
+          const block = (label, body) => '<section class="pf-block"><h3 class="pf-h">' + label + '</h3>' + body + '</section>';
+          const prof = state.firmProfiles[+id];
+          const checkText = prof && (prof.min != null || prof.max != null)
+            ? (prof.min != null ? "$" + prof.min + "M" : "\u2014") + " \u2013 " + (prof.max != null ? "$" + prof.max + "M" : "\u2014") : "";
+          $("detail-stage").textContent = state.pipeline[id] || "";
           $("detail-content").innerHTML =
-            '<div class="detail-meta"><span>' + esc(category(f)) + '</span><span>' + esc(f.location || 'Location unknown') + '</span><span>' + esc(f.aum || 'AUM unknown') + '</span>' + (tagChips ? '<div class="tags">' + tagChips + '</div>' : '') + '</div>' +
-            row('Stack', state.pipeline[id]) + row('Stars', d.tier ? starLabel(d.tier) + ' (' + starCount(d.tier) + '/5)' : 'No stars') + row('Priority', prio ? prio[0].toUpperCase() + prio.slice(1) : 'No priority') + row('Owner', d.owner || 'Unknown owner') +
-            row('Connection', d.connection) + row('Notes', d.notes) +
-            checkSize +
+            '<div class="pf">' +
+            '<header class="pf-hero">' + logoHTML(id, "lg-hero") + '<div class="pf-kicker">' + [category(f), f.location || "Location unknown", f.aum || "AUM unknown"].map((x) => "<span>" + esc(x) + "</span>").join("") + '</div>' +
+            '<div class="pf-name">' + esc(f.name) + '</div>' +
+            '<div class="pf-badges">' + (stars ? '<span class="pf-stars" aria-label="' + starCount(d.tier) + ' of 5 stars">' + stars + '</span>' : '') +
+            (prio ? '<span class="pf-prio">' + prio[0].toUpperCase() + prio.slice(1) + ' priority</span>' : '') +
+            (tagChips ? '<span class="tags">' + tagChips + '</span>' : '') + '</div></header>' +
+            '<dl class="pf-facts">' +
+            fact("Stage", state.pipeline[id]) +
+            fact("Committed", commitAmt ? fmtM(commitAmt) : "") +
+            fact("Stars", d.tier ? starCount(d.tier) + " of 5" : "") +
+            fact("Priority", prio ? prio[0].toUpperCase() + prio.slice(1) : "") +
+            fact("Owner", d.owner) +
+            fact("Check size", checkText) +
+            fact("Connection", d.connection) + '</dl>' +
+            '<div class="pf-ask"><span class="email-action"><button type="button" class="email-choice pf-askbtn" aria-expanded="false">Draft email</button><span class="email-templates">' +
+              ['Intro', 'Touch base', 'Follow up', 'Meeting', 'Share materials', 'Thanks'].map((t) => '<a href="' + esc(reqLink('CapitalTrack: draft email to ' + f.name + ', ' + t.toLowerCase() + '.' + reqId(id))) + '">' + t + '</a>').join('') + '</span></span>' +
+              '<span class="email-action"><button type="button" class="email-choice pf-askbtn" aria-expanded="false">Move stage</button><span class="email-templates">' +
+              stages.filter((st) => st !== state.pipeline[id]).map((st) => '<a href="' + esc(reqLink('CapitalTrack: move ' + f.name + ' to ' + st + '.' + reqId(id))) + '">' + st + '</a>').join('') + '</span></span>' +
+              '<a class="pf-askbtn" href="' + esc(reqLink('CapitalTrack: set next step for ' + f.name + ': ' + reqId(id).trim() + ' ')) + '">Next step</a>' +
+              '<a class="pf-askbtn" href="' + esc(reqLink('CapitalTrack: set ' + f.name + ' commitment to $' )) + '">Commitment</a></div>' +
+            '<div class="pf-cols"><div class="pf-main">' +
+            block("Next step", '<p class="pf-next' + (nextStep ? "" : " pf-none") + '">' + esc(nextStep || "No next step") + '</p>') +
+            block("Notes", '<p class="pf-notes' + (d.notes ? "" : " pf-none") + '">' + esc(d.notes || "No notes") + '</p>') +
+            block("Firm profile", '<p class="detail-description">' + esc(p.description || "No firm description yet.") + '</p>') +
+            '</div><div class="pf-rail">' +
             touchUI +
-            '<h3 class="detail-section">Firm profile</h3>' +
-            '<p class="detail-description">' + esc(p.description || 'No firm description yet.') + '</p>' +
-            '<h3 class="detail-section">People (' + contacts.length + ')</h3>' +
-            (people || '<p>No people listed.</p>');
+            block("People (" + contacts.length + ")", people || '<p class="pf-none">No people listed.</p>') +
+            '</div></div></div>';
           $("detail-content").scrollTop = 0;
           $("detail-modal").classList.add("show");
           $("detail-close").focus();
@@ -2572,13 +2779,7 @@
           if (detailFirm !== null) openDetail(detailFirm);
         }
         $("detail-content").addEventListener("click", async (e) => {
-          const btn = e.target.closest("[data-touch]");
           const del = e.target.closest("[data-del-touch]");
-          if (btn && detailFirm !== null) {
-            const kind = btn.dataset.touch;
-            await logTouch(detailFirm, kind, "");
-            return;
-          }
           if (del) {
             const tid = +del.dataset.delTouch;
             const gone = state.touches.find((t) => t.id === tid);
@@ -2737,18 +2938,11 @@
         });
         $("fab-add-card").addEventListener("click", () => {
           closeFab();
-          open(stages[0]);
+          location.href = reqLink("CapitalTrack: add to the pipe: ");
         });
         $("fab-add-lp").addEventListener("click", () => {
           closeFab();
-          $("lp-name").value = "";
-          $("lp-city").value = "";
-          $("lp-state").value = "";
-          $("lp-aum").value = "";
-          $("lp-notes").value = "";
-          $("lp-stage").value = "";
-          $("lp-modal").classList.add("show");
-          $("lp-name").focus();
+          location.href = reqLink("CapitalTrack: add a new LP to the pipe: ");
         });
         function closeLp() {
           $("lp-modal").classList.remove("show");
