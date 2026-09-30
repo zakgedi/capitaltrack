@@ -1055,6 +1055,10 @@
       .today-log .touch-btn { padding: 5px 8px; font-size: 9px; }
       .card-next { font: 12px/1.4 Arial, Helvetica, sans-serif; color: var(--sub); margin-top: 4px; }
       .card-next.missing { color: #bd3c56; }
+      @media (max-width: 720px) {
+        .today-row { flex-wrap: wrap; row-gap: 6px; }
+        .today-name { flex: 1 1 100%; }
+      }
       /* List view: one ranked column of detailed cards. */
       .board.list { display: block; max-width: 1060px; overflow-x: visible; }
       .board.list .list-card { margin-bottom: 10px; padding: 16px 18px 14px; cursor: pointer; }
