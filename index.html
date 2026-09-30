@@ -1117,6 +1117,12 @@
         .board.list { padding: 0 0 24px; }
         .board.list .list-card { padding: 13px 14px 12px; }
       }
+      /* Stacks: fixed-height columns that scroll inside instead of growing the page. */
+      .board:not(.list) .stack { display: flex; flex-direction: column; }
+      .board:not(.list) .stack-head { flex: 0 0 auto; }
+      .board:not(.list) .stack-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+      @media (min-width: 1100px) { .board:not(.list) .stack { height: calc(100dvh - 300px); min-height: 420px; } }
+      @media (max-width: 1099px) { .board:not(.list) .stack { max-height: 70dvh; } }
     </style>
     <!-- Machine-readable: /llms.txt describes this site's JSON surface (/firms.json) and live pipeline API for AI agents. -->
   </head>
@@ -2302,9 +2308,8 @@
           const touchUI = state.hasTouches
             ? '<h3 class="detail-section">Touches</h3>' +
               '<div class="touch-row" role="group" aria-label="Log a touch">' +
-              ["email", "call", "meeting", "scheduled", "note"].map((k) => '<button type="button" class="touch-btn" data-touch="' + k + '">' + touchLabel(k) + "</button>").join("") +
-              (state.hasPin ? '<button type="button" class="touch-btn" data-pin="' + id + '">' + (state.pins[+id] ? "Unpin" : "Pin") + '</button>' : '') +
-              '</div><div class="touch-note" id="touch-note" hidden><input id="touch-note-text" maxlength="500" placeholder="What was the note?" aria-label="Touch note" /><button type="button" id="touch-note-save">Log</button></div>' +
+              ["email", "call", "meeting", "scheduled"].map((k) => '<button type="button" class="touch-btn" data-touch="' + k + '">' + touchLabel(k) + "</button>").join("") +
+              '</div>' +
               (firmTouches.length
                 ? '<ul class="touch-list">' + firmTouches.map((t) =>
                     "<li><span>" + esc(fmtDay(t.touched_at) + " \u00b7 " + touchLabel(t.kind) + (t.owner ? " \u00b7 " + t.owner : "") + (t.note ? " \u2014 " + t.note : "")) + '</span><button type="button" class="touch-del" data-del-touch="' + t.id + '" aria-label="Delete touch">\u00d7</button></li>').join("") + "</ul>"
@@ -2557,17 +2562,7 @@
           const del = e.target.closest("[data-del-touch]");
           if (btn && detailFirm !== null) {
             const kind = btn.dataset.touch;
-            if (kind === "note") {
-              const n = $("touch-note");
-              n.hidden = !n.hidden;
-              if (!n.hidden) $("touch-note-text").focus();
-              return;
-            }
             await logTouch(detailFirm, kind, "");
-            return;
-          }
-          if (e.target.closest("#touch-note-save") && detailFirm !== null) {
-            await logTouch(detailFirm, "note", $("touch-note-text").value.trim());
             return;
           }
           if (del) {
