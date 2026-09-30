@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
-    <title>Rank - LP Globe</title>
+    <title>Rank · CapitalTrack</title>
     <meta name="description" content="Head-to-head LP ranking: pick the stronger allocator in each pairing to calibrate the rank engine." />
     <style>
       :root { --ink: #141414; --sub: #666; --rule: #dedede; --soft: #f6f6f5; }
@@ -24,6 +24,14 @@
       .pane-nav a:focus-visible, .brand:focus-visible, .duel-card:focus-visible, .skip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
       .actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
       .picks { font: 600 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--sub); }
+      .globe-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fff; border: 1px solid transparent; color: var(--ink); cursor: pointer; padding: 0 8px; }
+      .globe-btn:hover { border-color: var(--ink); }
+      .globe-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .globe-modal { position: fixed; inset: 0; z-index: 70; background: #0005; display: none; align-items: center; justify-content: center; padding: 18px; }
+      .globe-modal.show { display: flex; }
+      .globe-panel { position: relative; background: #fff; width: 100%; height: 100%; border: 1px solid var(--ink); display: flex; }
+      .globe-panel iframe { flex: 1; border: 0; display: block; }
+      .globe-close { position: absolute; top: 8px; right: 10px; z-index: 2; border: 1px solid var(--ink); background: #fff; width: 30px; height: 30px; font-size: 18px; line-height: 1; cursor: pointer; }
       .picks b { color: var(--ink); }
 
       .stage { padding: 28px 0 8px; }
@@ -83,9 +91,9 @@
   <body>
     <header class="top">
       <div class="shell top-inner">
-        <a class="brand" href="index.html" aria-label="LP Globe home">LP GLOBE</a><span class="divider"></span>
+        <a class="brand" href="index.html" aria-label="CapitalTrack home">CapitalTrack</a><span class="divider"></span>
         <nav class="pane-nav" aria-label="App panes">
-          <a href="index.html">Globe</a><a href="pipeline.html">Pipe</a><a href="rank.html" aria-current="page">Rank</a>
+          <button type="button" id="open-globe" aria-label="Open globe" class="globe-btn"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="6.4" fill="none" stroke="currentColor" stroke-width="1.2"/><ellipse cx="8" cy="8" rx="2.9" ry="6.4" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M1.7 8h12.6" stroke="currentColor" stroke-width="1.2" /></svg></button><a href="rank.html" aria-current="page" class="v1">1v1</a>
         </nav>
         <div class="actions"><span class="picks"><b id="pick-count">0</b> picks</span></div>
       </div>
@@ -108,12 +116,28 @@
       </section>
       <div class="status" id="status">Loading firms…</div>
     </main>
+    <div class="globe-modal" id="globe-modal" role="dialog" aria-modal="true" aria-label="Globe">
+      <div class="globe-panel">
+        <button class="globe-close" id="globe-close" type="button" aria-label="Close globe">×</button>
+        <iframe id="globe-frame" title="Globe" src="about:blank"></iframe>
+      </div>
+    </div>
+    <script src="firms-data.js"></script>
     <script src="auth-lite.js"></script>
     <script>
       const $ = (id) => document.getElementById(id);
       const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
       const K = 24;
-      let firms = [];
+      function openGlobe() {
+        const frame = $("globe-frame");
+        if (!frame.dataset.loaded) { frame.src = "globe.html"; frame.dataset.loaded = "1"; }
+        $("globe-modal").classList.add("show");
+      }
+      function closeGlobe() { $("globe-modal").classList.remove("show"); }
+      $("open-globe").addEventListener("click", openGlobe);
+      $("globe-close").addEventListener("click", closeGlobe);
+      $("globe-modal").addEventListener("pointerdown", (e) => { if (e.target === $("globe-modal")) closeGlobe(); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("globe-modal").classList.contains("show")) closeGlobe(); });
       let ratings = new Map();   // firm index -> {elo, games}
       let current = null;        // [i, j]
       let busy = false;
@@ -125,14 +149,11 @@
       const eloOf = (i) => (ratings.get(i) || { elo: seed(firms[i]), games: 0 });
 
       async function loadFirms() {
-        const source = await (await fetch("index.html")).text();
-        const line = source.split("\n").find((x) => x.startsWith('firms=[{"name":'));
-        if (!line || !line.endsWith("];")) throw new Error("Firm universe unavailable");
-        firms = JSON.parse(line.slice(6, -1));
+        if (!Array.isArray(firms) || !firms.length) throw new Error("Firm universe unavailable");
       }
 
       async function loadRatings() {
-        const rows = await window.lpAuth.rankings();
+        const rows = await window.ctAuth.rankings();
         for (const r of rows) if (r.firm_id >= 0 && r.firm_id < firms.length) ratings.set(r.firm_id, { elo: r.elo, games: r.games });
         pickCount = [...ratings.values()].reduce((a, r) => a + r.games, 0) / 2;
         $("pick-count").textContent = pickCount;
@@ -140,7 +161,7 @@
 
       async function saveRating(i) {
         const r = ratings.get(i);
-        await window.lpAuth.putRanking(i, Math.round(r.elo), r.games);
+        await window.ctAuth.putRanking(i, Math.round(r.elo), r.games);
       }
 
       function pickPair() {
