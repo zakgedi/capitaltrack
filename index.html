@@ -1087,6 +1087,12 @@
       .roster-add:hover { background: var(--ink); color: #fff; }
       .card-next { font: 12px/1.4 Arial, Helvetica, sans-serif; color: var(--sub); margin-top: 4px; }
       .card-next.missing { color: #bd3c56; }
+      .menu-actions { display: flex; gap: 8px; margin: 14px 0 4px; }
+      .menu-actions button { flex: 1; border: 1px solid var(--ink); background: #fff; padding: 13px 0; font: 600 11px/1 Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+      .menu-actions button:hover { background: var(--ink); color: #fff; }
+      .menu-actions #menu-del { color: #bd3c56; border-color: #bd3c56; }
+      .menu-actions #menu-del:hover { background: #bd3c56; color: #fff; }
+      .card.lp { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
       .card-sched.due { color: #bd3c56; }
       .pin-btn { background: none; border: 0; color: #a6a6a2; padding: 6px; margin: -6px 0 0 0; min-width: 32px; min-height: 32px; cursor: pointer; line-height: 0; }
       .pin-btn:hover, .pin-btn:focus-visible, .pin-btn.on { color: var(--ink); }
@@ -1147,7 +1153,7 @@
         </div>
         <div class="fund" id="fund" role="status" aria-label="Fund commitment progress" hidden>
           <span class="fund-name">Nova III</span>
-          <span class="fund-track"><span class="fund-fill" id="fund-fill"></span><span class="fund-soft" id="fund-soft"></span></span>
+          <span class="fund-track"><span class="fund-fill" id="fund-fill"></span></span>
           <span class="fund-nums" id="fund-nums"></span>
         </div>
         <span class="count" id="total"></span>
@@ -1352,12 +1358,6 @@
               type="text"
               autocomplete="off"
               placeholder="Send deck, intro call…" /></label
-          ><label id="card-commit-status-wrap"
-            >Commit status<select id="card-commit-status" aria-label="Commitment status">
-              <option value="uncommitted">Uncommitted</option>
-              <option value="soft">Soft circled</option>
-              <option value="committed">Committed</option>
-            </select></label
           ><label
             >Notes<textarea id="card-notes" maxlength="10000"></textarea>
           </label>
@@ -1397,6 +1397,12 @@
           <button type="button" id="date-undo">Undo touch</button>
           <button type="button" id="date-done" class="primary">Done</button>
         </div>
+      </div>
+    </div>
+    <div class="date-sheet" id="card-menu" role="dialog" aria-modal="true" aria-label="Card actions">
+      <div class="date-panel">
+        <div class="date-head"><span class="date-title" id="card-menu-title"></span><button class="close" id="card-menu-close" type="button" aria-label="Close">×</button></div>
+        <div class="menu-actions"><button type="button" id="menu-pin"></button><button type="button" id="menu-del">Remove from pipe</button></div>
       </div>
     </div>
     <script>
@@ -1483,7 +1489,7 @@
                 "'": "&#39;",
               })[c],
           );
-        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, commitStatus: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, hasCommitStatus: false, pins: {}, hasPin: false };
+        let state = { pipeline: {}, details: {}, tags: [], cardTags: [], commitments: {}, fundGoal: 500000000, touches: [], firmProfiles: {}, customFirms: [], stageTimes: {}, nextSteps: {}, hasTouches: false, hasFirmProfiles: false, hasCustomFirms: false, hasStageTimes: false, hasNextStep: false, pins: {}, hasPin: false };
         let customFirmMap = new Map();
         let lastTouches = new Map();
         let schedTouches = new Map();
@@ -1582,8 +1588,6 @@
           catch (e) { state.nextSteps = {}; state.hasNextStep = false; }
           try { state.pins = Object.fromEntries((await db.pins()).map((r) => [r.firm_id, !!r.pinned])); state.hasPin = true; }
           catch (e) { state.pins = {}; state.hasPin = false; }
-          try { state.commitStatus = Object.fromEntries((await db.commitmentsFull()).map((r) => [r.firm_id, r.status || "committed"])); state.hasCommitStatus = true; }
-          catch (e) { state.commitStatus = {}; state.hasCommitStatus = false; }
           try {
             const funds = await db.funds();
             const iii = funds.find((f) => f.fund === "III");
@@ -1751,18 +1755,13 @@
           return "$" + (m >= 100 ? Math.round(m) : Math.round(m * 10) / 10) + "M";
         };
         function renderFund() {
-          let committed = 0, soft = 0;
-          for (const [id, amt] of Object.entries(state.commitments)) {
-            const st = state.hasCommitStatus ? state.commitStatus[id] || "committed" : "committed";
-            if (st === "soft") soft += amt;
-            else if (st !== "uncommitted") committed += amt;
-          }
+          let committed = 0;
+          for (const amt of Object.values(state.commitments)) committed += amt;
           const goal = state.fundGoal || 500000000;
           const cw = Math.min(100, (committed / goal) * 100);
           $("fund").hidden = false;
           $("fund-fill").style.width = cw + "%";
-          $("fund-soft").style.width = Math.min(100 - cw, (soft / goal) * 100) + "%";
-          $("fund-nums").innerHTML = "<b>" + fmtM(committed) + "</b> of " + fmtM(goal) + " committed" + (state.hasCommitStatus && soft ? ' · <b>' + fmtM(soft) + "</b> soft" : "");
+          $("fund-nums").innerHTML = "<b>" + fmtM(committed) + "</b> of " + fmtM(goal) + " committed";
         }
         function nextStepHTML(id) {
           if (!state.hasNextStep) return "";
@@ -1869,7 +1868,7 @@
                         const d = state.details[id] || {};
                         const prio = priorityOf(id);
                         return (
-                          '<article class="card" draggable="true" data-stars="' + (starCount(d.tier) || '') + '" data-priority="' + prio + '" data-id="' +
+                          '<article class="card lp" draggable="true" data-stars="' + (starCount(d.tier) || '') + '" data-priority="' + prio + '" data-id="' +
                           id +
                           '" tabindex="0" aria-label="' +
                           esc(f.name) +
@@ -1939,7 +1938,7 @@
                   const d = state.details[id] || {};
                   const prio = priorityOf(id);
                   return (
-                    '<article class="card list-card" data-stars="' + (starCount(d.tier) || '') + '" data-priority="' + prio + '" data-stage="' + esc(stage) + '" data-id="' +
+                    '<article class="card lp list-card" data-stars="' + (starCount(d.tier) || '') + '" data-priority="' + prio + '" data-stage="' + esc(stage) + '" data-id="' +
                     id +
                     '" tabindex="0" aria-label="' +
                     esc(f.name) +
@@ -2460,6 +2459,59 @@
           const d = e.target.closest("[data-chip-day]");
           if (d) pickTouchDate(d.dataset.chipDay);
         });
+        let menuFirm = null, lpTimer = null, lpStart = null, lpFired = false;
+        function openCardMenu(id) {
+          menuFirm = id;
+          $("card-menu-title").textContent = (firmOf(id) || {}).name || "";
+          $("menu-pin").hidden = !state.hasPin;
+          $("menu-pin").textContent = state.pins[id] ? "Unpin" : "Pin";
+          $("menu-del").dataset.armed = "0"; $("menu-del").textContent = "Remove from pipe";
+          $("card-menu").classList.add("show");
+        }
+        const closeCardMenu = () => { $("card-menu").classList.remove("show"); menuFirm = null; };
+        $("card-menu-close").onclick = closeCardMenu;
+        $("card-menu").addEventListener("pointerdown", (e) => { if (e.target === $("card-menu")) closeCardMenu(); });
+        $("menu-pin").onclick = () => { const id = menuFirm; closeCardMenu(); if (id !== null) togglePin(id); };
+        $("menu-del").onclick = async () => {
+          const b = $("menu-del");
+          if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Confirm remove"; return; }
+          const id = menuFirm; closeCardMenu();
+          if (id === null || loading || saving) return;
+          try {
+            const snap = (await db.pipeRow(id))[0];
+            await db.del(id);
+            delete state.pipeline[id];
+            state.cardTags = state.cardTags.filter((x) => x.firm_id !== +id);
+            render();
+            noticeUndo("Removed from pipe", async () => {
+              try {
+                const { firm_id, stage, updated_at, ...rest } = snap;
+                await db.put(id, stage, rest);
+                await loadPipeline();
+              } catch (err) { notice("Not restored: " + err.message); }
+            });
+          } catch (err) { notice("Not removed: " + err.message); render(); }
+        };
+        (() => {
+          const board = $("board");
+          const cancel = () => { clearTimeout(lpTimer); lpTimer = null; lpStart = null; document.querySelectorAll('.card[draggable="false"]').forEach((c) => { if (c.classList.contains("lp") && !c.classList.contains("list-card")) c.draggable = true; }); };
+          board.addEventListener("pointerdown", (e) => {
+            lpFired = false;
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            const card = e.target.closest(".card");
+            if (!card || e.target.closest("button, input, select, a") && !e.target.closest(".card-name") || e.target.closest(".grip")) return;
+            const id = +card.dataset.id;
+            if (state.pipeline[id] === undefined) return;
+            lpFired = false; lpStart = { x: e.clientX, y: e.clientY };
+            if (e.pointerType !== "mouse" && card.draggable) card.draggable = false;
+            lpTimer = setTimeout(() => { lpFired = true; lpTimer = null; if (navigator.vibrate) try { navigator.vibrate(10); } catch (_) {} openCardMenu(id); }, 550);
+          });
+          board.addEventListener("pointermove", (e) => { if (lpStart && Math.hypot(e.clientX - lpStart.x, e.clientY - lpStart.y) > 8) cancel(); });
+          ["pointerup", "pointercancel", "pointerleave"].forEach((t) => board.addEventListener(t, cancel));
+          window.addEventListener("scroll", cancel, { passive: true });
+          board.addEventListener("contextmenu", (e) => { const card = e.target.closest(".card"); if (card && state.pipeline[+card.dataset.id] !== undefined) { e.preventDefault(); cancel(); lpFired = true; openCardMenu(+card.dataset.id); } });
+          board.addEventListener("click", (e) => { if (lpFired) { e.stopImmediatePropagation(); e.preventDefault(); lpFired = false; } }, true);
+        })();
         async function togglePin(id) {
           const on = !state.pins[id];
           state.pins[id] = on;
@@ -2565,8 +2617,6 @@
           $("card-next-wrap").hidden = !state.hasNextStep;
           const ns = state.nextSteps[id] || { step: "", date: null };
           $("card-next").value = ns.step || "";
-          $("card-commit-status-wrap").hidden = !state.hasCommitStatus;
-          $("card-commit-status").value = state.commitStatus[id] || "uncommitted";
           $("card-notes").value = d.notes || "";
           $("card-tag-name").value = "";
           $("card-tag-color").value = "blue";
@@ -2842,7 +2892,7 @@
             const commitM = parseFloat($("card-commitment").value);
             const hadCommit = state.commitments[id] != null;
             if (commitM > 0) {
-              await db.putCommitment(id, Math.round(commitM * 1e6), state.hasCommitStatus ? $("card-commit-status").value : undefined);
+              await db.putCommitment(id, Math.round(commitM * 1e6));
             } else if (hadCommit) {
               await db.deleteCommitment(id);
             }
