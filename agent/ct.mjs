@@ -28,7 +28,7 @@ const TIER = { 5: 'S', 4: 'A', 3: 'B', 2: 'C', 1: 'D' };
 const FALLBACK_LOG = process.env.CT_AUDIT_FALLBACK || path.join(HERE, 'audit-fallback.jsonl');
 
 async function api(p, method = 'GET', body, prefer) {
-  const r = await fetch(API + p, { method, headers: { apikey: KEY, Authorization: 'Bearer ' + await importerToken(), 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const r = await fetch(API + p, { method, headers: { apikey: KEY, Authorization: 'Bearer ' + (p.startsWith('/ct_gathered_notes') ? await importerToken() : KEY), 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
   const t = await r.text(); let d; try { d = t ? JSON.parse(t) : null; } catch { d = t; }
   if (!r.ok) throw new Error((d && (d.message || d.msg)) || 'HTTP ' + r.status + ' ' + p);
   return d;
@@ -113,6 +113,21 @@ const CMDS = {
     if (opt.dry) return { dry: true, from: t, patch };
     await api('/ct_touches?id=eq.' + tid, 'PATCH', patch, 'return=minimal');
     return { ok: true, touch: tid, patch, log: await audit({ action: 'touch_edit', firm_id: t.firm_id, detail: { touch_id: tid, from: { touched_at: t.touched_at, sent_at: t.sent_at || null }, to: patch, ...(opt.src ? { src: opt.src } : {}) }, why: opt.why }) };
+  },
+  async 'gathered-notes'({ pos, opt }) {
+    const f=await resolveFirm(pos.join(' '));
+    if(!opt.file)return api('/ct_gathered_notes?firm_id=eq.'+f.id+'&select=*');
+    const input=JSON.parse(fs.readFileSync(opt.file,'utf8'));
+    if(typeof input.summary!=='string'||!input.summary.trim()||input.summary.length>200||/[\r\n]/.test(input.summary))throw Error('summary must be one line, 1-200 characters');
+    if(typeof input.notes!=='string'||!input.notes.trim()||!Array.isArray(input.sources)||!input.sources.length)throw Error('notes and source provenance required');
+    const prev=(await api('/ct_gathered_notes?firm_id=eq.'+f.id+'&select=*'))[0]||null;
+    if(prev&&['summary','notes','sources','inferred'].every(k=>JSON.stringify(prev[k]??false)===JSON.stringify(input[k]??false)))return {ok:true,skipped:'unchanged',firm_id:f.id};
+    const rec={firm_id:f.id,summary:input.summary.trim(),notes:input.notes.trim(),sources:input.sources,inferred:!!input.inferred,updated_at:new Date().toISOString()};
+    if(opt.dry)return {dry:true,firm_id:f.id,would:rec};
+    const r=await api('/ct_gathered_notes?on_conflict=firm_id','POST',rec,'resolution=merge-duplicates,return=representation');
+    const stored=(await api('/ct_gathered_notes?firm_id=eq.'+f.id+'&select=*'))[0];
+    if(stored.summary!==rec.summary||stored.notes!==rec.notes)throw Error('gathered notes readback failed');
+    return {ok:true,firm_id:f.id,updated_at:stored.updated_at,log:await audit({action:'gathered_notes_update',firm_id:f.id,firm_name:f.name,detail:{summary_chars:rec.summary.length,notes_chars:rec.notes.length,source_count:rec.sources.length},why:opt.why})};
   },
   async meetings({ pos, opt }) {
     const f = pos.length ? await resolveFirm(pos.join(' ')) : null;
