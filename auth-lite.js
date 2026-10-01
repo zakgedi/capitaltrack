@@ -11,8 +11,7 @@ async function ctToken(){if(!ctSession)return KEY;if(!ctValidEmail(ctSession.use
 async function api(path,opts={}){const headers={'apikey':KEY,'Authorization':'Bearer '+await ctToken(),'Content-Type':'application/json',...opts.headers};const res=await fetch(API+path,{...opts,headers});const body=await res.text();let data;try{data=body?JSON.parse(body):null}catch{data=body}if(!res.ok)throw Error(data?.message||data?.msg||('HTTP '+res.status));return data}
 window.ctLogin={
  get session(){return ctSession},
- async send(email){email=String(email||'').trim().toLowerCase();if(!ctValidEmail(email))throw Error('Use your @nova.nexus email.');await ctAuthRequest('otp',{email,create_user:true});return email},
- async verify(email,token){if(!ctValidEmail(email))throw Error('Use your @nova.nexus email.');if(!/^\d{6}$/.test(token))throw Error('Enter the 6-digit code.');const session=await ctAuthRequest('verify',{email,token,type:'email'});ctStoreSession(session);return session},
+ async signIn(password){if(!password)throw Error('Enter the passcode.');const session=await ctAuthRequest('token?grant_type=password',{email:'capitaltrack@nova.nexus',password});ctStoreSession(session);return session},
  async ready(){return ctToken()},
  async signOut(){if(ctSession){try{await fetch(API+'/auth/v1/logout',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+ctSession.access_token}})}catch{}}ctStoreSession(null);location.reload()}
 };
