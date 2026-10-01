@@ -278,7 +278,7 @@
       (async () => {
         try {
           await window.ctLogin.ready();
-          if(!window.ctLogin.session&&!sessionStorage.getItem('ct-migration-continue')){location.replace('index.html');return;}
+          if(!window.ctLogin.session){location.replace('index.html');return;}
           await loadFirms();
           $("status").textContent = "";
           await loadRatings();
