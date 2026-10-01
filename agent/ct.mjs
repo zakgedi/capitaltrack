@@ -200,6 +200,24 @@ const CMDS = {
     await api('/ct_commitments?on_conflict=firm_id', 'POST', { firm_id: f.id, amount: amt, fund: 'III', updated_at: new Date().toISOString() }, 'resolution=merge-duplicates,return=minimal');
     return { ok: true, from: prev, to: amt, log: await audit({ action: 'commit', firm_id: f.id, firm_name: f.name, detail: { from: prev, to: amt }, why: opt.why }) };
   },
+  async 'firm-create'({pos,opt}) {
+    const name=pos.join(' ').trim(),simple=opt.simple||name,type=opt.type||'Other',stage=opt.stage||'Backlog';
+    if(!name||!STAGES.includes(stage))throw Error('firm-create "Full name" --simple "Short name" --type "Type" --stage "Stage" --relationship "referred via X"');
+    const exists=await api('/ct_custom_firms?select=id,name');const hit=exists.find(c=>c.name.toLowerCase()===name.toLowerCase());if(hit)return {ok:true,existing:true,id:10000+hit.id,name};
+    const rec={name,simple_name:simple,full_name:name,type,notes:opt.relationship||'',city:opt.city||'',state:opt.state||''};
+    if(opt.dry)return {dry:true,firm:rec,pipeline:{stage,owner:opt.owner||''}};
+    const made=(await api('/ct_custom_firms','POST',rec,'return=representation'))[0],id=10000+made.id;
+    await audit({action:'firm_create',firm_id:id,firm_name:name,detail:rec,why:opt.why});
+    try {await api('/ct_pipeline?on_conflict=firm_id','POST',{firm_id:id,stage,owner:opt.owner||'',stage_changed_at:new Date().toISOString()},'resolution=merge-duplicates,return=minimal');}
+    catch(e){throw Error('Firm created as '+id+' but pipeline add failed: '+e.message+'. Use add '+id+' to finish; do not create again.');}
+    return {ok:true,id,name,stage,log:await audit({action:'add',firm_id:id,firm_name:name,detail:{stage},why:opt.why})};
+  },
+  async scheduling({pos,opt}) {
+    const f=await resolveFirm(pos[0]),status=opt.status||'scheduling',waiting=opt.waiting||'unknown';
+    if(!['scheduling','booked','closed'].includes(status)||!['ours','theirs','unknown'].includes(waiting))throw Error('Invalid status/waiting');
+    const rec={firm_id:f.id,status,waiting_on:waiting,people:(opt.people||'').split(',').map(x=>x.trim()).filter(Boolean),last_touch_at:opt.at||null,proposed_times:opt.times||'',next_action:opt.next||'',updated_at:new Date().toISOString()};
+    if(opt.dry)return {dry:true,rec};await api('/ct_scheduling?on_conflict=firm_id','POST',rec,'resolution=merge-duplicates,return=minimal');return {ok:true,rec,log:await audit({action:'scheduling',firm_id:f.id,firm_name:f.name,detail:rec,why:opt.why})};
+  },
   async add({ pos, opt }) {
     const f = await resolveFirm(pos[0]); const stage = opt.stage || 'Wishlist'; if (!STAGES.includes(stage)) throw new Error('bad stage');
     if (await pipeRow(f.id)) throw new Error(f.name + ' already on board');
@@ -212,6 +230,17 @@ const CMDS = {
     if (opt.dry) return { dry: true, remove: f.name, snapshot: row };
     await api('/ct_pipeline?firm_id=eq.' + f.id, 'DELETE');
     return { ok: true, removed: f.name, log: await audit({ action: 'remove', firm_id: f.id, firm_name: f.name, detail: { snapshot: row }, why: opt.why }) };
+  },
+  async profile({pos,opt}) {
+    const f=await resolveFirm(pos[0]);
+    if(!opt.file)return api('/ct_profile_enrichment?firm_id=eq.'+f.id+'&select=*');
+    const d=JSON.parse(fs.readFileSync(opt.file,'utf8'));
+    if(typeof d.background!=='string'||!Array.isArray(d.sources)||!d.sources.length)throw Error('profile JSON requires background and sources [{title,url}]');
+    if(d.sources.some(x=>!/^https?:\/\//i.test(x.url||'')))throw Error('sources require HTTP(S) URLs');
+    const rec={firm_id:f.id,background:d.background,contacts:(d.contacts||[]).map(c=>({name:c.name,role:c.role||''})),sources:d.sources.map(x=>({title:x.title||x.url,url:x.url})),updated_at:new Date().toISOString()};
+    if(opt.dry)return {dry:true,rec};
+    await api('/ct_profile_enrichment?on_conflict=firm_id','POST',rec,'resolution=merge-duplicates,return=minimal');
+    return {ok:true,rec,log:await audit({action:'profile',firm_id:f.id,firm_name:f.name,detail:rec,why:opt.why})};
   },
   async person({ pos, opt }) {
     const f = await resolveFirm(pos[0]); const name = pos[1]; if (!name) throw new Error('person <firm> "<name>" [--email --linkedin --role --unverified]');
@@ -236,6 +265,6 @@ const CMDS = {
 const [cmd, ...rest] = process.argv.slice(2);
 if (!cmd || !CMDS[cmd] || cmd === 'patchField') { console.error('commands: ' + Object.keys(CMDS).filter((c) => c !== 'patchField').join(', ')); process.exit(2); }
 const a = args(rest);
-const WRITES = new Set(['schedule', 'schedule-cancel', 'pass', 'reopen', 'touch', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
+const WRITES = new Set(['profile','firm-create','scheduling','schedule', 'schedule-cancel', 'pass', 'reopen', 'touch', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
 if (WRITES.has(cmd) && !a.opt.dry && !a.opt.why) { console.error('--why "<reason>" is required for writes'); process.exit(2); }
 try { console.log(JSON.stringify(await CMDS[cmd](a), null, 1)); } catch (e) { console.error('ERROR: ' + e.message); process.exit(1); }
