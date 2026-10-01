@@ -7,14 +7,28 @@ import vm from 'vm';
 import { fileURLToPath } from 'url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const API = 'https://pkiliwsmcxseoczfsfar.supabase.co/rest/v1';
+// Dedicated, RLS-bound importer identity. No shared human account or service-role bypass.
 const KEY = 'sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy';
+const IMPORTER_EMAIL = process.env.CT_IMPORTER_EMAIL || 'importer@nova.nexus';
+const IMPORTER_PASSWORD_FILE = process.env.CT_IMPORTER_PASSWORD_FILE || path.join(process.env.HOME || '/home/sandbox', '.config/capitaltrack/importer-password');
+let importerSession = null;
+async function importerToken() {
+  if (importerSession && importerSession.expires_at > Date.now() + 60000) return importerSession.access_token;
+  const password = process.env.CT_IMPORTER_PASSWORD || (fs.existsSync(IMPORTER_PASSWORD_FILE) ? fs.readFileSync(IMPORTER_PASSWORD_FILE, 'utf8').trim() : '');
+  if (!password) throw Error('Importer credential unavailable; configure CT_IMPORTER_PASSWORD_FILE privately. Anonymous fallback is disabled.');
+  const r = await fetch(API.replace('/rest/v1', '/auth/v1/token?grant_type=password'), {method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:IMPORTER_EMAIL,password})});
+  const d = await r.json();
+  if (!r.ok || !d.access_token || d.user?.email !== IMPORTER_EMAIL || !d.user?.email_confirmed_at) throw Error('Dedicated importer sign-in failed');
+  importerSession = {...d,expires_at:Date.now()+(d.expires_in||3600)*1000};
+  return d.access_token;
+}
 const STAGES = ['Backlog', 'Wishlist', 'Warm', 'Contacted', 'In Process', 'Committed', 'Passed'];
 const KINDS = ['email', 'call', 'meeting', 'scheduled', 'note'];
 const TIER = { 5: 'S', 4: 'A', 3: 'B', 2: 'C', 1: 'D' };
 const FALLBACK_LOG = process.env.CT_AUDIT_FALLBACK || path.join(HERE, 'audit-fallback.jsonl');
 
 async function api(p, method = 'GET', body, prefer) {
-  const r = await fetch(API + p, { method, headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const r = await fetch(API + p, { method, headers: { apikey: KEY, Authorization: 'Bearer ' + await importerToken(), 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
   const t = await r.text(); let d; try { d = t ? JSON.parse(t) : null; } catch { d = t; }
   if (!r.ok) throw new Error((d && (d.message || d.msg)) || 'HTTP ' + r.status + ' ' + p);
   return d;
