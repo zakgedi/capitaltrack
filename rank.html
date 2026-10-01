@@ -132,7 +132,7 @@
         $("globe-modal").classList.add("show");
       }
       function closeGlobe() { $("globe-modal").classList.remove("show"); }
-      $("open-globe").addEventListener("click", openGlobe);
+      $("open-globe")?.addEventListener("click", openGlobe);
       $("globe-close").addEventListener("click", closeGlobe);
       $("globe-modal").addEventListener("pointerdown", (e) => { if (e.target === $("globe-modal")) closeGlobe(); });
       document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("globe-modal").classList.contains("show")) closeGlobe(); });
@@ -288,4 +288,4 @@
       })();
     </script>
   </body>
-</html>
+  </html>
