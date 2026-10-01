@@ -248,7 +248,7 @@ function viewPerson(fi,ci){const f=firms[fi];const c=f&&f.contacts[ci];if(!c)ret
  if(org)h+='<a class="pill" href="'+mail+'">Org: '+esc(org)+'</a>'+(c.unverified?'<span class="pill warn">Unverified</span>':'');
  if(personal)h+='<a class="pill" href="mailto:'+esc(personal)+'">Personal: '+esc(personal)+'</a>';
  if(!org&&!personal&&c.unverified)h+='<span class="pill warn">Unverified</span>';
- if(c.linkedin)h+='<a class="pill" href="'+esc(c.linkedin)+'" target="_blank" rel="noopener">LinkedIn &#8599;</a>';
+ if(c.linkedin)h+='<a class="pill" href="'+esc(c.linkedin)+'" target="_blank" rel="noopener">LinkedIn</a>';
  h+='</div>';
  if(c.notes)h+='<div class="note">'+linkify(esc(c.notes))+'</div>';
  h+=knowRow('person',fi,ci);
