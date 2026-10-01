@@ -1,7 +1,21 @@
-// CapitalTrack shared API. The publishable key is public; RLS grants link-wide editing.
+// Public configuration. Anonymous migration access is removed only after verified sign-in.
 const API='https://pkiliwsmcxseoczfsfar.supabase.co';
 const KEY='sb_publishable_32d3KFrWN_SVr5sdEv7ekQ_1Ycwv5Qy';
-async function api(path,opts={}){const headers={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json',...opts.headers};const res=await fetch(API+path,{...opts,headers});const body=await res.text();let data;try{data=body?JSON.parse(body):null}catch{data=body}if(!res.ok)throw Error(data?.message||data?.msg||('HTTP '+res.status));return data}
+const CT_SESSION_KEY='capitaltrack.session.v1';
+let ctSession=null,ctRefresh=null;
+try{ctSession=JSON.parse(localStorage.getItem(CT_SESSION_KEY)||'null')}catch{}
+function ctValidEmail(email){return /^[^\s@]+@nova\.nexus$/i.test(String(email||'').trim())}
+function ctStoreSession(session){if(session&&!ctValidEmail(session.user?.email))throw Error('Use your @nova.nexus email.');ctSession=session;if(session)localStorage.setItem(CT_SESSION_KEY,JSON.stringify(session));else localStorage.removeItem(CT_SESSION_KEY);return session}
+async function ctAuthRequest(path,body){const res=await fetch(API+'/auth/v1/'+path,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await res.json();if(!res.ok)throw Error(data.msg||data.message||data.error_description||'Sign-in failed. Try again.');return data}
+async function ctToken(){if(!ctSession)return KEY;if(!ctValidEmail(ctSession.user?.email)){ctStoreSession(null);return KEY}if((ctSession.expires_at||0)*1000>Date.now()+60000)return ctSession.access_token;if(!ctRefresh)ctRefresh=ctAuthRequest('token?grant_type=refresh_token',{refresh_token:ctSession.refresh_token}).then(ctStoreSession).catch(e=>{ctStoreSession(null);throw e}).finally(()=>ctRefresh=null);await ctRefresh;return ctSession.access_token}
+async function api(path,opts={}){const headers={'apikey':KEY,'Authorization':'Bearer '+await ctToken(),'Content-Type':'application/json',...opts.headers};const res=await fetch(API+path,{...opts,headers});const body=await res.text();let data;try{data=body?JSON.parse(body):null}catch{data=body}if(!res.ok)throw Error(data?.message||data?.msg||('HTTP '+res.status));return data}
+window.ctLogin={
+ get session(){return ctSession},
+ async send(email){email=String(email||'').trim().toLowerCase();if(!ctValidEmail(email))throw Error('Use your @nova.nexus email.');await ctAuthRequest('otp',{email,create_user:true});return email},
+ async verify(email,token){if(!ctValidEmail(email))throw Error('Use your @nova.nexus email.');if(!/^\d{6}$/.test(token))throw Error('Enter the 6-digit code.');const session=await ctAuthRequest('verify',{email,token,type:'email'});ctStoreSession(session);return session},
+ async ready(){return ctToken()},
+ async signOut(){if(ctSession){try{await fetch(API+'/auth/v1/logout',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+ctSession.access_token}})}catch{}}ctStoreSession(null);location.reload()}
+};
 window.ctAuth={
   list(){return api('/rest/v1/ct_pipeline?select=firm_id,stage,owner,tier,connection,notes')},
   put(id,stage,detail){return api('/rest/v1/ct_pipeline?on_conflict=firm_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({firm_id:+id,stage,...(detail||{})})})},
