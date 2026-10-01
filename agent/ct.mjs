@@ -271,6 +271,15 @@ const CMDS = {
     await api('/ct_profile_enrichment?on_conflict=firm_id','POST',rec,'resolution=merge-duplicates,return=minimal');
     return {ok:true,rec,log:await audit({action:'profile',firm_id:f.id,firm_name:f.name,detail:rec,why:opt.why})};
   },
+  async primary({pos,opt}) {
+    const f=await resolveFirm(pos[0]);const name=pos.slice(1).join(' ');const contacts=await api('/ct_contacts?firm_id=eq.'+f.id+'&select=name');if(!contacts.some(c=>c.name===name))throw Error('Primary must be a saved contact');
+    const current=(await api('/ct_audit?action=eq.primary_contact_edit&firm_id=eq.'+f.id+'&select=detail&order=id.desc&limit=1'))[0]?.detail.to||[];if(JSON.stringify(current)===JSON.stringify([name]))return {ok:true,unchanged:true};
+    const change_id='agent:'+crypto.randomUUID();await audit({action:'primary_contact_edit',firm_id:f.id,firm_name:f.name,detail:{from:current,to:[name],change_id,inferred:opt.inferred==='true'},why:opt.why});const saved=(await api('/ct_audit?action=eq.primary_contact_edit&firm_id=eq.'+f.id+'&select=detail&order=id.desc&limit=1'))[0];if(saved?.detail.change_id!==change_id)throw Error('Primary readback failed');return {ok:true,primary:name};
+  },
+  async process({pos,opt}) {
+    const f=await resolveFirm(pos[0]);const allowed=['Intro Call','Data Room','CIO Meeting','Diligence Q&A','Investment Committee','Legal / Side Letter','Subscription Documents'];const add=pos.slice(1);if(add.some(x=>!allowed.includes(x)))throw Error('Unknown process step');
+    const current=(await api('/ct_audit?action=eq.process_steps&firm_id=eq.'+f.id+'&select=detail&order=id.desc&limit=1'))[0]?.detail.steps||[];const steps=[...new Set([...current,...add])];if(JSON.stringify(steps)===JSON.stringify(current))return {ok:true,unchanged:true,steps};await audit({action:'process_steps',firm_id:f.id,firm_name:f.name,detail:{steps,added:add,inferred:opt.inferred==='true'},why:opt.why});return {ok:true,steps};
+  },
   async person({ pos, opt }) {
     const f = await resolveFirm(pos[0]); const name = pos[1]; if (!name) throw new Error('person <firm> "<name>" [--email --linkedin --role --unverified]');
     const rec = { firm_id: f.id, name, ...(opt.email ? { email: opt.email } : {}), ...(opt.linkedin ? { linkedin: opt.linkedin } : {}), ...(opt.role ? { role: opt.role } : {}), unverified: opt.unverified === 'true', updated_at: new Date().toISOString() };
@@ -294,6 +303,6 @@ const CMDS = {
 const [cmd, ...rest] = process.argv.slice(2);
 if (!cmd || !CMDS[cmd] || cmd === 'patchField') { console.error('commands: ' + Object.keys(CMDS).filter((c) => c !== 'patchField').join(', ')); process.exit(2); }
 const a = args(rest);
-const WRITES = new Set(['profile','firm-create','scheduling','schedule', 'schedule-cancel', 'pass', 'reopen', 'touch', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
+const WRITES = new Set(['primary','process','profile','firm-create','scheduling','schedule', 'schedule-cancel', 'pass', 'reopen', 'touch', 'touch-delete', 'touch-edit', 'stage', 'next', 'owner', 'note', 'connection', 'stars', 'pin', 'priority', 'commit', 'add', 'remove', 'person']);
 if (WRITES.has(cmd) && !(cmd === 'profile' && !a.opt.file) && !a.opt.dry && !a.opt.why) { console.error('--why "<reason>" is required for writes'); process.exit(2); }
 try { console.log(JSON.stringify(await CMDS[cmd](a), null, 1)); } catch (e) { console.error('ERROR: ' + e.message); process.exit(1); }
