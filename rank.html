@@ -123,7 +123,7 @@
       </div>
     </div>
     <script src="firms-data.js"></script>
-    <script src="auth-lite.js"></script>
+    <script src="auth-lite.js?v=passcode1"></script>
     <script>
       const $ = (id) => document.getElementById(id);
       const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -277,6 +277,8 @@
 
       (async () => {
         try {
+          await window.ctLogin.ready();
+          if(!window.ctLogin.session&&!sessionStorage.getItem('ct-migration-continue')){location.replace('index.html');return;}
           await loadFirms();
           $("status").textContent = "";
           await loadRatings();
