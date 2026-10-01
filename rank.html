@@ -87,14 +87,12 @@
         .desc { -webkit-line-clamp: 3; }
       }
     </style>
-  </head>
+  <style>.top-inner,.app-header{min-height:64px;gap:24px;padding:0 28px}.brand,.app-brand{font:700 13px/1 Arial,sans-serif;letter-spacing:.08em}.divider,.app-divider{display:none}.pane-nav,.app-header nav{gap:4px;margin:0}.pane-nav a,.app-header nav a{padding:11px 12px;min-height:36px}.strategy-link{margin-left:auto;font:500 11px Arial;text-decoration:none;color:#111;white-space:nowrap}.top-inner .actions{margin-left:0}@media(max-width:600px){.top-inner,.app-header{min-height:98px;padding:16px;gap:12px;flex-wrap:wrap}.brand,.app-brand{flex:1}.pane-nav,.app-header nav{order:4;flex:1 1 100%;margin:0;border-top:1px solid #ddd;padding-top:10px}.strategy-link{margin:0}.top-inner .actions{display:none}}</style><style>.top-inner .pane-nav,.app-header nav{margin-left:auto;gap:4px}.top-inner .actions,.top-inner .divider,.app-divider{display:none!important}.strategy-link{font:600 11px Arial!important;text-transform:uppercase;padding:11px 12px!important;margin:0!important}.top-inner,.app-header{min-height:64px!important;flex-wrap:nowrap!important}.pane-nav,.app-header nav{order:0!important;flex:0 0 auto!important;border:0!important;padding:0!important}.brand,.app-brand{flex:none!important}@media(max-width:600px){.top-inner,.app-header{min-height:62px!important;padding:0 16px!important;gap:8px!important}.pane-nav a,.app-header nav a,.strategy-link{padding:10px 9px!important;font-size:10px!important}.brand,.app-brand{font-size:12px!important}}</style></head>
   <body>
     <header class="top">
       <div class="shell top-inner">
         <a class="brand" href="index.html" aria-label="CapitalTrack home">CapitalTrack</a><span class="divider"></span>
-        <nav class="pane-nav" aria-label="App panes">
-          <button type="button" id="open-globe" aria-label="Open globe" class="globe-btn"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="6.4" fill="none" stroke="currentColor" stroke-width="1.2"/><ellipse cx="8" cy="8" rx="2.9" ry="6.4" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M1.7 8h12.6" stroke="currentColor" stroke-width="1.2" /></svg></button><a href="rank.html" aria-current="page" class="v1">1v1</a>
-        </nav>
+        <nav class="pane-nav" aria-label="App navigation"><a href="index.html">Home</a><a href="index.html#pipe">Pipe</a><a class="strategy-link" href="https://docs.google.com/document/d/1iA4yxIeOWlJTTARHaGqQ-8CvxiNbK2_gXK7xxj4ytsQ/edit" target="_blank" rel="noopener">Docs</a></nav>
         <div class="actions"><span class="picks"><b id="pick-count">0</b> picks</span></div>
       </div>
     </header>
@@ -123,7 +121,7 @@
       </div>
     </div>
     <script src="firms-data.js"></script>
-    <script src="auth-lite.js?v=passcode1"></script>
+    <script src="auth-lite.js?v=open2"></script>
     <script>
       const $ = (id) => document.getElementById(id);
       const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -278,7 +276,7 @@
       (async () => {
         try {
           await window.ctLogin.ready();
-          if(!window.ctLogin.session){location.replace('index.html');return;}
+          
           await loadFirms();
           $("status").textContent = "";
           await loadRatings();
