@@ -69,6 +69,12 @@ async function audit(entry) {
   if (auditTable) { await api('/ct_audit', 'POST', row, 'return=minimal'); return 'audit:db'; }
   fs.appendFileSync(FALLBACK_LOG, JSON.stringify(row) + '\n'); return 'audit:local-fallback (run ct_audit SQL)';
 }
+async function queueEnrichment(f,from,to,reason='pipeline entry') {
+  if(from&&(!['Backlog','Warm'].includes(from)||['Backlog','Warm','Passed'].includes(to)))return;
+  const rows=await api('/ct_audit?firm_id=eq.'+f.id+'&action=in.(pipeline_enrichment_requested,pipeline_enrichment_completed,pipeline_enrichment_blocked)&select=action,detail');
+  const closed=new Set(rows.filter(e=>e.action!=='pipeline_enrichment_requested').map(e=>e.detail.request_id));if(rows.some(e=>e.action==='pipeline_enrichment_requested'&&!closed.has(e.detail.request_id)))return;
+  await audit({action:'pipeline_enrichment_requested',firm_id:f.id,firm_name:f.name,detail:{request_id:crypto.randomUUID(),status:'pending',rubric_version:1,reason,from_stage:from||null,to_stage:to},why:'Owner requested detailed private research on pipeline entry'});
+}
 const pipeRow = async (id) => (await api('/ct_pipeline?firm_id=eq.' + id + '&select=*'))[0] || null;
 async function prioTagIds() { const tags = await api('/ct_tags?select=id,name'); const m = {}; for (const t of tags) m[t.name.toLowerCase()] = t.id; return m; }
 
@@ -188,7 +194,7 @@ const CMDS = {
     const patch = { stage: st, stage_changed_at: new Date().toISOString(), pass_reason: null, passed_at: null, passed_by: null };
     if (opt.dry) return { dry: true, from: row.stage, patch };
     await api('/ct_pipeline?firm_id=eq.' + f.id, 'PATCH', patch, 'return=minimal');
-    return { ok: true, from: row.stage, to: st, log: await audit({ action: 'stage', firm_id: f.id, firm_name: f.name, detail: { from: row.stage, to: st, reopened: true }, why: opt.why }) };
+    await queueEnrichment(f,row.stage,st);return { ok: true, from: row.stage, to: st, log: await audit({ action: 'stage', firm_id: f.id, firm_name: f.name, detail: { from: row.stage, to: st, reopened: true }, why: opt.why }) };
   },
   async stage({ pos, opt }) {
     const [q, stage] = pos; if (!STAGES.includes(stage)) throw new Error('stage must be ' + STAGES.join('|'));
@@ -196,7 +202,7 @@ const CMDS = {
     if (opt.forward && STAGES.indexOf(stage) <= STAGES.indexOf(row.stage)) return { ok: true, skipped: 'not forward: ' + row.stage + ' -> ' + stage };
     if (opt.dry) return { dry: true, from: row.stage, to: stage };
     await api('/ct_pipeline?firm_id=eq.' + f.id, 'PATCH', { stage, stage_changed_at: new Date().toISOString() }, 'return=minimal');
-    return { ok: true, from: row.stage, to: stage, log: await audit({ action: 'stage', firm_id: f.id, firm_name: f.name, detail: { from: row.stage, to: stage }, why: opt.why }) };
+    await queueEnrichment(f,row.stage,stage);return { ok: true, from: row.stage, to: stage, log: await audit({ action: 'stage', firm_id: f.id, firm_name: f.name, detail: { from: row.stage, to: stage }, why: opt.why }) };
   },
   async patchField(name, col, val, { pos, opt }) {
     const f = await resolveFirm(pos[0]); const row = await pipeRow(f.id); if (!row) throw new Error('not on board');
@@ -239,7 +245,7 @@ const CMDS = {
     await audit({action:'firm_create',firm_id:id,firm_name:name,detail:rec,why:opt.why});
     try {await api('/ct_pipeline?on_conflict=firm_id','POST',{firm_id:id,stage,owner:opt.owner||'',stage_changed_at:new Date().toISOString()},'resolution=merge-duplicates,return=minimal');}
     catch(e){throw Error('Firm created as '+id+' but pipeline add failed: '+e.message+'. Use add '+id+' to finish; do not create again.');}
-    return {ok:true,id,name,stage,log:await audit({action:'add',firm_id:id,firm_name:name,detail:{stage},why:opt.why})};
+    await queueEnrichment({id,name},null,stage);return {ok:true,id,name,stage,log:await audit({action:'add',firm_id:id,firm_name:name,detail:{stage},why:opt.why})};
   },
   async scheduling({pos,opt}) {
     const f=await resolveFirm(pos[0]),status=opt.status||'scheduling',waiting=opt.waiting||'unknown';
@@ -252,7 +258,7 @@ const CMDS = {
     if (await pipeRow(f.id)) throw new Error(f.name + ' already on board');
     if (opt.dry) return { dry: true, add: f.name, stage };
     await api('/ct_pipeline?on_conflict=firm_id', 'POST', { firm_id: f.id, stage, stage_changed_at: new Date().toISOString(), ...(opt.owner ? { owner: opt.owner } : {}) }, 'resolution=merge-duplicates,return=minimal');
-    return { ok: true, added: f.name, stage, log: await audit({ action: 'add', firm_id: f.id, firm_name: f.name, detail: { stage }, why: opt.why }) };
+    await queueEnrichment(f,null,stage);return { ok: true, added: f.name, stage, log: await audit({ action: 'add', firm_id: f.id, firm_name: f.name, detail: { stage }, why: opt.why }) };
   },
   async remove({ pos, opt }) {
     const f = await resolveFirm(pos[0]); const row = await pipeRow(f.id); if (!row) throw new Error('not on board');
