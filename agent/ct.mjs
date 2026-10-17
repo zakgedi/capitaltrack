@@ -84,7 +84,8 @@ const CMDS = {
   async show({ pos }) {
     const f = await resolveFirm(pos.join(' ')); const [row, touches, commit, next] = await Promise.all([pipeRow(f.id), api('/ct_touches?firm_id=eq.' + f.id + '&select=id,kind,note,owner,touched_at&order=touched_at.desc&limit=10'), api('/ct_commitments?firm_id=eq.' + f.id + '&select=amount'), Promise.resolve(null)]);
     const tags = await api('/ct_card_tags?firm_id=eq.' + f.id + '&select=tag_id'); const all = await api('/ct_tags?select=id,name');
-    return { firm: f, pipeline: row, commitment: commit[0]?.amount ?? null, tags: tags.map((t) => all.find((x) => x.id === t.tag_id)?.name), touches };
+    const uq=(await api('/ct_audit?firm_id=eq.'+f.id+'&action=eq.universe_quality&select=detail&order=id.desc&limit=1'))[0]?.detail;
+    return { firm: f, pipeline: row, stars: ({S:5,A:4,B:3,C:2,D:1})[row?.tier || uq?.tier] || 0, universe_rating: uq || null, commitment: commit[0]?.amount ?? null, tags: tags.map((t) => all.find((x) => x.id === t.tag_id)?.name), touches };
   },
   async pipe() { const rows = await api('/ct_pipeline?select=firm_id,stage,owner,tier,next_step,pinned&order=stage.asc'); FIRMS ||= await loadFirmsAsync(); CUSTOM ||= await api('/ct_custom_firms?select=id,name'); const nm = (id) => id >= 10000 ? CUSTOM.find((c) => c.id === id - 10000)?.name : FIRMS[id]?.name; return rows.map((r) => ({ id: r.firm_id, name: nm(r.firm_id), stage: r.stage, owner: r.owner, stars: { S: 5, A: 4, B: 3, C: 2, D: 1 }[r.tier] || 0, next: r.next_step })); },
   async touch({ pos, opt }) {
@@ -215,7 +216,19 @@ const CMDS = {
   async owner(a) { return CMDS.patchField('owner', 'owner', a.pos.slice(1).join(' '), a); },
   async note(a) { return CMDS.patchField('notes', 'notes', a.pos.slice(1).join(' '), a); },
   async connection(a) { return CMDS.patchField('connection', 'connection', a.pos.slice(1).join(' '), a); },
-  async stars(a) { const n = +a.pos[1]; if (!TIER[n]) throw new Error('stars 1-5'); return CMDS.patchField('stars', 'tier', TIER[n], a); },
+  async stars(a) {
+    const n = +a.pos[1]; if (!TIER[n]) throw new Error('stars 1-5');
+    const f = await resolveFirm(a.pos[0]);
+    if (await pipeRow(f.id)) return CMDS.patchField('stars', 'tier', TIER[n], a);
+    const p='/ct_audit?firm_id=eq.'+f.id+'&action=eq.universe_quality&select=detail&order=id.desc&limit=1';
+    const prev=(await api(p))[0]?.detail || {};
+    if(prev.tier===TIER[n])return {ok:true,unchanged:true,universe_only:true,stars:n};
+    const detail={tier:TIER[n],stars:n,from:prev.tier||'',change_id:crypto.randomUUID(),source:a.opt.src||'agent',user_set:a.opt['user-set']==='true'};
+    if(a.opt.dry)return {dry:true,universe_only:true,firm_id:f.id,detail};
+    await audit({actor:detail.user_set?'user':'agent',action:'universe_quality',firm_id:f.id,firm_name:f.name,detail,why:a.opt.why});
+    if((await api(p))[0]?.detail?.change_id!==detail.change_id)throw Error('Universe quality verification failed');
+    return {ok:true,universe_only:true,firm_id:f.id,stars:n,tier:TIER[n]};
+  },
   async pin(a) { return CMDS.patchField('pin', 'pinned', a.pos[1] !== 'off', a); },
   async priority({ pos, opt }) {
     const f = await resolveFirm(pos[0]); const lvl = pos[1]; if (!['high', 'mid', 'low', 'none'].includes(lvl)) throw new Error('priority high|mid|low|none');
